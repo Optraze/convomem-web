@@ -63,7 +63,7 @@ export const Route = createRootRouteWithContext<SdkContext>()({
         content: SITE_NAME,
       },
       {
-        name: 'apple-mobile-web-app-capable',
+        name: 'mobile-web-app-capable',
         content: 'yes',
       },
       // Open Graph (Facebook, LinkedIn, Slack, Discord, iMessage, …)
@@ -145,7 +145,7 @@ export const Route = createRootRouteWithContext<SdkContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning={true}>
       <head>
         <HeadContent />
       </head>
