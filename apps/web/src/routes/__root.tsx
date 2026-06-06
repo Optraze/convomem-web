@@ -8,8 +8,12 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import type { SdkContext } from '@workspace/sdk'
 
+import type { SdkContext } from '@workspace/sdk'
+import {
+  ThemeProvider,
+  themeScript,
+} from '@workspace/ui/components/theme-provider'
 import appCss from '@workspace/ui/globals.css?url'
 
 export const Route = createRootRouteWithContext<SdkContext>()({
@@ -32,6 +36,13 @@ export const Route = createRootRouteWithContext<SdkContext>()({
         href: appCss,
       },
     ],
+    scripts: [
+      // Runs before React hydrates; resolves theme from localStorage / system
+      // preference and toggles `.dark` / `.light` on <html> synchronously.
+      {
+        children: themeScript,
+      },
+    ],
   }),
   notFoundComponent: () => (
     <main className="container mx-auto p-4 pt-16">
@@ -44,12 +55,12 @@ export const Route = createRootRouteWithContext<SdkContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
