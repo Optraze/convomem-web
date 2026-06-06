@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22" fill="none" role="img" aria-label="Convomem">
+  <style>
+    .bg{fill:#141414}
+    .fg{fill:#fafafa}
+    @media (prefers-color-scheme: dark){
+      .bg{fill:#fafafa}
+      .fg{fill:#141414}
+    }
+  </style>
+  <rect class="bg" width="22" height="22" rx="5"/>
+  <circle class="fg" cx="11" cy="11" r="3.3"/>
+</svg>

@@ -16,6 +16,14 @@ import {
 } from '@workspace/ui/components/theme-provider'
 import appCss from '@workspace/ui/globals.css?url'
 
+const SITE_NAME = 'ConvoMem'
+const SITE_TITLE = 'ConvoMem — AI Memory for Customer Conversations'
+const SITE_DESCRIPTION =
+  'ConvoMem is an enterprise memory layer for conversational AI. Capture, store, and inject customer context into every voice, chat, and support interaction.'
+// All asset URLs are root-relative so they resolve against whatever host the
+// page is served from (localhost in dev, the production domain in prod).
+const OG_IMAGE = '/og-image.png'
+
 export const Route = createRootRouteWithContext<SdkContext>()({
   head: () => ({
     meta: [
@@ -27,13 +35,95 @@ export const Route = createRootRouteWithContext<SdkContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Convomem',
+        title: SITE_TITLE,
       },
+      {
+        name: 'description',
+        content: SITE_DESCRIPTION,
+      },
+      {
+        name: 'keywords',
+        content:
+          'AI memory, customer intelligence, conversational AI, voice bot, chat bot, customer context, enterprise AI',
+      },
+      {
+        name: 'author',
+        content: 'ConvoMem',
+      },
+      {
+        name: 'theme-color',
+        content: '#ffffff',
+      },
+      {
+        name: 'application-name',
+        content: SITE_NAME,
+      },
+      {
+        name: 'apple-mobile-web-app-title',
+        content: SITE_NAME,
+      },
+      {
+        name: 'apple-mobile-web-app-capable',
+        content: 'yes',
+      },
+      // Open Graph (Facebook, LinkedIn, Slack, Discord, iMessage, …)
+      { property: 'og:type', content: 'website' },
+      { property: 'og:site_name', content: SITE_NAME },
+      { property: 'og:title', content: SITE_TITLE },
+      { property: 'og:description', content: SITE_DESCRIPTION },
+      { property: 'og:url', content: '/' },
+      { property: 'og:image', content: OG_IMAGE },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
+      { property: 'og:image:alt', content: SITE_TITLE },
+      { property: 'og:locale', content: 'en_US' },
+      // Twitter Card
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: SITE_TITLE },
+      { name: 'twitter:description', content: SITE_DESCRIPTION },
+      { name: 'twitter:image', content: OG_IMAGE },
+      { name: 'twitter:image:alt', content: SITE_TITLE },
     ],
     links: [
       {
         rel: 'stylesheet',
         href: appCss,
+      },
+      // SVG favicon (theme-aware via prefers-color-scheme media query)
+      {
+        rel: 'icon',
+        href: '/favicon.svg',
+        type: 'image/svg+xml',
+      },
+      // Legacy / fallback favicons
+      {
+        rel: 'icon',
+        type: 'image/x-icon',
+        href: '/favicon.ico',
+        sizes: '32x32',
+      },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        href: '/favicon-32x32.png',
+        sizes: '32x32',
+      },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        href: '/favicon-16x16.png',
+        sizes: '16x16',
+      },
+      // Apple touch icon (iOS home screen)
+      {
+        rel: 'apple-touch-icon',
+        href: '/apple-touch-icon.png',
+        sizes: '180x180',
+      },
+      // PWA manifest
+      {
+        rel: 'manifest',
+        href: '/manifest.json',
       },
     ],
     scripts: [

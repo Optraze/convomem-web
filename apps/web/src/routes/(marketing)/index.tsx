@@ -1,10 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { Button } from '@workspace/ui/components/button'
+import { Button } from '@workspace/ui/components/button.tsx'
 
-export const Route = createFileRoute('/')({ component: App })
+export const Route = createFileRoute('/(marketing)/')({
+  component: RouteComponent,
+})
 
-function App() {
+function RouteComponent() {
   return (
     <div className="flex min-h-svh p-6">
       <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
