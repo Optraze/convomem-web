@@ -26,6 +26,7 @@
     "@tanstack/react-start": "latest",
     "@tanstack/react-table": "latest",
     "@tanstack/router-plugin": "^1.132.0",
+    "@workspace/sdk": "workspace:*",
     "@workspace/ui": "workspace:*",
     "lucide-react": "^1.17.0",
     "react": "^19.2.6",

@@ -1,7 +1,6 @@
 import React from 'react'
 
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import type { QueryClient } from '@tanstack/react-query'
 import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import {
   createRootRouteWithContext,
@@ -9,14 +8,11 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+import type { SdkContext } from '@workspace/sdk'
 
 import appCss from '@workspace/ui/globals.css?url'
 
-interface MyRouterContext {
-  queryClient: QueryClient
-}
-
-export const Route = createRootRouteWithContext<MyRouterContext>()({
+export const Route = createRootRouteWithContext<SdkContext>()({
   head: () => ({
     meta: [
       {

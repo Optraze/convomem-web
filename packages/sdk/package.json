@@ -1,0 +1,23 @@
+{
+  "name": "@workspace/sdk",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "codegen": "openapi-ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hey-api/client-fetch": "*",
+    "@tanstack/react-query": "latest"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.97.3",
+    "@types/react": "^19",
+    "react": "^19.2.6",
+    "typescript": "^6"
+  }
+}
