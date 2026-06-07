@@ -1,11 +1,10 @@
 'use client'
 
-import type { Theme } from './theme-provider'
+import { useEffect } from 'react'
+import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 
 import type React from 'react'
-import { useEffect } from 'react'
-
-import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
+import type { Theme } from './theme-provider'
 
 import { cn } from '@workspace/ui/lib/utils'
 

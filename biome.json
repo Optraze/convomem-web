@@ -1,0 +1,103 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.turbo",
+      "!**/.output",
+      "!**/.nitro",
+      "!**/.tanstack",
+      "!**/.vinxi",
+      "!**/coverage",
+      "!**/.pnpm-store",
+      "!**/routeTree.gen.ts",
+      "!packages/sdk/src/client",
+      "!pnpm-lock.yaml"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "es5"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "a11y": "off",
+      "style": {
+        "useImportType": {
+          "level": "error",
+          "options": {
+            "style": "separatedType"
+          }
+        }
+      }
+    },
+    "domains": {
+      "react": "recommended",
+      "types": "recommended"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              { "type": false, "source": [":BUN:", ":NODE:"] },
+              ":BLANK_LINE:",
+              { "type": false, "source": ["react", "react-dom"] },
+              {
+                "type": false,
+                "source": [
+                  ":PACKAGE:",
+                  ":PACKAGE_WITH_PROTOCOL:",
+                  "!react",
+                  "!react-dom",
+                  "!@*/**",
+                  "!@workspace/**"
+                ]
+              },
+              {
+                "type": false,
+                "source": ["@*/**", "!@/**", "!@workspace/**"]
+              },
+              ":BLANK_LINE:",
+              { "type": true },
+              ":BLANK_LINE:",
+              { "type": false, "source": "@workspace/**" },
+              ":BLANK_LINE:",
+              { "type": false, "source": ":ALIAS:" },
+              ":BLANK_LINE:",
+              { "type": false, "source": ":PATH:" }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

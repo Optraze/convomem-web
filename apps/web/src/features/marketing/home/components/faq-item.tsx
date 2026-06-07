@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { motion } from 'motion/react'
+import { useState } from 'react'
 
 export function FaqItem({
   q,

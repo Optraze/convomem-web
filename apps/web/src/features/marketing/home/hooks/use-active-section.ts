@@ -20,7 +20,9 @@ export function useActiveSection(ids: readonly string[]) {
     })
 
     return () => {
-      observers.forEach((observer) => observer?.disconnect())
+      observers.forEach((observer) => {
+        observer?.disconnect()
+      })
     }
   }, [ids])
 

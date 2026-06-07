@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
+import { useEffect, useState } from 'react'
 
 export function CookieBanner() {
   const [visible, setVisible] = useState(false)

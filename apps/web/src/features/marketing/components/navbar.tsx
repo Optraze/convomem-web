@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { motion } from 'motion/react'
-
 import { useNavigate } from '@tanstack/react-router'
 
 import { Logo } from '@workspace/ui/components/logo.tsx'
