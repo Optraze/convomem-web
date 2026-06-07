@@ -16,13 +16,14 @@ import {
 } from '@workspace/ui/components/theme-provider'
 import appCss from '@workspace/ui/globals.css?url'
 
-const SITE_NAME = 'ConvoMem'
-const SITE_TITLE = 'ConvoMem — AI Memory for Customer Conversations'
-const SITE_DESCRIPTION =
-  'ConvoMem is an enterprise memory layer for conversational AI. Capture, store, and inject customer context into every voice, chat, and support interaction.'
-// All asset URLs are root-relative so they resolve against whatever host the
-// page is served from (localhost in dev, the production domain in prod).
-const OG_IMAGE = '/og-image.png'
+import {
+  getSeoUrl,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+} from '@/lib/seo.ts'
+
+const OG_IMAGE = getSeoUrl('/og-image.png')
 
 export const Route = createRootRouteWithContext<SdkContext>()({
   head: () => ({
@@ -71,7 +72,7 @@ export const Route = createRootRouteWithContext<SdkContext>()({
       { property: 'og:site_name', content: SITE_NAME },
       { property: 'og:title', content: SITE_TITLE },
       { property: 'og:description', content: SITE_DESCRIPTION },
-      { property: 'og:url', content: '/' },
+      { property: 'og:url', content: getSeoUrl('/') },
       { property: 'og:image', content: OG_IMAGE },
       { property: 'og:image:width', content: '1200' },
       { property: 'og:image:height', content: '630' },
