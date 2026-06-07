@@ -41,6 +41,9 @@
     --color-card-foreground: var(--card-foreground);
     --color-card: var(--card);
     --color-foreground: var(--foreground);
+    --color-hint: var(--hint);
+    --color-subtle: var(--subtle);
+    --color-ghost: var(--ghost);
     --color-background: var(--background);
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
@@ -66,6 +69,9 @@
     --secondary-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
     --muted-foreground: oklch(0.556 0 0);
+    --hint: oklch(0.556 0 0);
+    --subtle: oklch(0.708 0 0);
+    --ghost: oklch(0.82 0 0);
     --accent: oklch(0.97 0 0);
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
@@ -101,6 +107,9 @@
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
     --muted-foreground: oklch(0.708 0 0);
+    --hint: oklch(0.556 0 0);
+    --subtle: oklch(0.42 0 0);
+    --ghost: oklch(0.30 0 0);
     --accent: oklch(0.269 0 0);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
@@ -132,4 +141,35 @@
   button:not(:disabled), [role="button"]:not(:disabled) {
     cursor: pointer;
     }
+}
+
+@layer utilities {
+  .bg-blueprint {
+    background-image:
+      linear-gradient(to right, currentColor 1px, transparent 1px),
+      linear-gradient(to bottom, currentColor 1px, transparent 1px);
+    background-size: 76px 76px;
+    background-position: center top;
+  }
+
+  .sweep-line {
+    animation: sweep-line 7s ease-in-out infinite;
+  }
+
+  @keyframes sweep-line {
+    0% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    88% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(640px);
+      opacity: 0;
+    }
+  }
 }

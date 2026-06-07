@@ -1,20 +1,25 @@
-import type { HTMLAttributes } from 'react'
+import type { SVGProps } from 'react'
 
 import { cn } from '@workspace/ui/lib/utils'
 
-function Logo({ className, ...props }: HTMLAttributes<HTMLSpanElement>) {
+function Logo({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
-    <span
-      data-slot="logo"
-      aria-hidden="true"
-      className={cn(
-        'inline-flex size-5.5 items-center justify-center rounded-[5px] bg-foreground',
-        className
-      )}
+    <svg
+      id="convomem-logo"
+      viewBox="0 0 22 22"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      role="img"
+      aria-label="Convomem"
+      className={cn('size-6', className)}
       {...props}
     >
-      <span className="block size-[6.6px] rounded-full bg-background" />
-    </span>
+      <style>
+        {`.convomem-logo-bg{fill:#141414}.convomem-logo-fg{fill:#fafafa}@media (prefers-color-scheme: dark){.convomem-logo-bg{fill:#fafafa}.convomem-logo-fg{fill:#141414}}`}
+      </style>
+      <rect className="convomem-logo-bg" width="22" height="22" rx="5" />
+      <circle className="convomem-logo-fg" cx="11" cy="11" r="3.3" />
+    </svg>
   )
 }
 

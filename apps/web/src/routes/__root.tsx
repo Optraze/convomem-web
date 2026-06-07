@@ -1,3 +1,5 @@
+import type { SdkContext } from '@workspace/sdk'
+
 import React from 'react'
 
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -9,7 +11,6 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
-import type { SdkContext } from '@workspace/sdk'
 import {
   ThemeProvider,
   themeScript,
