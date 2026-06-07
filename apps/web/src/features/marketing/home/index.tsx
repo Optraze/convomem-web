@@ -1,17 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, ArrowUpRight, Check, Menu, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
-import { useNavigate } from '@tanstack/react-router'
 
-import { Logo } from '@workspace/ui/components/logo.tsx'
-import { ThemeSwitcher } from '@workspace/ui/components/theme-switcher'
+import { Accordion } from '@workspace/ui/components/accordion'
 
+import { MarketingFooter } from '../components/footer.tsx'
+import { MarketingNavbar } from '../components/navbar.tsx'
+import { useMarketingNavigation } from '../hooks/use-marketing-navigation.ts'
 import { CookieBanner } from './components/cookie-banner.tsx'
 import { Crosshair } from './components/crosshair.tsx'
 import { DemoModal } from './components/demo-modal.tsx'
 import { FaqItem } from './components/faq-item.tsx'
 import { MemoryRail } from './components/memory-rail.tsx'
 import { ScenarioPlayer } from './components/scenario-player.tsx'
+import { SectionHeading } from './components/section-heading.tsx'
 import { SectionLabel } from './components/section-label.tsx'
 import {
   capabilities,
@@ -22,12 +24,6 @@ import {
   SECTIONS,
 } from './data.ts'
 import { useActiveSection } from './hooks/use-active-section.ts'
-
-const navItems = [
-  { label: 'Try it', id: 'try' },
-  { label: 'In the wild', id: 'scenarios' },
-  { label: 'Pricing', id: 'pricing' },
-] as const
 
 const trustItems = ['7-day trial', 'No card', 'On-prem on Custom'] as const
 
@@ -47,178 +43,24 @@ const pipelineSignal = [
   'insights',
 ] as const
 
-const footerColumns = [
-  {
-    heading: 'Product',
-    items: [
-      { label: 'Try it', action: 'try' },
-      { label: 'Pricing', action: 'pricing' },
-      { label: 'Docs', href: '/docs' },
-    ],
-  },
-  {
-    heading: 'Resources',
-    items: [
-      { label: 'Docs', href: '/docs' },
-      { label: 'API Reference', href: '/docs' },
-      { label: 'Contact', href: '/contact' },
-      { label: 'Support', href: '/contact' },
-    ],
-  },
-  {
-    heading: 'Legal',
-    items: [
-      { label: 'Privacy', href: '/privacy' },
-      { label: 'Terms', href: '/terms' },
-      { label: 'Cookies', href: '/privacy' },
-    ],
-  },
-] as const
-
 export function Home() {
-  const navigate = useNavigate()
   const reduce = useReducedMotion()
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [demoOpen, setDemoOpen] = useState(false)
   const sectionIds = useMemo(() => SECTIONS.map((section) => section.id), [])
   const active = useActiveSection(sectionIds)
-
-  useEffect(() => {
-    if (!document.getElementById('ld-faq')) {
-      const script = document.createElement('script')
-      script.id = 'ld-faq'
-      script.type = 'application/ld+json'
-      script.text = JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: faqs.map((f) => ({
-          '@type': 'Question',
-          name: f.q,
-          acceptedAnswer: { '@type': 'Answer', text: f.a },
-        })),
-      })
-      document.head.appendChild(script)
-    }
-    return () => document.getElementById('ld-faq')?.remove()
-  }, [])
-
-  const go = (href: string) => {
-    setMobileOpen(false)
-    void navigate({ href })
-  }
-
-  const jumpToSection = (id: string) => {
-    setMobileOpen(false)
-    if (id === 'top') {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
-    }
-    document.getElementById(id)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
-  }
+  const { go, jumpToSection } = useMarketingNavigation()
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground antialiased">
       <MemoryRail active={active} onJump={jumpToSection} />
-
-      <nav className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-5 sm:px-8">
-          <button
-            onClick={() => jumpToSection('top')}
-            className="flex items-center gap-2.5"
-          >
-            <Logo />
-            <span className="font-mono text-[14px] font-semibold tracking-[-0.01em]">
-              ConvoMem
-            </span>
-          </button>
-
-          <div className="hidden items-center gap-8 md:flex">
-            {navItems.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => jumpToSection(n.id)}
-                className="text-muted-foreground transition-colors hover:text-foreground"
-                style={{ fontSize: '13px' }}
-              >
-                {n.label}
-              </button>
-            ))}
-            <button
-              onClick={() => go('/docs')}
-              className="text-muted-foreground transition-colors hover:text-foreground"
-              style={{ fontSize: '13px' }}
-            >
-              Docs
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => go('/login')}
-              className="hidden px-2 text-muted-foreground transition-colors hover:text-foreground sm:block"
-              style={{ fontSize: '13px' }}
-            >
-              Sign in
-            </button>
-            <button
-              onClick={() => go('/register')}
-              className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 text-background transition-opacity hover:opacity-90"
-              style={{ fontSize: '13px', fontWeight: 500 }}
-            >
-              Start free <ArrowRight size={13} />
-            </button>
-            <button
-              onClick={() => setMobileOpen((open) => !open)}
-              className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-muted md:hidden"
-              aria-label="Menu"
-            >
-              {mobileOpen ? <X size={16} /> : <Menu size={16} />}
-            </button>
-          </div>
-        </div>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-3 border-t border-border bg-background/95 px-5 py-4 backdrop-blur-xl md:hidden"
-          >
-            {navItems.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => jumpToSection(n.id)}
-                className="block w-full text-left text-muted-foreground hover:text-foreground"
-                style={{ fontSize: '13px' }}
-              >
-                {n.label}
-              </button>
-            ))}
-            <button
-              onClick={() => go('/docs')}
-              className="block w-full text-left text-muted-foreground hover:text-foreground"
-              style={{ fontSize: '13px' }}
-            >
-              Docs
-            </button>
-            <button
-              onClick={() => go('/contact')}
-              className="block w-full text-left text-muted-foreground hover:text-foreground"
-              style={{ fontSize: '13px' }}
-            >
-              Contact
-            </button>
-          </motion.div>
-        )}
-      </nav>
+      <MarketingNavbar />
 
       <main className="mx-auto w-full max-w-5xl px-5 sm:px-8">
         <section id="top" className="relative pt-20 pb-12 sm:pt-44 sm:pb-28">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[640px] overflow-hidden [mask-image:linear-gradient(to_bottom,black,transparent_85%)]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-160 overflow-hidden mask-[linear-gradient(to_bottom,black,transparent_85%)]">
             <div className="bg-blueprint absolute inset-0 text-foreground opacity-[0.08]" />
             {!reduce && (
-              <div className="sweep-line absolute inset-x-0 top-0 h-px bg-foreground/[0.12]" />
+              <div className="sweep-line absolute inset-x-0 top-0 h-px bg-foreground/12" />
             )}
           </div>
 
@@ -345,17 +187,9 @@ export function Home() {
         <section id="try" className="border-t border-border py-14 sm:py-28">
           <SectionLabel index="01" label="Try it" />
           <div className="max-w-2xl">
-            <h2
-              className="text-balance text-foreground"
-              style={{
-                fontSize: 'clamp(22px, 3.6vw, 44px)',
-                fontWeight: 600,
-                letterSpacing: '-0.04em',
-                lineHeight: 1.05,
-              }}
-            >
+            <SectionHeading variant="lead">
               Run a message through the real pipeline.
-            </h2>
+            </SectionHeading>
             <p
               className="mt-6 text-muted-foreground"
               style={{ fontSize: '15px', lineHeight: 1.7 }}
@@ -404,17 +238,9 @@ export function Home() {
           <SectionLabel index="02" label="In the wild" />
           <div className="grid items-start gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
             <div className="lg:sticky lg:top-24">
-              <h2
-                className="text-balance text-foreground"
-                style={{
-                  fontSize: 'clamp(22px, 3.4vw, 40px)',
-                  fontWeight: 600,
-                  letterSpacing: '-0.035em',
-                  lineHeight: 1.1,
-                }}
-              >
+              <SectionHeading>
                 What it feels like for your customer.
-              </h2>
+              </SectionHeading>
               <p
                 className="mt-5 max-w-sm text-muted-foreground"
                 style={{ fontSize: '14px', lineHeight: 1.75 }}
@@ -432,18 +258,10 @@ export function Home() {
           className="border-t border-border py-12 sm:py-24"
         >
           <SectionLabel index="03" label="Capabilities" />
-          <h2
-            className="mb-10 text-balance text-foreground"
-            style={{
-              fontSize: 'clamp(22px, 3.4vw, 40px)',
-              fontWeight: 600,
-              letterSpacing: '-0.035em',
-              lineHeight: 1.1,
-            }}
-          >
+          <SectionHeading className="mb-10">
             Customer intelligence,
             <br className="hidden sm:block" /> assembled automatically.
-          </h2>
+          </SectionHeading>
 
           <div role="list" className="border-t border-border">
             {capabilities.map((c, i) => (
@@ -490,17 +308,9 @@ export function Home() {
           className="border-t border-border py-12 sm:py-24"
         >
           <SectionLabel index="04" label="Pipeline" />
-          <h2
-            className="mb-10 text-balance text-foreground"
-            style={{
-              fontSize: 'clamp(22px, 3.4vw, 40px)',
-              fontWeight: 600,
-              letterSpacing: '-0.035em',
-              lineHeight: 1.1,
-            }}
-          >
+          <SectionHeading className="mb-10">
             Three steps. Zero friction.
-          </h2>
+          </SectionHeading>
 
           <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-3">
             {pipeline.map((p) => (
@@ -539,17 +349,9 @@ export function Home() {
 
         <section id="pricing" className="border-t border-border py-12 sm:py-24">
           <SectionLabel index="05" label="Pricing" />
-          <h2
-            className="mb-10 text-balance text-foreground"
-            style={{
-              fontSize: 'clamp(22px, 3.4vw, 40px)',
-              fontWeight: 600,
-              letterSpacing: '-0.035em',
-              lineHeight: 1.1,
-            }}
-          >
+          <SectionHeading className="mb-10">
             Transparent. No surprises.
-          </h2>
+          </SectionHeading>
 
           <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
             {enterprisePlans.map((plan) => {
@@ -627,7 +429,7 @@ export function Home() {
                       <li key={f} className="flex items-start gap-2">
                         <Check
                           size={12}
-                          className={`mt-0.5 flex-shrink-0 ${
+                          className={`mt-0.5 shrink-0 ${
                             hi ? 'text-background/70' : 'text-foreground'
                           }`}
                         />
@@ -661,20 +463,15 @@ export function Home() {
           </div>
         </section>
 
-        <section id="faq" className="border-t border-border py-12 sm:py-24">
+        <section
+          id="faq"
+          itemScope
+          itemType="https://schema.org/FAQPage"
+          className="border-t border-border py-12 sm:py-24"
+        >
           <SectionLabel index="06" label="Questions" />
-          <h2
-            className="mb-8 text-balance text-foreground"
-            style={{
-              fontSize: 'clamp(22px, 3.4vw, 40px)',
-              fontWeight: 600,
-              letterSpacing: '-0.035em',
-              lineHeight: 1.1,
-            }}
-          >
-            Questions, answered.
-          </h2>
-          <div className="border-b border-border">
+          <SectionHeading className="mb-8">Questions, answered.</SectionHeading>
+          <Accordion className="border-b border-border">
             {faqs.map((f, i) => (
               <FaqItem
                 key={f.q}
@@ -683,12 +480,12 @@ export function Home() {
                 index={String(i + 1).padStart(2, '0')}
               />
             ))}
-          </div>
+          </Accordion>
         </section>
 
         <section className="border-t border-border py-14 sm:py-28">
           <div className="border-border-strong bg-surface relative overflow-hidden rounded-2xl border px-5 py-10 text-center sm:px-12 sm:py-14">
-            <div className="bg-blueprint pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)] text-foreground opacity-[0.4]" />
+            <div className="bg-blueprint pointer-events-none absolute inset-0 mask-[radial-gradient(ellipse_at_center,black,transparent_75%)] text-foreground opacity-[0.4]" />
             <div className="relative">
               <p className="mb-4 font-mono text-[11px] tracking-[0.24em] text-hint/70 uppercase sm:mb-5">
                 Every conversation remembered · from the first call
@@ -732,57 +529,7 @@ export function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-border bg-background px-5 py-12 sm:px-8">
-        <div className="mx-auto w-full max-w-5xl px-5 sm:px-8">
-          <div className="mb-10 grid grid-cols-2 gap-8 md:grid-cols-4">
-            <div className="col-span-2 md:col-span-1">
-              <div className="mb-4 flex items-center gap-2">
-                <Logo />
-                <span className="font-mono text-[13px] font-semibold text-foreground">
-                  ConvoMem
-                </span>
-              </div>
-              <p
-                className="max-w-[220px] text-hint/80"
-                style={{ fontSize: '12px', lineHeight: 1.6 }}
-              >
-                The memory layer for conversational AI. API-first. On-prem
-                available.
-              </p>
-            </div>
-            {footerColumns.map((col) => (
-              <div key={col.heading}>
-                <p className="mb-3 font-mono text-[11px] tracking-[0.16em] text-hint/70 uppercase">
-                  {col.heading}
-                </p>
-                <div className="space-y-2">
-                  {col.items.map((it) => (
-                    <button
-                      key={it.label}
-                      onClick={() =>
-                        'href' in it ? go(it.href) : jumpToSection(it.action)
-                      }
-                      className="block text-hint/75 transition-colors hover:text-foreground"
-                      style={{ fontSize: '12px' }}
-                    >
-                      {it.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col items-center justify-between gap-3 border-t border-border pt-8 sm:flex-row">
-            <p className="font-mono text-[11px] text-hint/60">
-              © 2026 ConvoMem
-            </p>
-            <ThemeSwitcher />
-            <p className="font-mono text-[11px] tracking-[0.12em] text-hint/60">
-              API-first · On-prem on Custom · Zero lock-in
-            </p>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
 
       <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
       <CookieBanner />

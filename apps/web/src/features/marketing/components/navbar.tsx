@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useNavigate } from '@tanstack/react-router'
 
 import { Logo } from '@workspace/ui/components/logo.tsx'
+
+import { useMarketingNavigation } from '../hooks/use-marketing-navigation.ts'
 
 const navItems = [
   { label: 'Try it', id: 'try' },
@@ -12,25 +13,10 @@ const navItems = [
 ] as const
 
 export function MarketingNavbar() {
-  const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
-
-  const go = (href: string) => {
-    setMobileOpen(false)
-    void navigate({ href })
-  }
-
-  const jumpToSection = (id: string) => {
-    setMobileOpen(false)
-    if (id === 'top') {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
-    }
-    document.getElementById(id)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
-  }
+  const { go, jumpToSection } = useMarketingNavigation({
+    onNavigate: () => setMobileOpen(false),
+  })
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">

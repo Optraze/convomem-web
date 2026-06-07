@@ -1,6 +1,8 @@
-import { ChevronDown } from 'lucide-react'
-import { motion } from 'motion/react'
-import { useState } from 'react'
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@workspace/ui/components/accordion'
 
 export function FaqItem({
   q,
@@ -11,43 +13,38 @@ export function FaqItem({
   a: string
   index: string
 }) {
-  const [open, setOpen] = useState(false)
   return (
-    <div className="border-t border-border">
-      <button
-        onClick={() => setOpen(!open)}
-        className="group flex w-full items-start gap-4 py-5 text-left"
-        aria-expanded={open}
-      >
+    <AccordionItem
+      value={q}
+      itemScope
+      itemProp="mainEntity"
+      itemType="https://schema.org/Question"
+      className="border-t border-border not-last:border-b-0"
+    >
+      <AccordionTrigger className="group gap-4 rounded-none py-5 hover:no-underline">
         <span className="tnum mt-1 font-mono text-[11px] tracking-[0.1em] text-hint/60">
           {index}
         </span>
         <span
-          className="flex-1 text-foreground group-hover:text-foreground"
-          style={{ fontSize: '15px', fontWeight: 500 }}
+          itemProp="name"
+          className="flex-1 text-[15px] font-medium text-foreground group-hover:text-foreground"
         >
           {q}
         </span>
-        <ChevronDown
-          size={15}
-          className={`mt-1 flex-shrink-0 text-hint/70 transition-transform ${
-            open ? 'rotate-180' : ''
-          }`}
-        />
-      </button>
-      <motion.div
-        initial={false}
-        animate={{ height: open ? 'auto' : 0, opacity: open ? 1 : 0 }}
-        transition={{ duration: 0.25 }}
-        className="overflow-hidden"
+      </AccordionTrigger>
+      <AccordionContent
+        itemScope
+        itemProp="acceptedAnswer"
+        itemType="https://schema.org/Answer"
+        className="text-[13.5px] leading-[1.75]"
       >
         <p
+          itemProp="text"
           className="max-w-2xl pb-5 pl-9 text-muted-foreground"
-          style={{ fontSize: '13.5px', lineHeight: 1.75 }}
         >
           {a}
         </p>
-      </motion.div>
-    </div>
+      </AccordionContent>
+    </AccordionItem>
   )
 }
