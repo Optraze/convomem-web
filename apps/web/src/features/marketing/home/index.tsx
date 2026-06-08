@@ -85,38 +85,16 @@ export function Home() {
                   </span>
                 </div>
 
-                <h1
-                  className="text-balance"
-                  style={{
-                    fontWeight: 600,
-                    letterSpacing: '-0.045em',
-                    lineHeight: 0.94,
-                  }}
-                >
-                  <span
-                    className="block text-foreground"
-                    style={{ fontSize: 'clamp(26px, 5.4vw, 66px)' }}
-                  >
+                <h1 className="text-balance leading-[0.94] font-semibold tracking-[-0.045em]">
+                  <span className="block text-[clamp(26px,5.4vw,66px)] text-foreground">
                     Every customer conversation,
                   </span>
-                  <span
-                    className="block text-foreground"
-                    style={{
-                      fontSize: 'clamp(34px, 10.5vw, 124px)',
-                      letterSpacing: '-0.06em',
-                    }}
-                  >
+                  <span className="block text-[clamp(34px,10.5vw,124px)] tracking-[-0.06em] text-foreground">
                     remembered.
                   </span>
                 </h1>
 
-                <p
-                  className="mt-6 max-w-md text-muted-foreground sm:mt-9"
-                  style={{
-                    fontSize: 'clamp(14px, 1.5vw, 16px)',
-                    lineHeight: 1.7,
-                  }}
-                >
+                <p className="mt-6 max-w-md text-[clamp(14px,1.5vw,16px)] leading-[1.7] text-muted-foreground sm:mt-9">
                   Voice bots, chat bots, and support agents forget every caller
                   the moment a session ends. ConvoMem gives them durable
                   customer memory — so the next interaction starts with context,
@@ -126,8 +104,7 @@ export function Home() {
                 <div className="mt-6 flex flex-col items-start gap-3 sm:mt-9 sm:flex-row sm:items-center">
                   <Link
                     to="/contact"
-                    className="group flex items-center gap-2 rounded-md bg-foreground px-5 py-2.5 text-background transition-all hover:opacity-90 active:scale-[0.98]"
-                    style={{ fontSize: '14px', fontWeight: 500 }}
+                    className="group flex items-center gap-2 rounded-md bg-foreground px-5 py-2.5 font-medium text-background text-sm transition-all hover:opacity-90 active:scale-[0.98]"
                   >
                     Talk to sales
                     <ArrowRight
@@ -137,8 +114,7 @@ export function Home() {
                   </Link>
                   <button
                     onClick={() => setDemoOpen(true)}
-                    className="group border-border-strong flex items-center gap-2 rounded-md border px-5 py-2.5 text-foreground transition-all hover:bg-muted active:scale-[0.98]"
-                    style={{ fontSize: '14px', fontWeight: 500 }}
+                    className="group border-border-strong flex items-center gap-2 rounded-md border px-5 py-2.5 font-medium text-foreground text-sm transition-all hover:bg-muted active:scale-[0.98]"
                   >
                     Try the live demo
                     <ArrowUpRight
@@ -170,10 +146,8 @@ export function Home() {
                     key={s.label}
                     className="border-b border-border py-4 pr-2 pl-8 last:border-0"
                   >
-                    <dd className="tnum font-mono leading-none font-semibold tracking-[-0.03em] text-foreground">
-                      <span style={{ fontSize: 'clamp(24px,2.4vw,36px)' }}>
-                        {s.value}
-                      </span>
+                    <dd className="tnum font-mono text-[clamp(24px,2.4vw,36px)] leading-none font-semibold tracking-[-0.03em] text-foreground">
+                      <span>{s.value}</span>
                     </dd>
                     <dt className="mt-2.5 font-mono text-[10px] tracking-[0.16em] text-hint/70 uppercase">
                       {s.label}
@@ -191,10 +165,7 @@ export function Home() {
             <SectionHeading variant="lead">
               Run a message through the real pipeline.
             </SectionHeading>
-            <p
-              className="mt-6 text-muted-foreground"
-              style={{ fontSize: '15px', lineHeight: 1.7 }}
-            >
+            <p className="mt-6 text-[15px] leading-[1.7] text-muted-foreground">
               Paste a message or drop a small CSV. It runs the same capture,
               scoring, redaction, reconciliation, and insight pipeline we use in
               production — streamed back live. Nothing is stored.
@@ -202,8 +173,7 @@ export function Home() {
             <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2">
               <button
                 onClick={() => setDemoOpen(true)}
-                className="group inline-flex items-center gap-2.5 rounded-md bg-foreground px-6 py-3 text-background transition-all hover:opacity-90 active:scale-[0.98]"
-                style={{ fontSize: '14px', fontWeight: 500 }}
+                className="group inline-flex items-center gap-2.5 rounded-md bg-foreground px-6 py-3 font-medium text-background text-sm transition-all hover:opacity-90 active:scale-[0.98]"
               >
                 Run the live demo
                 <ArrowUpRight
@@ -213,8 +183,7 @@ export function Home() {
               </button>
               <Link
                 to="/docs"
-                className="group inline-flex items-center gap-2 px-3 py-3 text-muted-foreground transition-colors hover:text-foreground"
-                style={{ fontSize: '14px', fontWeight: 500 }}
+                className="group inline-flex items-center gap-2 px-3 py-3 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
               >
                 Read the docs
                 <ArrowUpRight
@@ -242,10 +211,7 @@ export function Home() {
               <SectionHeading>
                 What it feels like for your customer.
               </SectionHeading>
-              <p
-                className="mt-5 max-w-sm text-muted-foreground"
-                style={{ fontSize: '14px', lineHeight: 1.75 }}
-              >
+              <p className="mt-5 max-w-sm text-muted-foreground text-sm leading-[1.75]">
                 Three real moments — a returning caller, a frustrated customer,
                 an expansion. In each one, the agent already knows the story.
               </p>
@@ -279,21 +245,11 @@ export function Home() {
                   <span className="tnum font-mono text-[11px] text-hint/60">
                     {String(i + 1).padStart(2, '0')}
                   </span>
-                  <h3
-                    className="text-foreground transition-transform group-hover:translate-x-0.5"
-                    style={{
-                      fontSize: '17px',
-                      fontWeight: 600,
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
+                  <h3 className="font-semibold text-[17px] tracking-[-0.01em] text-foreground transition-transform group-hover:translate-x-0.5">
                     {c.term}
                   </h3>
                 </div>
-                <p
-                  className="max-w-xl text-muted-foreground"
-                  style={{ fontSize: '13.5px', lineHeight: 1.7 }}
-                >
+                <p className="max-w-xl text-[13.5px] leading-[1.7] text-muted-foreground">
                   {c.desc}
                 </p>
                 <span className="font-mono text-[11px] whitespace-nowrap text-hint/70 md:text-right">
@@ -331,16 +287,10 @@ export function Home() {
                     step
                   </span>
                 </div>
-                <h3
-                  className="mb-2 text-foreground"
-                  style={{ fontSize: '16px', fontWeight: 600 }}
-                >
+                <h3 className="mb-2 font-semibold text-foreground text-base">
                   {p.title}
                 </h3>
-                <p
-                  className="text-muted-foreground"
-                  style={{ fontSize: '13.5px', lineHeight: 1.75 }}
-                >
+                <p className="text-[13.5px] leading-[1.75] text-muted-foreground">
                   {p.desc}
                 </p>
               </motion.div>
@@ -370,16 +320,16 @@ export function Home() {
                     </span>
                   )}
                   <h3
-                    style={{ fontSize: '14px', fontWeight: 600 }}
-                    className={hi ? 'text-background' : 'text-foreground'}
+                    className={`font-semibold text-sm ${
+                      hi ? 'text-background' : 'text-foreground'
+                    }`}
                   >
                     {plan.name}
                   </h3>
                   <p
-                    className={`mt-1 ${
+                    className={`mt-1 text-xs ${
                       hi ? 'text-background/55' : 'text-muted-foreground'
                     }`}
-                    style={{ fontSize: '12px' }}
                   >
                     {plan.description}
                   </p>
@@ -391,35 +341,23 @@ export function Home() {
                             hi ? 'text-background' : 'text-foreground'
                           }`}
                         >
-                          <span
-                            style={{
-                              fontSize: '34px',
-                              fontWeight: 600,
-                              letterSpacing: '-0.04em',
-                            }}
-                          >
+                          <span className="font-semibold text-[34px] tracking-[-0.04em]">
                             ${plan.price}
                           </span>
                         </span>
                         <span
-                          className={`ml-1 ${
+                          className={`ml-1 text-[13px] ${
                             hi ? 'text-background/45' : 'text-hint/70'
                           }`}
-                          style={{ fontSize: '13px' }}
                         >
                           /{plan.period}
                         </span>
                       </>
                     ) : (
                       <span
-                        className={`font-mono ${
+                        className={`font-mono font-semibold text-[26px] tracking-[-0.03em] ${
                           hi ? 'text-background' : 'text-foreground'
                         }`}
-                        style={{
-                          fontSize: '26px',
-                          fontWeight: 600,
-                          letterSpacing: '-0.03em',
-                        }}
                       >
                         Custom
                       </span>
@@ -435,10 +373,9 @@ export function Home() {
                           }`}
                         />
                         <span
-                          style={{ fontSize: '12px', lineHeight: 1.5 }}
-                          className={
+                          className={`text-xs leading-normal ${
                             hi ? 'text-background/75' : 'text-subtle/80'
-                          }
+                          }`}
                         >
                           {f}
                         </span>
@@ -447,12 +384,11 @@ export function Home() {
                   </ul>
                   <Link
                     to="/contact"
-                    className={`w-full rounded-md py-2 transition-all ${
+                    className={`mt-auto inline-flex h-10 w-full items-center justify-center rounded-md px-4 font-medium text-[13px] transition-opacity hover:opacity-90 active:scale-[0.98] ${
                       hi
-                        ? 'bg-background text-foreground hover:opacity-90'
-                        : 'border-border-strong border text-foreground hover:bg-muted'
+                        ? 'bg-background text-foreground'
+                        : 'bg-foreground text-background'
                     }`}
-                    style={{ fontSize: '13px', fontWeight: 500 }}
                   >
                     {plan.cta}
                   </Link>
@@ -489,36 +425,23 @@ export function Home() {
               <p className="mb-4 font-mono text-[11px] tracking-[0.24em] text-hint/70 uppercase sm:mb-5">
                 Every conversation remembered · from the first call
               </p>
-              <h2
-                className="mx-auto max-w-2xl text-balance text-foreground"
-                style={{
-                  fontSize: 'clamp(22px, 4.5vw, 52px)',
-                  fontWeight: 600,
-                  letterSpacing: '-0.04em',
-                  lineHeight: 1.05,
-                }}
-              >
+              <h2 className="mx-auto max-w-2xl text-balance font-semibold text-[clamp(22px,4.5vw,52px)] leading-[1.05] tracking-[-0.04em] text-foreground">
                 Stop introducing your AI to the same customer twice.
               </h2>
-              <p
-                className="mx-auto mt-5 max-w-md text-muted-foreground"
-                style={{ fontSize: '14px', lineHeight: 1.7 }}
-              >
+              <p className="mx-auto mt-5 max-w-md text-muted-foreground text-sm leading-[1.7]">
                 Start your 7-day free trial. No credit card. On-prem deployment
                 available on the Custom tier.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
                   to="/contact"
-                  className="flex items-center gap-2 rounded-md bg-foreground px-6 py-2.5 text-background transition-opacity hover:opacity-90"
-                  style={{ fontSize: '14px', fontWeight: 500 }}
+                  className="flex items-center gap-2 rounded-md bg-foreground px-6 py-2.5 font-medium text-background text-sm transition-opacity hover:opacity-90"
                 >
                   Talk to sales <ArrowRight size={15} />
                 </Link>
                 <Link
                   to="/docs"
-                  className="border-border-strong flex items-center gap-2 rounded-md border px-6 py-2.5 text-foreground transition-colors hover:bg-muted"
-                  style={{ fontSize: '14px', fontWeight: 500 }}
+                  className="border-border-strong flex items-center gap-2 rounded-md border px-6 py-2.5 font-medium text-foreground text-sm transition-colors hover:bg-muted"
                 >
                   Read the docs
                 </Link>

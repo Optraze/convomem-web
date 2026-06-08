@@ -48,10 +48,7 @@ export function MarketingFooter() {
                   ConvoMem
                 </span>
               </div>
-              <p
-                className="max-w-55 text-hint/80"
-                style={{ fontSize: '12px', lineHeight: 1.6 }}
-              >
+              <p className="max-w-55 text-xs leading-[1.6] text-hint/80">
                 The memory layer for conversational AI. API-first. On-prem
                 available.
               </p>
@@ -70,8 +67,7 @@ export function MarketingFooter() {
                     <Link
                       key={item.label}
                       to={item.href}
-                      className="block text-hint/75 transition-colors hover:text-foreground"
-                      style={{ fontSize: '12px' }}
+                      className="block text-xs text-hint/75 transition-colors hover:text-foreground"
                     >
                       {item.label}
                     </Link>
@@ -81,8 +77,7 @@ export function MarketingFooter() {
                       to="/"
                       hash={item.action}
                       onClick={() => jumpToSection(item.action)}
-                      className="block text-hint/75 transition-colors hover:text-foreground"
-                      style={{ fontSize: '12px' }}
+                      className="block text-xs text-hint/75 transition-colors hover:text-foreground"
                     >
                       {item.label}
                     </Link>

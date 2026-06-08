@@ -40,16 +40,14 @@ export function MarketingNavbar() {
               to="/"
               hash={n.hash}
               onClick={() => jumpToSection(n.hash)}
-              className="text-muted-foreground transition-colors hover:text-foreground"
-              style={{ fontSize: '13px' }}
+              className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
             >
               {n.label}
             </Link>
           ))}
           <Link
             to="/docs"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-            style={{ fontSize: '13px' }}
+            className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
           >
             Docs
           </Link>
@@ -58,15 +56,13 @@ export function MarketingNavbar() {
         <div className="flex items-center gap-2.5">
           <Link
             to="/contact"
-            className="hidden px-2 text-muted-foreground transition-colors hover:text-foreground sm:block"
-            style={{ fontSize: '13px' }}
+            className="hidden px-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground sm:block"
           >
             Contact
           </Link>
           <Link
             to="/contact"
-            className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 text-background transition-opacity hover:opacity-90"
-            style={{ fontSize: '13px', fontWeight: 500 }}
+            className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 font-medium text-[13px] text-background transition-opacity hover:opacity-90"
           >
             Talk to sales <ArrowRight size={13} />
           </Link>
@@ -92,8 +88,7 @@ export function MarketingNavbar() {
               to="/"
               hash={n.hash}
               onClick={() => jumpToSection(n.hash)}
-              className="block w-full text-left text-muted-foreground hover:text-foreground"
-              style={{ fontSize: '13px' }}
+              className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
             >
               {n.label}
             </Link>
@@ -101,16 +96,14 @@ export function MarketingNavbar() {
           <Link
             to="/docs"
             onClick={() => setMobileOpen(false)}
-            className="block w-full text-left text-muted-foreground hover:text-foreground"
-            style={{ fontSize: '13px' }}
+            className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
           >
             Docs
           </Link>
           <Link
             to="/contact"
             onClick={() => setMobileOpen(false)}
-            className="block w-full text-left text-muted-foreground hover:text-foreground"
-            style={{ fontSize: '13px' }}
+            className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
           >
             Contact
           </Link>
