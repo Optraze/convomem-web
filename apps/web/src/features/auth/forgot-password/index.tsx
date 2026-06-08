@@ -2,35 +2,36 @@ import { useId, useState } from 'react'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
+import type React from 'react'
+
+import { Button } from '@workspace/ui/components/button'
+import { Input } from '@workspace/ui/components/input'
+import { Label } from '@workspace/ui/components/label'
+
 import { AuthHeader } from '@/features/auth/components/auth-copy.tsx'
-import {
-  AuthField,
-  AuthInput,
-  AuthSubmitButton,
-} from '@/features/auth/components/auth-form-fields.tsx'
 import { AuthLayout } from '@/features/auth/components/auth-layout.tsx'
+import { useForgotPasswordMutation } from '@/features/auth/lib/hooks.ts'
 
 export function ForgotPasswordPage() {
   const emailId = useId()
   const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  const forgotPasswordMutation = useForgotPasswordMutation({
+    onSuccess: () => setSent(true),
+  })
+
+  const errorMessage = forgotPasswordMutation.error?.message || null
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setLoading(true)
-
-    window.setTimeout(() => {
-      setLoading(false)
-      setSent(true)
-    }, 700)
+    forgotPasswordMutation.mutate({ email })
   }
 
   return (
     <AuthLayout
       eyebrow="Password recovery"
       title="Get back into your workspace."
-      description="Enter your account email and we’ll send a secure password reset link if an account exists."
+      description="Enter your account email and we will send a secure password reset link if an account exists."
     >
       <div>
         <AuthHeader
@@ -38,11 +39,11 @@ export function ForgotPasswordPage() {
           description={
             sent ? (
               <>
-                If an account exists for <strong>{email}</strong>, we’ve sent a
+                If an account exists for <strong>{email}</strong>, we've sent a
                 password reset link.
               </>
             ) : (
-              'No worries, we’ll send you a reset link.'
+              'No worries, we\u2019ll send you a reset link.'
             )
           }
         />
@@ -62,8 +63,20 @@ export function ForgotPasswordPage() {
         ) : (
           <>
             <form onSubmit={handleSubmit} className="grid gap-4">
-              <AuthField id={emailId} label="Email">
-                <AuthInput
+              {errorMessage ? (
+                <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-destructive text-sm">
+                  {errorMessage}
+                </div>
+              ) : null}
+
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor={emailId}
+                  className="text-muted-foreground text-xs"
+                >
+                  Email
+                </Label>
+                <Input
                   id={emailId}
                   type="email"
                   name="email"
@@ -71,13 +84,20 @@ export function ForgotPasswordPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
+                  className="h-10 rounded-xl px-3 text-sm"
                   required
                 />
-              </AuthField>
+              </div>
 
-              <AuthSubmitButton loading={loading}>
-                Send reset link
-              </AuthSubmitButton>
+              <Button
+                type="submit"
+                disabled={forgotPasswordMutation.isPending}
+                className="mt-2 h-10 w-full rounded-xl"
+              >
+                {forgotPasswordMutation.isPending
+                  ? 'Sending…'
+                  : 'Send reset link'}
+              </Button>
             </form>
 
             <Link

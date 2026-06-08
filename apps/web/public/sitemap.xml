@@ -20,4 +20,12 @@
     <loc>https://convomem.com/terms</loc>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://convomem.com/login</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/signup</loc>
+    <priority>0.5</priority>
+  </url>
 </urlset>
