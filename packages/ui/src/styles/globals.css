@@ -147,6 +147,13 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+  @media screen and (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
 }
 
 @layer utilities {

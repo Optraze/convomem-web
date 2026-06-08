@@ -9,10 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
@@ -32,35 +44,63 @@ const marketingIndexRoute = marketingIndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/': typeof marketingIndexRoute
 }
 export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/': typeof marketingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/(marketing)/': typeof marketingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/contact' | '/docs' | '/'
+  fullPaths: '/contact' | '/docs' | '/privacy' | '/terms' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/contact' | '/docs' | '/'
-  id: '__root__' | '/contact' | '/docs' | '/(marketing)/'
+  to: '/contact' | '/docs' | '/privacy' | '/terms' | '/'
+  id:
+    | '__root__'
+    | '/contact'
+    | '/docs'
+    | '/privacy'
+    | '/terms'
+    | '/(marketing)/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DocsRoute: typeof DocsRoute
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
   marketingIndexRoute: typeof marketingIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs': {
       id: '/docs'
       path: '/docs'
@@ -88,6 +128,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DocsRoute: DocsRoute,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
   marketingIndexRoute: marketingIndexRoute,
 }
 export const routeTree = rootRouteImport
