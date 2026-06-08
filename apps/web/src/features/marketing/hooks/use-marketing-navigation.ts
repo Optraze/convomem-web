@@ -18,11 +18,23 @@ export function useMarketingNavigation({
     onNavigate?.()
 
     if (id === 'top') {
+      if (window.location.pathname !== '/') {
+        void navigate({ href: '/' })
+        return
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
-    document.getElementById(id)?.scrollIntoView({
+    const section = document.getElementById(id)
+
+    if (!section) {
+      void navigate({ href: `/#${id}` })
+      return
+    }
+
+    section.scrollIntoView({
       behavior: 'smooth',
       block: 'start',
     })

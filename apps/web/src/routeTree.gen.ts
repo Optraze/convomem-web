@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
 
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const marketingIndexRoute = marketingIndexRouteImport.update({
@@ -24,27 +30,31 @@ const marketingIndexRoute = marketingIndexRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
   '/': typeof marketingIndexRoute
 }
 export interface FileRoutesByTo {
+  '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
   '/': typeof marketingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
   '/(marketing)/': typeof marketingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/docs' | '/'
+  fullPaths: '/contact' | '/docs' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/docs' | '/'
-  id: '__root__' | '/docs' | '/(marketing)/'
+  to: '/contact' | '/docs' | '/'
+  id: '__root__' | '/contact' | '/docs' | '/(marketing)/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  ContactRoute: typeof ContactRoute
   DocsRoute: typeof DocsRoute
   marketingIndexRoute: typeof marketingIndexRoute
 }
@@ -58,6 +68,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(marketing)/': {
       id: '/(marketing)/'
       path: '/'
@@ -69,6 +86,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  ContactRoute: ContactRoute,
   DocsRoute: DocsRoute,
   marketingIndexRoute: marketingIndexRoute,
 }
