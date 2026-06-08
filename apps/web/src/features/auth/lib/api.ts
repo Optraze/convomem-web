@@ -32,6 +32,28 @@ export type AuthError = {
 }
 
 // ---------------------------------------------------------------------------
+// JWT helpers
+// ---------------------------------------------------------------------------
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const base64 = token.split('.')[1]
+    const json = atob(base64.replace(/-/g, '+').replace(/_/g, '/'))
+    return JSON.parse(json) as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+/** Returns true if the JWT is expired (or invalid/unparseable). */
+export function isTokenExpired(token: string): boolean {
+  const payload = decodeJwtPayload(token)
+  if (!payload || typeof payload.exp !== 'number') return true
+  // 5-second buffer to avoid edge cases near expiry
+  return Date.now() >= (payload.exp - 5) * 1000
+}
+
+// ---------------------------------------------------------------------------
 // Token store — access token in localStorage, refresh token in HttpOnly cookie
 // ---------------------------------------------------------------------------
 
@@ -65,10 +87,55 @@ export const tokenStore = {
 }
 
 // ---------------------------------------------------------------------------
-// Internal request helper
+// Token refresh — deduplicated (concurrent requests share one refresh call)
 // ---------------------------------------------------------------------------
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+let isRefreshing = false
+let refreshWaiters: ((ok: boolean) => void)[] = []
+
+async function tryRefresh(): Promise<boolean> {
+  if (isRefreshing) {
+    return new Promise((resolve) => {
+      refreshWaiters.push(resolve)
+    })
+  }
+
+  isRefreshing = true
+  try {
+    const res = await fetch(`${BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    })
+
+    if (!res.ok) {
+      for (const fn of refreshWaiters) fn(false)
+      return false
+    }
+
+    const data = (await res.json()) as AuthResponse
+    tokenStore.setAccessToken(data.accessToken)
+    tokenStore.setUser(data.user)
+    for (const fn of refreshWaiters) fn(true)
+    return true
+  } catch {
+    for (const fn of refreshWaiters) fn(false)
+    return false
+  } finally {
+    isRefreshing = false
+    refreshWaiters = []
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Internal request helper (with 401 → refresh → retry)
+// ---------------------------------------------------------------------------
+
+async function request<T>(
+  path: string,
+  init?: RequestInit,
+  _retry = true
+): Promise<T> {
   const token = tokenStore.getAccessToken()
 
   const res = await fetch(`${BASE}${path}`, {
@@ -80,6 +147,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...((init?.headers as Record<string, string>) ?? {}),
     },
   })
+
+  // On 401: try refresh once, then retry the request
+  if (res.status === 401 && _retry) {
+    const ok = await tryRefresh()
+    if (ok) return request<T>(path, init, false)
+    tokenStore.clear()
+    throw { status: 401, code: 'UNAUTHORIZED', message: 'Session expired' }
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))

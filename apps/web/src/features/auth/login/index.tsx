@@ -26,7 +26,7 @@ export function LoginPage() {
 
   const errorMessage = loginMutation.error?.message || null
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
     loginMutation.mutate({
