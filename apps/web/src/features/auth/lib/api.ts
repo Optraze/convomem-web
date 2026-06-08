@@ -32,28 +32,6 @@ export type AuthError = {
 }
 
 // ---------------------------------------------------------------------------
-// JWT helpers
-// ---------------------------------------------------------------------------
-
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const base64 = token.split('.')[1]
-    const json = atob(base64.replace(/-/g, '+').replace(/_/g, '/'))
-    return JSON.parse(json) as Record<string, unknown>
-  } catch {
-    return null
-  }
-}
-
-/** Returns true if the JWT is expired (or invalid/unparseable). */
-export function isTokenExpired(token: string): boolean {
-  const payload = decodeJwtPayload(token)
-  if (!payload || typeof payload.exp !== 'number') return true
-  // 5-second buffer to avoid edge cases near expiry
-  return Date.now() >= (payload.exp - 5) * 1000
-}
-
-// ---------------------------------------------------------------------------
 // Token store — access token in localStorage, refresh token in HttpOnly cookie
 // ---------------------------------------------------------------------------
 
@@ -65,6 +43,9 @@ export const tokenStore = {
 
   setAccessToken: (token: string) => {
     localStorage.setItem('cm_access_token', token)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('auth-change'))
+    }
   },
 
   getUser: (): AuthUser | null => {
@@ -78,11 +59,17 @@ export const tokenStore = {
 
   setUser: (user: AuthUser) => {
     localStorage.setItem('cm_user', JSON.stringify(user))
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('auth-change'))
+    }
   },
 
   clear: () => {
     localStorage.removeItem('cm_access_token')
     localStorage.removeItem('cm_user')
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('auth-change'))
+    }
   },
 }
 

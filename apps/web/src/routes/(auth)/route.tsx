@@ -1,9 +1,16 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Navigate, Outlet } from '@tanstack/react-router'
+
+import { tokenStore } from '@/features/auth/lib/api.ts'
 
 export const Route = createFileRoute('/(auth)')({
-  component: AuthLayoutRoute,
+  component: AuthLayoutGuard,
 })
 
-function AuthLayoutRoute() {
+function AuthLayoutGuard() {
+  // Already logged in — redirect to dashboard
+  if (tokenStore.getAccessToken()) {
+    return <Navigate to="/dashboard" />
+  }
+
   return <Outlet />
 }

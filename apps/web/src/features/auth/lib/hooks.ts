@@ -75,3 +75,21 @@ export function useResetPasswordMutation(opts?: { onSuccess?: () => void }) {
     onSuccess: () => opts?.onSuccess?.(),
   })
 }
+
+// ---------------------------------------------------------------------------
+// Logout
+// ---------------------------------------------------------------------------
+
+export function useLogoutMutation(opts?: { onSuccess?: () => void }) {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async () => {
+      await authApi.logout()
+    },
+    onSuccess: () => {
+      qc.clear()
+      opts?.onSuccess?.()
+    },
+  })
+}

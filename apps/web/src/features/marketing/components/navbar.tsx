@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { ArrowRight, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Link } from '@tanstack/react-router'
 
 import { Logo } from '@workspace/ui/components/logo.tsx'
+
+import { useCurrentUser } from '@/features/auth/lib/use-current-user.ts'
 
 import { useMarketingNavigation } from '../hooks/use-marketing-navigation.ts'
 
@@ -18,6 +20,8 @@ export function MarketingNavbar() {
   const { jumpToSection } = useMarketingNavigation({
     onNavigate: () => setMobileOpen(false),
   })
+
+  const user = useCurrentUser()
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -60,12 +64,23 @@ export function MarketingNavbar() {
           >
             Contact
           </Link>
-          <Link
-            to="/contact"
-            className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 font-medium text-[13px] text-background transition-opacity hover:opacity-90"
-          >
-            Talk to sales <ArrowRight size={13} />
-          </Link>
+
+          {user ? (
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 font-medium text-[13px] text-background transition-opacity hover:opacity-90"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 font-medium text-[13px] text-background transition-opacity hover:opacity-90"
+            >
+              Log in
+            </Link>
+          )}
+
           <button
             onClick={() => setMobileOpen((open) => !open)}
             className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-muted md:hidden"
@@ -107,6 +122,25 @@ export function MarketingNavbar() {
           >
             Contact
           </Link>
+          <div className="border-t border-border pt-3">
+            {user ? (
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileOpen(false)}
+                className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
+              >
+                Log in
+              </Link>
+            )}
+          </div>
         </motion.div>
       )}
     </nav>

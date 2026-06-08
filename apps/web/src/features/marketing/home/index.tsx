@@ -103,10 +103,10 @@ export function Home() {
 
                 <div className="mt-6 flex flex-col items-start gap-3 sm:mt-9 sm:flex-row sm:items-center">
                   <Link
-                    to="/contact"
+                    to="/signup"
                     className="group flex items-center gap-2 rounded-md bg-foreground px-5 py-2.5 font-medium text-background text-sm transition-all hover:opacity-90 active:scale-[0.98]"
                   >
-                    Talk to sales
+                    Start free trial
                     <ArrowRight
                       size={15}
                       className="transition-transform group-hover:translate-x-0.5"
@@ -434,10 +434,10 @@ export function Home() {
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
-                  to="/contact"
+                  to="/signup"
                   className="flex items-center gap-2 rounded-md bg-foreground px-6 py-2.5 font-medium text-background text-sm transition-opacity hover:opacity-90"
                 >
-                  Talk to sales <ArrowRight size={15} />
+                  Start free trial <ArrowRight size={15} />
                 </Link>
                 <Link
                   to="/docs"
