@@ -8,15 +8,13 @@ import {
   Scale,
 } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useNavigate } from '@tanstack/react-router'
-
-import { Button } from '@workspace/ui/components/button'
-
-import { MarketingFooter } from '@/features/marketing/components/footer.tsx'
-import { MarketingNavbar } from '@/features/marketing/components/navbar.tsx'
+import { Link } from '@tanstack/react-router'
 
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+
+import { MarketingFooter } from '@/features/marketing/components/footer.tsx'
+import { MarketingNavbar } from '@/features/marketing/components/navbar.tsx'
 
 const updatedAt = 'April 24, 2026'
 
@@ -43,17 +41,6 @@ const billingTerms = [
 ] as const
 
 export function TermsOfService() {
-  const navigate = useNavigate()
-
-  const goBack = () => {
-    if (window.history.length > 1) {
-      window.history.back()
-      return
-    }
-
-    void navigate({ href: '/' })
-  }
-
   return (
     <main className="min-h-screen bg-background text-foreground antialiased">
       <MarketingNavbar />
@@ -84,15 +71,13 @@ export function TermsOfService() {
             <p className="mt-2 text-sm text-foreground">{updatedAt}</p>
           </div>
 
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={goBack}
-            className="mt-6 text-muted-foreground hover:text-foreground"
+          <Link
+            to="/"
+            className="mt-6 inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <ArrowLeft data-icon="inline-start" />
-            Back
-          </Button>
+            Back home
+          </Link>
         </motion.aside>
 
         <article className="min-w-0">

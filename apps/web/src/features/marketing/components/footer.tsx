@@ -1,3 +1,5 @@
+import { Link } from '@tanstack/react-router'
+
 import { Logo } from '@workspace/ui/components/logo.tsx'
 import { ThemeSwitcher } from '@workspace/ui/components/theme-switcher'
 
@@ -32,7 +34,7 @@ const footerColumns = [
 ] as const
 
 export function MarketingFooter() {
-  const { go, jumpToSection } = useMarketingNavigation()
+  const { jumpToSection } = useMarketingNavigation()
 
   return (
     <footer className="border-t border-border bg-background px-5 py-12 sm:px-8">
@@ -63,20 +65,29 @@ export function MarketingFooter() {
                 {column.heading}
               </p>
               <div className="space-y-2">
-                {column.items.map((item) => (
-                  <button
-                    key={item.label}
-                    onClick={() =>
-                      'href' in item
-                        ? go(item.href)
-                        : jumpToSection(item.action)
-                    }
-                    className="block text-hint/75 transition-colors hover:text-foreground"
-                    style={{ fontSize: '12px' }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+                {column.items.map((item) =>
+                  'href' in item ? (
+                    <Link
+                      key={item.label}
+                      to={item.href}
+                      className="block text-hint/75 transition-colors hover:text-foreground"
+                      style={{ fontSize: '12px' }}
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <Link
+                      key={item.label}
+                      to="/"
+                      hash={item.action}
+                      onClick={() => jumpToSection(item.action)}
+                      className="block text-hint/75 transition-colors hover:text-foreground"
+                      style={{ fontSize: '12px' }}
+                    >
+                      {item.label}
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           ))}

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
+import { Link } from '@tanstack/react-router'
 
 import { Accordion } from '@workspace/ui/components/accordion'
 
@@ -48,7 +49,7 @@ export function Home() {
   const [demoOpen, setDemoOpen] = useState(false)
   const sectionIds = useMemo(() => SECTIONS.map((section) => section.id), [])
   const active = useActiveSection(sectionIds)
-  const { go, jumpToSection } = useMarketingNavigation()
+  const { jumpToSection } = useMarketingNavigation()
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground antialiased">
@@ -123,17 +124,17 @@ export function Home() {
                 </p>
 
                 <div className="mt-6 flex flex-col items-start gap-3 sm:mt-9 sm:flex-row sm:items-center">
-                  <button
-                    onClick={() => go('/register')}
+                  <Link
+                    to="/contact"
                     className="group flex items-center gap-2 rounded-md bg-foreground px-5 py-2.5 text-background transition-all hover:opacity-90 active:scale-[0.98]"
                     style={{ fontSize: '14px', fontWeight: 500 }}
                   >
-                    Start free trial
+                    Talk to sales
                     <ArrowRight
                       size={15}
                       className="transition-transform group-hover:translate-x-0.5"
                     />
-                  </button>
+                  </Link>
                   <button
                     onClick={() => setDemoOpen(true)}
                     className="group border-border-strong flex items-center gap-2 rounded-md border px-5 py-2.5 text-foreground transition-all hover:bg-muted active:scale-[0.98]"
@@ -210,8 +211,8 @@ export function Home() {
                   className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                 />
               </button>
-              <button
-                onClick={() => go('/docs')}
+              <Link
+                to="/docs"
                 className="group inline-flex items-center gap-2 px-3 py-3 text-muted-foreground transition-colors hover:text-foreground"
                 style={{ fontSize: '14px', fontWeight: 500 }}
               >
@@ -220,7 +221,7 @@ export function Home() {
                   size={14}
                   className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                 />
-              </button>
+              </Link>
             </div>
 
             <p className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] tracking-[0.14em] text-hint/75">
@@ -444,10 +445,8 @@ export function Home() {
                       </li>
                     ))}
                   </ul>
-                  <button
-                    onClick={() =>
-                      go(plan.price !== null ? '/register' : '/contact')
-                    }
+                  <Link
+                    to="/contact"
                     className={`w-full rounded-md py-2 transition-all ${
                       hi
                         ? 'bg-background text-foreground hover:opacity-90'
@@ -456,7 +455,7 @@ export function Home() {
                     style={{ fontSize: '13px', fontWeight: 500 }}
                   >
                     {plan.cta}
-                  </button>
+                  </Link>
                 </div>
               )
             })}
@@ -509,20 +508,20 @@ export function Home() {
                 available on the Custom tier.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <button
-                  onClick={() => go('/register')}
+                <Link
+                  to="/contact"
                   className="flex items-center gap-2 rounded-md bg-foreground px-6 py-2.5 text-background transition-opacity hover:opacity-90"
                   style={{ fontSize: '14px', fontWeight: 500 }}
                 >
-                  Start free trial <ArrowRight size={15} />
-                </button>
-                <button
-                  onClick={() => go('/contact')}
+                  Talk to sales <ArrowRight size={15} />
+                </Link>
+                <Link
+                  to="/docs"
                   className="border-border-strong flex items-center gap-2 rounded-md border px-6 py-2.5 text-foreground transition-colors hover:bg-muted"
                   style={{ fontSize: '14px', fontWeight: 500 }}
                 >
-                  Talk to sales
-                </button>
+                  Read the docs
+                </Link>
               </div>
             </div>
           </div>

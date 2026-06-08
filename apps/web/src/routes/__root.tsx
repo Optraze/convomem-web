@@ -1,11 +1,8 @@
-import { TanStackDevtools } from '@tanstack/react-devtools'
-import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import {
   createRootRouteWithContext,
   HeadContent,
   Scripts,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
 import type { SdkContext } from '@workspace/sdk'
 import type React from 'react'
@@ -16,9 +13,11 @@ import {
 } from '@workspace/ui/components/theme-provider'
 import appCss from '@workspace/ui/globals.css?url'
 
+import { Devtools } from '@/components/devtools.tsx'
 import {
   getSeoUrl,
   SITE_DESCRIPTION,
+  SITE_KEYWORDS,
   SITE_NAME,
   SITE_TITLE,
 } from '@/lib/seo.ts'
@@ -44,8 +43,7 @@ export const Route = createRootRouteWithContext<SdkContext>()({
       },
       {
         name: 'keywords',
-        content:
-          'AI memory, customer intelligence, conversational AI, voice bot, chat bot, customer context, enterprise AI',
+        content: SITE_KEYWORDS,
       },
       {
         name: 'author',
@@ -152,23 +150,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>
-        {import.meta.env.DEV && (
-          <TanStackDevtools
-            config={{
-              position: 'bottom-right',
-            }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-              {
-                name: 'Tanstack Query',
-                render: <ReactQueryDevtoolsPanel />,
-              },
-            ]}
-          />
-        )}
+        <Devtools />
         <Scripts />
       </body>
     </html>

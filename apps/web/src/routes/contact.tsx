@@ -31,7 +31,7 @@ import {
 import { Textarea } from '@workspace/ui/components/textarea'
 
 import { MarketingNavbar } from '@/features/marketing/components/navbar.tsx'
-import { getSeoUrl, SITE_NAME } from '@/lib/seo.ts'
+import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo.ts'
 
 const inquiryTypes = ['Sales', 'Support', 'Partnership', 'Other'] as const
 
@@ -66,14 +66,12 @@ const defaultValues: ContactFormValues = {
 
 export const Route = createFileRoute('/contact')({
   head: () => ({
-    meta: [
-      { title: `Contact us — ${SITE_NAME}` },
-      {
-        name: 'description',
-        content:
-          'Contact ConvoMem for pricing, support, partnerships, or enterprise deployment questions.',
-      },
-    ],
+    meta: createPageMeta({
+      title: `Contact us — ${SITE_NAME}`,
+      description:
+        'Contact ConvoMem for pricing, support, partnerships, or enterprise deployment questions.',
+      path: '/contact',
+    }),
     links: [{ rel: 'canonical', href: getSeoUrl('/contact') }],
   }),
   component: ContactPage,

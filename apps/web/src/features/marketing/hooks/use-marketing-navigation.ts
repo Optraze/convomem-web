@@ -9,11 +9,6 @@ export function useMarketingNavigation({
 }: UseMarketingNavigationOptions = {}) {
   const navigate = useNavigate()
 
-  const go = (href: string) => {
-    onNavigate?.()
-    void navigate({ href })
-  }
-
   const jumpToSection = (id: string) => {
     onNavigate?.()
 
@@ -40,5 +35,5 @@ export function useMarketingNavigation({
     })
   }
 
-  return { go, jumpToSection }
+  return { jumpToSection }
 }

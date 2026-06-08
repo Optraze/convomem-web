@@ -4,7 +4,6 @@ import { client } from './client/client.gen'
 
 // Re-export the generated SDK (functions, types, options).
 export * from './client'
-
 // Re-export the generated React Query hooks so apps can do
 // `import { usePostCaptureMutation } from '@workspace/sdk'`
 // without reaching into a sub-folder.

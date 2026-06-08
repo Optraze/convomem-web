@@ -1,10 +1,9 @@
-import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
+import { createEnv } from '@t3-oss/env-core'
 
 export const env = createEnv({
   server: {
     SERVER_URL: z.url().optional(),
-    VITE_API_URL: z.url().optional(),
   },
 
   /**
