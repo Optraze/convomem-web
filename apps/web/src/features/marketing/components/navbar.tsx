@@ -5,9 +5,9 @@ import { Link } from '@tanstack/react-router'
 
 import { Logo } from '@workspace/ui/components/logo.tsx'
 
-import { useCurrentUser } from '@/features/auth/lib/use-current-user.ts'
-
 import { useMarketingNavigation } from '../hooks/use-marketing-navigation.ts'
+
+const APP_URL = 'https://app.convomem.com'
 
 const navItems = [
   { label: 'Try it', hash: 'try' },
@@ -20,8 +20,6 @@ export function MarketingNavbar() {
   const { jumpToSection } = useMarketingNavigation({
     onNavigate: () => setMobileOpen(false),
   })
-
-  const user = useCurrentUser()
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -52,28 +50,22 @@ export function MarketingNavbar() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <Link
-            to="/contact"
-            className="hidden px-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground sm:block"
+          <a
+            href={`${APP_URL}/login`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden px-3 py-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground sm:block"
           >
-            Contact
-          </Link>
-
-          {user ? (
-            <Link
-              to="/"
-              className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 font-medium text-[13px] text-background transition-opacity hover:opacity-90"
-            >
-              Dashboard
-            </Link>
-          ) : (
-            <Link
-              to="/login"
-              className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 font-medium text-[13px] text-background transition-opacity hover:opacity-90"
-            >
-              Log in
-            </Link>
-          )}
+            Log in
+          </a>
+          <a
+            href={`${APP_URL}/register`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 font-medium text-[13px] text-background transition-opacity hover:opacity-90"
+          >
+            Get started
+          </a>
 
           <button
             onClick={() => setMobileOpen((open) => !open)}
@@ -109,24 +101,23 @@ export function MarketingNavbar() {
           >
             Contact
           </Link>
-          <div className="border-t border-border pt-3">
-            {user ? (
-              <Link
-                to="/"
-                onClick={() => setMobileOpen(false)}
-                className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <Link
-                to="/login"
-                onClick={() => setMobileOpen(false)}
-                className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
-              >
-                Log in
-              </Link>
-            )}
+          <div className="border-t border-border pt-3 flex flex-col gap-2">
+            <a
+              href={`${APP_URL}/login`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
+            >
+              Log in
+            </a>
+            <a
+              href={`${APP_URL}/register`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
+            >
+              Get started
+            </a>
           </div>
         </motion.div>
       )}
