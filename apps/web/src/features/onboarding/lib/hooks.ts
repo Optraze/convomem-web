@@ -75,7 +75,9 @@ export function useFinalizeOnboarding(opts?: { onSuccess?: () => void }) {
 // Create organization
 // ---------------------------------------------------------------------------
 
-export function useCreateOrg(opts?: { onSuccess?: (org: { id: string; name: string; slug: string }) => void }) {
+export function useCreateOrg(opts?: {
+  onSuccess?: (org: { id: string; name: string; slug: string }) => void
+}) {
   return useMutation({
     mutationFn: (data: { name: string; slug: string }) =>
       orgApi.create(data.name, data.slug),

@@ -1,10 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import {
-  Check,
-  Layers,
-  Sparkles,
-  ShieldCheck,
-} from 'lucide-react'
+import { Check, Layers, Sparkles, ShieldCheck } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { Logo } from '@workspace/ui/components/logo'
@@ -47,11 +42,7 @@ function VerticalStepper({ current }: { current: number }) {
                   : 'border border-border bg-background text-muted-foreground'
               }`}
             >
-              {state === 'done' ? (
-                <Check size={13} strokeWidth={3} />
-              ) : (
-                s.num
-              )}
+              {state === 'done' ? <Check size={13} strokeWidth={3} /> : s.num}
             </span>
             <div className="min-w-0">
               <div
@@ -159,7 +150,11 @@ export function OnboardingShell({
               className="flex items-center gap-2.5 text-[12.5px] text-muted-foreground"
             >
               <span className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border bg-background">
-                <Vp size={13} className="text-muted-foreground" strokeWidth={1.75} />
+                <Vp
+                  size={13}
+                  className="text-muted-foreground"
+                  strokeWidth={1.75}
+                />
               </span>
               {text}
             </li>
@@ -184,7 +179,11 @@ export function OnboardingShell({
           <div className="mb-7 flex items-start gap-3.5">
             {Icon && (
               <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-gradient-to-b from-surface to-accent shadow-sm shadow-black/[0.03]">
-                <Icon size={19} className="text-foreground" strokeWidth={1.75} />
+                <Icon
+                  size={19}
+                  className="text-foreground"
+                  strokeWidth={1.75}
+                />
               </div>
             )}
             <div className="pt-0.5">

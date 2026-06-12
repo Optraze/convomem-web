@@ -128,8 +128,7 @@ export const onboardingApi = {
 // ---------------------------------------------------------------------------
 
 export const userOrgsApi = {
-  list: () =>
-    request<{ orgs: UserOrg[] }>('/user/orgs', { method: 'GET' }),
+  list: () => request<{ orgs: UserOrg[] }>('/user/orgs', { method: 'GET' }),
 }
 
 // ---------------------------------------------------------------------------

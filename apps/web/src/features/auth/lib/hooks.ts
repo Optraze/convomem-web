@@ -7,7 +7,9 @@ import { authApi, tokenStore } from './api'
 // Login
 // ---------------------------------------------------------------------------
 
-export function useLoginMutation(opts?: { onSuccess?: (res: { user: AuthUser; accessToken: string }) => void }) {
+export function useLoginMutation(opts?: {
+  onSuccess?: (res: { user: AuthUser; accessToken: string }) => void
+}) {
   const qc = useQueryClient()
 
   return useMutation({
