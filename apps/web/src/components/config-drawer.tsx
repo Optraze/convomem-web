@@ -46,7 +46,16 @@ export function ConfigDrawer() {
 
   return (
     <Sheet>
-      <SheetTrigger render={<Button size="icon" variant="ghost" aria-label="Open theme settings" className="rounded-full" />}>
+      <SheetTrigger
+        render={
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label="Open theme settings"
+            className="rounded-full"
+          />
+        }
+      >
         <Settings aria-hidden="true" />
       </SheetTrigger>
       <SheetContent className="flex flex-col">
@@ -266,12 +275,16 @@ function DirConfig() {
           {
             value: 'ltr',
             label: 'Left to Right',
-            icon: (props: SVGProps<SVGSVGElement>) => <IconDir dir="ltr" {...props} />,
+            icon: (props: SVGProps<SVGSVGElement>) => (
+              <IconDir dir="ltr" {...props} />
+            ),
           },
           {
             value: 'rtl',
             label: 'Right to Left',
-            icon: (props: SVGProps<SVGSVGElement>) => <IconDir dir="rtl" {...props} />,
+            icon: (props: SVGProps<SVGSVGElement>) => (
+              <IconDir dir="rtl" {...props} />
+            ),
           },
         ].map((item) => (
           <div key={item.value} className="flex flex-col items-center gap-1">

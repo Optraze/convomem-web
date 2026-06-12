@@ -5,15 +5,16 @@ import { Link } from '@tanstack/react-router'
 
 import { Accordion } from '@workspace/ui/components/accordion'
 
+import { DemoModal } from '@/features/landing/components/demo-modal.tsx'
+import { ScenarioPlayer } from '@/features/landing/components/scenario-player.tsx'
+
 import { MarketingFooter } from '../components/footer.tsx'
 import { MarketingNavbar } from '../components/navbar.tsx'
 import { useMarketingNavigation } from '../hooks/use-marketing-navigation.ts'
 import { CookieBanner } from './components/cookie-banner.tsx'
 import { Crosshair } from './components/crosshair.tsx'
-import { DemoModal } from './components/demo-modal.tsx'
 import { FaqItem } from './components/faq-item.tsx'
 import { MemoryRail } from './components/memory-rail.tsx'
-import { ScenarioPlayer } from './components/scenario-player.tsx'
 import { SectionHeading } from './components/section-heading.tsx'
 import { SectionLabel } from './components/section-label.tsx'
 import {
