@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as DocsRouteImport } from './routes/docs'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as OnboardingRouteRouteImport } from './routes/onboarding/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
@@ -44,11 +43,6 @@ const TermsRoute = TermsRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsRoute = DocsRouteImport.update({
-  id: '/docs',
-  path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -168,7 +162,6 @@ const appActivityRoute = appActivityRouteImport.update({
 export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/contact': typeof ContactRoute
-  '/docs': typeof DocsRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/activity': typeof appActivityRoute
@@ -193,7 +186,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
-  '/docs': typeof DocsRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/activity': typeof appActivityRoute
@@ -222,7 +214,6 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/contact': typeof ContactRoute
-  '/docs': typeof DocsRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/(app)/activity': typeof appActivityRoute
@@ -250,7 +241,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/onboarding'
     | '/contact'
-    | '/docs'
     | '/privacy'
     | '/terms'
     | '/activity'
@@ -275,7 +265,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/contact'
-    | '/docs'
     | '/privacy'
     | '/terms'
     | '/activity'
@@ -303,7 +292,6 @@ export interface FileRouteTypes {
     | '/(auth)'
     | '/onboarding'
     | '/contact'
-    | '/docs'
     | '/privacy'
     | '/terms'
     | '/(app)/activity'
@@ -332,7 +320,6 @@ export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   OnboardingRouteRoute: typeof OnboardingRouteRouteWithChildren
   ContactRoute: typeof ContactRoute
-  DocsRoute: typeof DocsRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   marketingIndexRoute: typeof marketingIndexRoute
@@ -352,13 +339,6 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs': {
-      id: '/docs'
-      path: '/docs'
-      fullPath: '/docs'
-      preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -596,7 +576,6 @@ const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   OnboardingRouteRoute: OnboardingRouteRouteWithChildren,
   ContactRoute: ContactRoute,
-  DocsRoute: DocsRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   marketingIndexRoute: marketingIndexRoute,

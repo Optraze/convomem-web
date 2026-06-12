@@ -18,9 +18,7 @@ import type {
   ConvState,
   InsightsResult,
 } from './use-demo-pipeline'
-import {
-  useDemoPipeline,
-} from './use-demo-pipeline'
+import { useDemoPipeline } from './use-demo-pipeline'
 
 const MONO = { fontFamily: "'JetBrains Mono', monospace" } as const
 

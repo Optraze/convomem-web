@@ -49,12 +49,6 @@ export function MarketingNavbar() {
               {n.label}
             </Link>
           ))}
-          <Link
-            to="/docs"
-            className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Docs
-          </Link>
         </div>
 
         <div className="flex items-center gap-2.5">
@@ -108,13 +102,6 @@ export function MarketingNavbar() {
               {n.label}
             </Link>
           ))}
-          <Link
-            to="/docs"
-            onClick={() => setMobileOpen(false)}
-            className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
-          >
-            Docs
-          </Link>
           <Link
             to="/contact"
             onClick={() => setMobileOpen(false)}

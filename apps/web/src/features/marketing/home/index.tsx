@@ -182,16 +182,6 @@ export function Home() {
                   className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                 />
               </button>
-              <Link
-                to="/docs"
-                className="group inline-flex items-center gap-2 px-3 py-3 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
-              >
-                Read the docs
-                <ArrowUpRight
-                  size={14}
-                  className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                />
-              </Link>
             </div>
 
             <p className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] tracking-[0.14em] text-hint/75">
@@ -439,12 +429,6 @@ export function Home() {
                   className="flex items-center gap-2 rounded-md bg-foreground px-6 py-2.5 font-medium text-background text-sm transition-opacity hover:opacity-90"
                 >
                   Start free trial <ArrowRight size={15} />
-                </Link>
-                <Link
-                  to="/docs"
-                  className="border-border-strong flex items-center gap-2 rounded-md border px-6 py-2.5 font-medium text-foreground text-sm transition-colors hover:bg-muted"
-                >
-                  Read the docs
                 </Link>
               </div>
             </div>

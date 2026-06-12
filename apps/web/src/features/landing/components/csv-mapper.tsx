@@ -1,10 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, X } from 'lucide-react'
-import type {
-  CsvTable,
-  CsvMapping,
-  MappedConversation,
-} from './extractor'
+import type { CsvTable, CsvMapping, MappedConversation } from './extractor'
 import {
   guessMapping,
   groupConversations,

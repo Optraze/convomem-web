@@ -11,14 +11,11 @@ const footerColumns = [
     items: [
       { label: 'Try it', action: 'try' },
       { label: 'Pricing', action: 'pricing' },
-      { label: 'Docs', href: '/docs' },
     ],
   },
   {
     heading: 'Resources',
     items: [
-      { label: 'Docs', href: '/docs' },
-      { label: 'API Reference', href: '/docs' },
       { label: 'Contact', href: '/contact' },
       { label: 'Support', href: '/contact' },
     ],
