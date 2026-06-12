@@ -18,3 +18,5 @@ todos.json
 # typescript
 *.tsbuildinfo
 .idea
+# Local Netlify folder
+.netlify
