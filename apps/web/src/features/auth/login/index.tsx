@@ -21,7 +21,7 @@ export function LoginPage() {
   const emailId = useId()
   const passwordId = useId()
   const loginMutation = useLoginMutation({
-    onSuccess: () => navigate({ to: '/dashboard' }),
+    onSuccess: () => navigate({ to: '/onboarding' }),
   })
 
   const errorMessage = loginMutation.error?.message || null

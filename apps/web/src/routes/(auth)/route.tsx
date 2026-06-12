@@ -11,9 +11,9 @@ function AuthLayoutGuard() {
 
   if (status === 'checking') return null
 
-  // Already logged in — redirect to dashboard
+  // Already logged in — redirect to onboarding (it will handle org check)
   if (status === 'authenticated') {
-    return <Navigate to="/dashboard" />
+    return <Navigate to="/onboarding" />
   }
 
   return <Outlet />

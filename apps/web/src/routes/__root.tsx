@@ -14,6 +14,7 @@ import {
 import appCss from '@workspace/ui/globals.css?url'
 
 import { Devtools } from '@/components/devtools.tsx'
+import { SessionExpiredDialog } from '@/features/auth/components/session-expired-dialog.tsx'
 import {
   getSeoUrl,
   SITE_DESCRIPTION,
@@ -149,7 +150,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <SessionExpiredDialog />
+        </ThemeProvider>
         <Devtools />
         <Scripts />
       </body>

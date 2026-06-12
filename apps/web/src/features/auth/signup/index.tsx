@@ -23,7 +23,7 @@ export function SignupPage() {
   const passwordId = useId()
   const [password, setPassword] = useState('')
   const signupMutation = useSignupMutation({
-    onSuccess: () => navigate({ to: '/dashboard' }),
+    onSuccess: () => navigate({ to: '/onboarding' }),
   })
 
   const errorMessage = signupMutation.error?.message || null

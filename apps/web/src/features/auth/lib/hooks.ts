@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
+import type { AuthUser } from './api'
 import { authApi, tokenStore } from './api'
 
 // ---------------------------------------------------------------------------
 // Login
 // ---------------------------------------------------------------------------
 
-export function useLoginMutation(opts?: { onSuccess?: () => void }) {
+export function useLoginMutation(opts?: { onSuccess?: (res: { user: AuthUser; accessToken: string }) => void }) {
   const qc = useQueryClient()
 
   return useMutation({
@@ -18,7 +19,7 @@ export function useLoginMutation(opts?: { onSuccess?: () => void }) {
     },
     onSuccess: (res) => {
       qc.setQueryData(['auth-user'], res.user)
-      opts?.onSuccess?.()
+      opts?.onSuccess?.(res)
     },
   })
 }
