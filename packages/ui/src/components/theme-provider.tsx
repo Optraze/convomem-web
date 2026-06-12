@@ -1,10 +1,14 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 import type React from 'react'
 
 export type Theme = 'dark' | 'light' | 'system'
+type ResolvedTheme = Exclude<Theme, 'system'>
+
+const DEFAULT_THEME = 'system'
+const THEME_STORAGE_KEY = 'vite-ui-theme'
 
 type ThemeProviderProps = {
   children: React.ReactNode
@@ -13,8 +17,11 @@ type ThemeProviderProps = {
 }
 
 type ThemeProviderState = {
+  defaultTheme: Theme
+  resolvedTheme: ResolvedTheme
   theme: Theme
   setTheme: (theme: Theme) => void
+  resetTheme: () => void
 }
 
 const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
@@ -23,8 +30,8 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'system',
-  storageKey = 'vite-ui-theme',
+  defaultTheme = DEFAULT_THEME,
+  storageKey = THEME_STORAGE_KEY,
   ...props
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(defaultTheme)
@@ -37,43 +44,55 @@ export function ThemeProvider({
     }
   }, [storageKey])
 
+  const resolvedTheme: ResolvedTheme = useMemo(() => {
+    if (theme === 'system') {
+      if (typeof window === 'undefined') return 'light'
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light'
+    }
+    return theme as ResolvedTheme
+  }, [theme])
+
   // Apply the resolved theme to <html> and follow system changes when in
   // "system" mode.
   useEffect(() => {
     const root = window.document.documentElement
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 
-    const applyTheme = (currentTheme: Theme) => {
+    const applyTheme = (currentResolvedTheme: ResolvedTheme) => {
       root.classList.remove('light', 'dark')
-      const resolved =
-        currentTheme === 'system'
-          ? mediaQuery.matches
-            ? 'dark'
-            : 'light'
-          : currentTheme
-      root.classList.add(resolved)
-      root.style.colorScheme = resolved
+      root.classList.add(currentResolvedTheme)
+      root.style.colorScheme = currentResolvedTheme
     }
 
-    applyTheme(theme)
+    applyTheme(resolvedTheme)
 
     if (theme === 'system') {
-      const onSystemChange = () => applyTheme('system')
+      const onSystemChange = () => {
+        const resolved = mediaQuery.matches ? 'dark' : 'light'
+        applyTheme(resolved)
+      }
       mediaQuery.addEventListener('change', onSystemChange)
       return () => mediaQuery.removeEventListener('change', onSystemChange)
     }
-  }, [theme])
+  }, [theme, resolvedTheme])
 
-  const value = {
-    theme,
-    setTheme: (newTheme: Theme) => {
-      localStorage.setItem(storageKey, newTheme)
-      setThemeState(newTheme)
-    },
+  const setTheme = (newTheme: Theme) => {
+    localStorage.setItem(storageKey, newTheme)
+    setThemeState(newTheme)
+  }
+
+  const resetTheme = () => {
+    localStorage.removeItem(storageKey)
+    setThemeState(DEFAULT_THEME)
   }
 
   return (
-    <ThemeProviderContext.Provider {...props} value={value}>
+    <ThemeProviderContext.Provider
+      {...props}
+      value={{ theme, resolvedTheme, defaultTheme, setTheme, resetTheme }}
+    >
       {children}
     </ThemeProviderContext.Provider>
   )
