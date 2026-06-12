@@ -21,19 +21,6 @@ import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
-import { Route as appWebhooksRouteImport } from './routes/(app)/webhooks'
-import { Route as appTeamRouteImport } from './routes/(app)/team'
-import { Route as appSettingsRouteImport } from './routes/(app)/settings'
-import { Route as appInsightsRouteImport } from './routes/(app)/insights'
-import { Route as appGraphRouteImport } from './routes/(app)/graph'
-import { Route as appDataImportRouteImport } from './routes/(app)/data-import'
-import { Route as appDashboardRouteImport } from './routes/(app)/dashboard'
-import { Route as appCustomersRouteImport } from './routes/(app)/customers'
-import { Route as appConversationsRouteImport } from './routes/(app)/conversations'
-import { Route as appBillingRouteImport } from './routes/(app)/billing'
-import { Route as appApiKeysRouteImport } from './routes/(app)/api-keys'
-import { Route as appAnalyticsRouteImport } from './routes/(app)/analytics'
-import { Route as appActivityRouteImport } from './routes/(app)/activity'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -93,90 +80,12 @@ const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => authRouteRoute,
 } as any)
-const appWebhooksRoute = appWebhooksRouteImport.update({
-  id: '/webhooks',
-  path: '/webhooks',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appTeamRoute = appTeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appSettingsRoute = appSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appInsightsRoute = appInsightsRouteImport.update({
-  id: '/insights',
-  path: '/insights',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appGraphRoute = appGraphRouteImport.update({
-  id: '/graph',
-  path: '/graph',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appDataImportRoute = appDataImportRouteImport.update({
-  id: '/data-import',
-  path: '/data-import',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appDashboardRoute = appDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appCustomersRoute = appCustomersRouteImport.update({
-  id: '/customers',
-  path: '/customers',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appConversationsRoute = appConversationsRouteImport.update({
-  id: '/conversations',
-  path: '/conversations',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appBillingRoute = appBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appApiKeysRoute = appApiKeysRouteImport.update({
-  id: '/api-keys',
-  path: '/api-keys',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appAnalyticsRoute = appAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => appRouteRoute,
-} as any)
-const appActivityRoute = appActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
-  getParentRoute: () => appRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/activity': typeof appActivityRoute
-  '/analytics': typeof appAnalyticsRoute
-  '/api-keys': typeof appApiKeysRoute
-  '/billing': typeof appBillingRoute
-  '/conversations': typeof appConversationsRoute
-  '/customers': typeof appCustomersRoute
-  '/dashboard': typeof appDashboardRoute
-  '/data-import': typeof appDataImportRoute
-  '/graph': typeof appGraphRoute
-  '/insights': typeof appInsightsRoute
-  '/settings': typeof appSettingsRoute
-  '/team': typeof appTeamRoute
-  '/webhooks': typeof appWebhooksRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -188,19 +97,6 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/activity': typeof appActivityRoute
-  '/analytics': typeof appAnalyticsRoute
-  '/api-keys': typeof appApiKeysRoute
-  '/billing': typeof appBillingRoute
-  '/conversations': typeof appConversationsRoute
-  '/customers': typeof appCustomersRoute
-  '/dashboard': typeof appDashboardRoute
-  '/data-import': typeof appDataImportRoute
-  '/graph': typeof appGraphRoute
-  '/insights': typeof appInsightsRoute
-  '/settings': typeof appSettingsRoute
-  '/team': typeof appTeamRoute
-  '/webhooks': typeof appWebhooksRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -210,25 +106,12 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/(app)': typeof appRouteRouteWithChildren
+  '/(app)': typeof appRouteRoute
   '/(auth)': typeof authRouteRouteWithChildren
   '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/(app)/activity': typeof appActivityRoute
-  '/(app)/analytics': typeof appAnalyticsRoute
-  '/(app)/api-keys': typeof appApiKeysRoute
-  '/(app)/billing': typeof appBillingRoute
-  '/(app)/conversations': typeof appConversationsRoute
-  '/(app)/customers': typeof appCustomersRoute
-  '/(app)/dashboard': typeof appDashboardRoute
-  '/(app)/data-import': typeof appDataImportRoute
-  '/(app)/graph': typeof appGraphRoute
-  '/(app)/insights': typeof appInsightsRoute
-  '/(app)/settings': typeof appSettingsRoute
-  '/(app)/team': typeof appTeamRoute
-  '/(app)/webhooks': typeof appWebhooksRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
@@ -243,19 +126,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/privacy'
     | '/terms'
-    | '/activity'
-    | '/analytics'
-    | '/api-keys'
-    | '/billing'
-    | '/conversations'
-    | '/customers'
-    | '/dashboard'
-    | '/data-import'
-    | '/graph'
-    | '/insights'
-    | '/settings'
-    | '/team'
-    | '/webhooks'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -267,19 +137,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/privacy'
     | '/terms'
-    | '/activity'
-    | '/analytics'
-    | '/api-keys'
-    | '/billing'
-    | '/conversations'
-    | '/customers'
-    | '/dashboard'
-    | '/data-import'
-    | '/graph'
-    | '/insights'
-    | '/settings'
-    | '/team'
-    | '/webhooks'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -294,19 +151,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/privacy'
     | '/terms'
-    | '/(app)/activity'
-    | '/(app)/analytics'
-    | '/(app)/api-keys'
-    | '/(app)/billing'
-    | '/(app)/conversations'
-    | '/(app)/customers'
-    | '/(app)/dashboard'
-    | '/(app)/data-import'
-    | '/(app)/graph'
-    | '/(app)/insights'
-    | '/(app)/settings'
-    | '/(app)/team'
-    | '/(app)/webhooks'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
@@ -316,7 +160,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  appRouteRoute: typeof appRouteRouteWithChildren
+  appRouteRoute: typeof appRouteRoute
   authRouteRoute: typeof authRouteRouteWithChildren
   OnboardingRouteRoute: typeof OnboardingRouteRouteWithChildren
   ContactRoute: typeof ContactRoute
@@ -411,135 +255,8 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authForgotPasswordRouteImport
       parentRoute: typeof authRouteRoute
     }
-    '/(app)/webhooks': {
-      id: '/(app)/webhooks'
-      path: '/webhooks'
-      fullPath: '/webhooks'
-      preLoaderRoute: typeof appWebhooksRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/team': {
-      id: '/(app)/team'
-      path: '/team'
-      fullPath: '/team'
-      preLoaderRoute: typeof appTeamRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/settings': {
-      id: '/(app)/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof appSettingsRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/insights': {
-      id: '/(app)/insights'
-      path: '/insights'
-      fullPath: '/insights'
-      preLoaderRoute: typeof appInsightsRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/graph': {
-      id: '/(app)/graph'
-      path: '/graph'
-      fullPath: '/graph'
-      preLoaderRoute: typeof appGraphRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/data-import': {
-      id: '/(app)/data-import'
-      path: '/data-import'
-      fullPath: '/data-import'
-      preLoaderRoute: typeof appDataImportRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/dashboard': {
-      id: '/(app)/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof appDashboardRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/customers': {
-      id: '/(app)/customers'
-      path: '/customers'
-      fullPath: '/customers'
-      preLoaderRoute: typeof appCustomersRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/conversations': {
-      id: '/(app)/conversations'
-      path: '/conversations'
-      fullPath: '/conversations'
-      preLoaderRoute: typeof appConversationsRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/billing': {
-      id: '/(app)/billing'
-      path: '/billing'
-      fullPath: '/billing'
-      preLoaderRoute: typeof appBillingRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/api-keys': {
-      id: '/(app)/api-keys'
-      path: '/api-keys'
-      fullPath: '/api-keys'
-      preLoaderRoute: typeof appApiKeysRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/analytics': {
-      id: '/(app)/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof appAnalyticsRouteImport
-      parentRoute: typeof appRouteRoute
-    }
-    '/(app)/activity': {
-      id: '/(app)/activity'
-      path: '/activity'
-      fullPath: '/activity'
-      preLoaderRoute: typeof appActivityRouteImport
-      parentRoute: typeof appRouteRoute
-    }
   }
 }
-
-interface appRouteRouteChildren {
-  appActivityRoute: typeof appActivityRoute
-  appAnalyticsRoute: typeof appAnalyticsRoute
-  appApiKeysRoute: typeof appApiKeysRoute
-  appBillingRoute: typeof appBillingRoute
-  appConversationsRoute: typeof appConversationsRoute
-  appCustomersRoute: typeof appCustomersRoute
-  appDashboardRoute: typeof appDashboardRoute
-  appDataImportRoute: typeof appDataImportRoute
-  appGraphRoute: typeof appGraphRoute
-  appInsightsRoute: typeof appInsightsRoute
-  appSettingsRoute: typeof appSettingsRoute
-  appTeamRoute: typeof appTeamRoute
-  appWebhooksRoute: typeof appWebhooksRoute
-}
-
-const appRouteRouteChildren: appRouteRouteChildren = {
-  appActivityRoute: appActivityRoute,
-  appAnalyticsRoute: appAnalyticsRoute,
-  appApiKeysRoute: appApiKeysRoute,
-  appBillingRoute: appBillingRoute,
-  appConversationsRoute: appConversationsRoute,
-  appCustomersRoute: appCustomersRoute,
-  appDashboardRoute: appDashboardRoute,
-  appDataImportRoute: appDataImportRoute,
-  appGraphRoute: appGraphRoute,
-  appInsightsRoute: appInsightsRoute,
-  appSettingsRoute: appSettingsRoute,
-  appTeamRoute: appTeamRoute,
-  appWebhooksRoute: appWebhooksRoute,
-}
-
-const appRouteRouteWithChildren = appRouteRoute._addFileChildren(
-  appRouteRouteChildren,
-)
 
 interface authRouteRouteChildren {
   authForgotPasswordRoute: typeof authForgotPasswordRoute
@@ -572,7 +289,7 @@ const OnboardingRouteRouteWithChildren = OnboardingRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  appRouteRoute: appRouteRouteWithChildren,
+  appRouteRoute: appRouteRoute,
   authRouteRoute: authRouteRouteWithChildren,
   OnboardingRouteRoute: OnboardingRouteRouteWithChildren,
   ContactRoute: ContactRoute,

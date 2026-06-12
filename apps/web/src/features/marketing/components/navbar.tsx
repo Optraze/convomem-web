@@ -61,7 +61,7 @@ export function MarketingNavbar() {
 
           {user ? (
             <Link
-              to="/dashboard"
+              to="/"
               className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 font-medium text-[13px] text-background transition-opacity hover:opacity-90"
             >
               Dashboard
@@ -112,7 +112,7 @@ export function MarketingNavbar() {
           <div className="border-t border-border pt-3">
             {user ? (
               <Link
-                to="/dashboard"
+                to="/"
                 onClick={() => setMobileOpen(false)}
                 className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
               >

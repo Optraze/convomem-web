@@ -1,27 +1,19 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Navigate, Outlet } from '@tanstack/react-router'
 
-import { SidebarInset, SidebarProvider } from '@workspace/ui/components/sidebar'
-
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { AppSidebar } from '@/features/dashboard/components/app-sidebar'
+import { useAuthSession } from '@/features/auth/lib/use-auth-session.ts'
 
 export const Route = createFileRoute('/(app)')({
-  component: AppLayout,
+  component: AuthGuard,
 })
 
-function AppLayout() {
-  return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Header>
-          <div className="flex-1" />
-        </Header>
-        <Main>
-          <Outlet />
-        </Main>
-      </SidebarInset>
-    </SidebarProvider>
-  )
+function AuthGuard() {
+  const status = useAuthSession()
+
+  if (status === 'checking') return null
+
+  if (status === 'unauthenticated') {
+    return <Navigate to="/login" />
+  }
+
+  return <Outlet />
 }

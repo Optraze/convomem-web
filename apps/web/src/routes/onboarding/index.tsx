@@ -171,7 +171,7 @@ function OnboardingPage() {
   } = useOnboardingDraft()
   const saveProgressMutation = useSaveOnboardingProgress()
   const finalizeMutation = useFinalizeOnboarding({
-    onSuccess: () => navigate({ to: '/dashboard' }),
+    onSuccess: () => navigate({ to: '/' }),
   })
   const createOrgMutation = useCreateOrg({
     onSuccess: () => setStep(2),
@@ -181,9 +181,9 @@ function OnboardingPage() {
   useEffect(() => {
     if (draftLoading || orgsLoading) return
 
-    // Already onboarded with orgs — go to dashboard
+    // Already onboarded with orgs — go to home
     if (user?.onboardedAt && orgsData?.orgs && orgsData.orgs.length > 0) {
-      navigate({ to: '/dashboard' })
+      navigate({ to: '/' })
       return
     }
 
@@ -194,7 +194,7 @@ function OnboardingPage() {
     }
 
     if (draft.onboardedAt && orgsData?.orgs && orgsData.orgs.length > 0) {
-      navigate({ to: '/dashboard' })
+      navigate({ to: '/' })
       return
     }
     if (draft.profession) setProfession(draft.profession)
