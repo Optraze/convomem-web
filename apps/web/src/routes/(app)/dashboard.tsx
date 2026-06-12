@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 
 import { Button } from '@workspace/ui/components/button'
 
-import { tokenStore } from '@/features/auth/lib/api.ts'
+import { authApi, tokenStore } from '@/features/auth/lib/api.ts'
 import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo.ts'
 
 export const Route = createFileRoute('/(app)/dashboard')({
@@ -21,8 +21,8 @@ export const Route = createFileRoute('/(app)/dashboard')({
 function DashboardPage() {
   const user = tokenStore.getUser()
 
-  function handleLogout() {
-    tokenStore.clear()
+  async function handleLogout() {
+    await authApi.logout().catch(() => undefined)
     window.location.href = '/login'
   }
 

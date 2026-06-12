@@ -42,13 +42,15 @@ export const tokenStore = {
       : null,
 
   setAccessToken: (token: string) => {
+    if (typeof window === 'undefined') return
+
     localStorage.setItem('cm_access_token', token)
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('auth-change'))
-    }
+    window.dispatchEvent(new Event('auth-change'))
   },
 
   getUser: (): AuthUser | null => {
+    if (typeof window === 'undefined') return null
+
     try {
       const raw = localStorage.getItem('cm_user')
       return raw ? (JSON.parse(raw) as AuthUser) : null
@@ -58,18 +60,18 @@ export const tokenStore = {
   },
 
   setUser: (user: AuthUser) => {
+    if (typeof window === 'undefined') return
+
     localStorage.setItem('cm_user', JSON.stringify(user))
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('auth-change'))
-    }
+    window.dispatchEvent(new Event('auth-change'))
   },
 
   clear: () => {
+    if (typeof window === 'undefined') return
+
     localStorage.removeItem('cm_access_token')
     localStorage.removeItem('cm_user')
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('auth-change'))
-    }
+    window.dispatchEvent(new Event('auth-change'))
   },
 }
 
@@ -77,40 +79,28 @@ export const tokenStore = {
 // Token refresh — deduplicated (concurrent requests share one refresh call)
 // ---------------------------------------------------------------------------
 
-let isRefreshing = false
-let refreshWaiters: ((ok: boolean) => void)[] = []
+let refreshPromise: Promise<AuthResponse | null> | null = null
 
-async function tryRefresh(): Promise<boolean> {
-  if (isRefreshing) {
-    return new Promise((resolve) => {
-      refreshWaiters.push(resolve)
-    })
-  }
-
-  isRefreshing = true
-  try {
+export async function refreshSession(): Promise<AuthResponse | null> {
+  refreshPromise ??= (async () => {
     const res = await fetch(`${BASE}/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
     })
 
-    if (!res.ok) {
-      for (const fn of refreshWaiters) fn(false)
-      return false
-    }
+    if (!res.ok) return null
 
     const data = (await res.json()) as AuthResponse
     tokenStore.setAccessToken(data.accessToken)
     tokenStore.setUser(data.user)
-    for (const fn of refreshWaiters) fn(true)
-    return true
-  } catch {
-    for (const fn of refreshWaiters) fn(false)
-    return false
+    return data
+  })().catch(() => null)
+
+  try {
+    return await refreshPromise
   } finally {
-    isRefreshing = false
-    refreshWaiters = []
+    refreshPromise = null
   }
 }
 
@@ -137,8 +127,8 @@ async function request<T>(
 
   // On 401: try refresh once, then retry the request
   if (res.status === 401 && _retry) {
-    const ok = await tryRefresh()
-    if (ok) return request<T>(path, init, false)
+    const refreshed = await refreshSession()
+    if (refreshed) return request<T>(path, init, false)
     tokenStore.clear()
     throw { status: 401, code: 'UNAUTHORIZED', message: 'Session expired' }
   }
@@ -187,7 +177,14 @@ export const authApi = {
       body: JSON.stringify({ token, password }),
     }),
 
-  refresh: () => request<AuthResponse>('/auth/refresh', { method: 'POST' }),
+  refresh: async () => {
+    const refreshed = await refreshSession()
+    if (!refreshed) {
+      tokenStore.clear()
+      throw { status: 401, code: 'UNAUTHORIZED', message: 'Session expired' }
+    }
+    return refreshed
+  },
 
   logout: async () => {
     try {

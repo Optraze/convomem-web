@@ -1,15 +1,17 @@
 import { createFileRoute, Navigate, Outlet } from '@tanstack/react-router'
 
-import { tokenStore } from '@/features/auth/lib/api.ts'
+import { useAuthSession } from '@/features/auth/lib/use-auth-session.ts'
 
 export const Route = createFileRoute('/(app)')({
   component: AuthGuard,
 })
 
 function AuthGuard() {
-  const token = tokenStore.getAccessToken()
+  const status = useAuthSession()
 
-  if (!token) {
+  if (status === 'checking') return null
+
+  if (status === 'unauthenticated') {
     return <Navigate to="/login" />
   }
 
