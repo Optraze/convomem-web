@@ -11,16 +11,10 @@
       "**",
       "!**/node_modules",
       "!**/dist",
-      "!**/.turbo",
       "!**/.output",
       "!**/.nitro",
       "!**/.tanstack",
-      "!**/.vinxi",
-      "!**/coverage",
-      "!**/.pnpm-store",
-      "!**/routeTree.gen.ts",
-      "!packages/sdk/src/client",
-      "!pnpm-lock.yaml"
+      "!**/routeTree.gen.ts"
     ]
   },
   "formatter": {
@@ -78,18 +72,15 @@
                   ":PACKAGE_WITH_PROTOCOL:",
                   "!react",
                   "!react-dom",
-                  "!@*/**",
-                  "!@workspace/**"
+                  "!@*/**"
                 ]
               },
               {
                 "type": false,
-                "source": ["@*/**", "!@/**", "!@workspace/**"]
+                "source": ["@*/**", "!@/**"]
               },
               ":BLANK_LINE:",
               { "type": true },
-              ":BLANK_LINE:",
-              { "type": false, "source": "@workspace/**" },
               ":BLANK_LINE:",
               { "type": false, "source": ":ALIAS:" },
               ":BLANK_LINE:",

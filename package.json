@@ -1,23 +1,58 @@
 {
   "name": "convomem",
-  "version": "0.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "lint": "biome lint .",
-    "format": "biome format --write .",
-    "check": "biome check --write .",
-    "ci": "biome ci .",
-    "typecheck": "turbo typecheck"
+    "dev": "vite dev --port 3000",
+    "generate-routes": "tsr generate",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "format": "biome format",
+    "lint": "biome lint",
+    "check": "biome check",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@base-ui/react": "latest",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@t3-oss/env-core": "^0.13.10",
+    "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/match-sorter-utils": "latest",
+    "@tanstack/react-devtools": "latest",
+    "@tanstack/react-form": "latest",
+    "@tanstack/react-query": "latest",
+    "@tanstack/react-query-devtools": "latest",
+    "@tanstack/react-router": "latest",
+    "@tanstack/react-router-ssr-query": "latest",
+    "@tanstack/react-start": "latest",
+    "@tanstack/router-plugin": "^1.132.0",
+    "class-variance-authority": "latest",
+    "clsx": "latest",
+    "lucide-react": "^1.17.0",
+    "motion": "^12.40.0",
+    "nitro": "npm:nitro-nightly@latest",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tailwind-merge": "latest",
+    "tailwindcss": "^4.1.18",
+    "tw-animate-css": "latest",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",
-    "turbo": "^2.9.18",
-    "typescript": "^6"
-  },
-  "packageManager": "pnpm@10.33.4",
-  "engines": {
-    "node": ">=24"
+    "@rolldown/plugin-babel": "^0.2.3",
+    "@tailwindcss/typography": "^0.5.16",
+    "@tanstack/devtools-vite": "latest",
+    "@tanstack/react-router-devtools": "^1.167.0",
+    "@tanstack/router-cli": "^1.132.0",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "typescript": "^6",
+    "vite": "^8"
   }
 }
