@@ -1,15 +1,8 @@
 {
-  // Wrangler configuration for Cloudflare Workers
-  // Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
-  "name": "convomem-web",
+  // Minimal config for local dev only.
+  // Nitro auto-generates .output/server/wrangler.json at build time
+  // with main, assets, and observability already configured.
+  "name": "convomem",
   "compatibility_date": "2025-01-01",
-  "compatibility_flags": ["nodejs_compat"],
-  "main": ".output/server/index.mjs",
-  "assets": {
-    "directory": ".output/public",
-    "binding": "ASSETS"
-  },
-  "observability": {
-    "enabled": true
-  }
+  "compatibility_flags": ["nodejs_compat"]
 }

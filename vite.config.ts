@@ -16,7 +16,9 @@ const config = defineConfig(({ command }) => ({
       debug: command === 'serve',
       cloudflare: {
         wrangler: {
+          name: 'convomem',
           compatibility_date: '2025-01-01',
+          compatibility_flags: ['nodejs_compat'],
         },
       },
     }),
