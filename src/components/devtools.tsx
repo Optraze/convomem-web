@@ -3,7 +3,7 @@ import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
 export function Devtools() {
-  if (!import.meta.env.DEV) {
+  if (process.env.NODE_ENV !== 'development') {
     return null
   }
 

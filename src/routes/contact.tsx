@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Building2,
   CheckCircle2,
@@ -32,10 +33,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { MarketingNavbar } from '@/features/marketing/components/navbar.tsx'
 import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo.ts'
 
-const inquiryTypes = ['Sales', 'Support', 'Partnership', 'Other'] as const
+const BASE_URL = process.env.VITE_API_URL ?? 'https://api.convomem.com'
 
-const nameSchema = z.string().trim().min(2, 'Enter your full name.')
-const emailSchema = z.string().email('Enter a valid email address.')
+const inquiryTypes = ['sales', 'support', 'partnership', 'other'] as const
+
+const nameSchema = z.string().trim().min(1, 'Enter your full name.')
+const emailSchema = z.email('Enter a valid email address.')
 const companySchema = z.string()
 const inquiryTypeSchema = z.enum(inquiryTypes)
 const messageSchema = z
@@ -59,7 +62,7 @@ const defaultValues: ContactFormValues = {
   name: '',
   email: '',
   company: '',
-  inquiryType: 'Sales',
+  inquiryType: 'sales',
   message: '',
 }
 
@@ -77,15 +80,68 @@ export const Route = createFileRoute('/contact')({
 })
 
 function ContactPage() {
+  const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
   const form = useForm({
     defaultValues,
     validators: {
       onSubmit: contactFormSchema,
     },
-    onSubmit: ({ value }) => {
-      console.log('Contact form submitted', value)
+    onSubmit: async ({ value }) => {
+      setSubmitError(null)
+      const res = await fetch(`${BASE_URL}/api/v1/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: value.name,
+          email: value.email,
+          company: value.company,
+          type: value.inquiryType,
+          message: value.message,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong. Please try again.')
+      }
+      setSubmitted(true)
     },
   })
+
+  if (submitted) {
+    return (
+      <main className="min-h-screen bg-background text-foreground antialiased">
+        <MarketingNavbar />
+        <section className="mx-auto flex min-h-[70vh] max-w-5xl flex-col items-center justify-center px-5 pt-28 text-center sm:px-8">
+          <CheckCircle2 className="mb-6 size-12 text-emerald-400" />
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Message sent
+          </h1>
+          <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
+            We&apos;ll get back to you as soon as possible. If your inquiry is
+            urgent, email us directly at{' '}
+            <a
+              href="mailto:support@convomem.com"
+              className="text-emerald-400 transition-colors hover:text-emerald-300"
+            >
+              support@convomem.com
+            </a>
+          </p>
+          <Button
+            variant="outline"
+            className="mt-8"
+            onClick={() => {
+              setSubmitted(false)
+              form.reset()
+            }}
+          >
+            Send another message
+          </Button>
+        </section>
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen bg-background text-foreground antialiased">
@@ -116,6 +172,11 @@ function ContactPage() {
           }}
         >
           <FieldGroup>
+            {submitError && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {submitError}
+              </div>
+            )}
             <form.Field
               name="name"
               validators={{
@@ -223,7 +284,7 @@ function ContactPage() {
                   </FieldLabel>
                   <Select
                     items={inquiryTypes.map((type) => ({
-                      label: type,
+                      label: type.charAt(0).toUpperCase() + type.slice(1),
                       value: type,
                     }))}
                     value={field.state.value}
@@ -295,10 +356,9 @@ function ContactPage() {
               selector={(state) => ({
                 canSubmit: state.canSubmit,
                 isSubmitting: state.isSubmitting,
-                isSubmitSuccessful: state.isSubmitSuccessful,
               })}
             >
-              {({ canSubmit, isSubmitting, isSubmitSuccessful }) => (
+              {({ canSubmit, isSubmitting }) => (
                 <div className="flex flex-col gap-3">
                   <Button
                     type="submit"
@@ -306,16 +366,8 @@ function ContactPage() {
                     disabled={!canSubmit}
                     className="h-11 w-full gap-2 rounded-lg"
                   >
-                    {isSubmitSuccessful ? (
-                      <CheckCircle2 data-icon="inline-start" />
-                    ) : (
-                      <Send data-icon="inline-start" />
-                    )}
-                    {isSubmitting
-                      ? 'Logging message...'
-                      : isSubmitSuccessful
-                        ? 'Logged to console'
-                        : 'Send message'}
+                    <Send data-icon="inline-start" />
+                    {isSubmitting ? 'Sending...' : 'Send message'}
                   </Button>
                   <p className="text-center text-xs text-muted-foreground">
                     Or email us directly at{' '}
