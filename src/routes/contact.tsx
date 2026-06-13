@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { MarketingNavbar } from '@/features/marketing/components/navbar.tsx'
 import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo.ts'
 
-const BASE_URL = process.env.VITE_API_URL ?? 'https://api.convomem.com'
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.convomem.com'
 
 const inquiryTypes = ['sales', 'support', 'partnership', 'other'] as const
 

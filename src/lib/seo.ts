@@ -7,9 +7,7 @@ export const SITE_KEYWORDS =
   'AI memory, customer intelligence, conversational AI, voice bot, chat bot, customer context, enterprise AI'
 
 export function getSeoUrl(path = '/') {
-  return process.env.NODE_ENV === 'production'
-    ? new URL(path, SITE_ORIGIN).toString()
-    : path
+  return import.meta.env.PROD ? new URL(path, SITE_ORIGIN).toString() : path
 }
 
 export function createPageMeta({

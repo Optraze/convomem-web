@@ -93,7 +93,7 @@ function StageRow({
     <div
       className={`flex items-start gap-3 py-2 border-b border-border last:border-0 transition-opacity ${status === 'pending' ? 'opacity-45' : 'opacity-100'}`}
     >
-      <span className="w-4 flex-shrink-0 flex items-center justify-center mt-0.5">
+      <span className="w-4 shrink-0 flex items-center justify-center mt-0.5">
         {status === 'running' && (
           <Loader2 size={12} className="text-foreground animate-spin" />
         )}
@@ -103,7 +103,7 @@ function StageRow({
           <span className="w-1.5 h-1.5 rounded-full border border-border-strong" />
         )}
       </span>
-      <span className="font-mono text-hint tnum text-[10px] w-5 flex-shrink-0 mt-0.5">
+      <span className="font-mono text-hint tnum text-[10px] w-5 shrink-0 mt-0.5">
         S{stage}
       </span>
       <div className="flex-1 min-w-0">
@@ -176,7 +176,7 @@ function FactRow({ fact, index }: { fact: DemoFact; index: number }) {
       transition={{ duration: 0.3 }}
       className="flex items-start gap-3 py-2 border-b border-border last:border-0"
     >
-      <span className="font-mono text-hint tnum text-[10px] mt-0.5 w-4 flex-shrink-0">
+      <span className="font-mono text-hint tnum text-[10px] mt-0.5 w-4 shrink-0">
         {String(index + 1).padStart(2, '0')}
       </span>
       <div className="flex-1 min-w-0">
@@ -233,7 +233,7 @@ function ConvCard({ c, n }: { c: ConvState; n: number }) {
       {c.facts.length > 0 && (
         <ul className="px-3.5 py-1.5">
           {c.facts.map((f, i) => (
-            <FactRow key={`fact-${i}`} fact={f} index={i} />
+            <FactRow key={f.content} fact={f} index={i} />
           ))}
         </ul>
       )}
@@ -305,9 +305,9 @@ function InsightsPanel({
         </div>
         {ins.insights.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {ins.insights.map((it, i) => (
+            {ins.insights.map((it) => (
               <span
-                key={`insight-${i}`}
+                key={`insight-${it.summary}`}
                 className="font-mono inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-border text-[10px] text-subtle"
               >
                 <span className="w-1 h-1 rounded-full bg-foreground" />
@@ -373,7 +373,12 @@ export function MemoryTerminal() {
   const totalFacts = convs.reduce((n, c) => n + c.facts.length, 0)
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: section tag not suitable here
+    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: drag-and-drop container
     <div
+      role="region"
+      tabIndex={-1}
+      aria-label="Demo pipeline terminal"
       onDragOver={(e) => {
         e.preventDefault()
         setDrag(true)
@@ -387,7 +392,7 @@ export function MemoryTerminal() {
       className={`relative rounded-xl border bg-surface overflow-hidden transition-colors ${drag ? 'border-foreground' : 'border-border-strong'}`}
     >
       {/* top accent */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-foreground/25 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-foreground/25 to-transparent" />
       {/* terminal chrome */}
       <div className="relative flex items-center justify-between px-4 py-2.5 border-b border-border">
         <div className="flex items-center gap-3">
@@ -440,10 +445,14 @@ export function MemoryTerminal() {
             exit={{ opacity: 0 }}
             className="p-4 sm:p-5"
           >
-            <label className="font-mono block text-hint text-[10px] tracking-[0.18em] uppercase mb-2.5">
+            <label
+              htmlFor="demo-message"
+              className="font-mono block text-hint text-[10px] tracking-[0.18em] uppercase mb-2.5"
+            >
               paste a real message — run it through the real pipeline
             </label>
             <textarea
+              id="demo-message"
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
@@ -527,7 +536,7 @@ export function MemoryTerminal() {
             key="output"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="p-4 sm:p-5 space-y-3 max-h-[600px] overflow-y-auto scrollbar-hide"
+            className="p-4 sm:p-5 space-y-3 max-h-150 overflow-y-auto scrollbar-hide"
           >
             {convs.map((c, i) => (
               <ConvCard key={c.index} c={c} n={i} />

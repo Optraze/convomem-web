@@ -66,9 +66,10 @@ export function ThemeSwitcher({
           const active = theme === value
 
           return (
+            // biome-ignore lint/a11y/useSemanticElements: expected
             <button
-              key={value}
               type="button"
+              key={value}
               role="radio"
               aria-checked={active}
               aria-label={label}

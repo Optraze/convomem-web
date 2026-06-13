@@ -24,12 +24,14 @@ export function CookieBanner() {
         </p>
         <div className="flex flex-shrink-0 items-center gap-2">
           <button
+            type="button"
             onClick={() => set('essential')}
             className="rounded-md border border-border px-3 py-1.5 text-xs text-subtle/85 transition-colors hover:bg-muted hover:text-foreground"
           >
             Essential only
           </button>
           <button
+            type="button"
             onClick={() => set('all')}
             className="rounded-md bg-foreground px-3 py-1.5 font-medium text-background text-xs transition-opacity hover:opacity-90"
           >

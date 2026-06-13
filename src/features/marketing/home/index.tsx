@@ -115,6 +115,7 @@ export function Home() {
                     />
                   </a>
                   <button
+                    type="button"
                     onClick={() => setDemoOpen(true)}
                     className="group border-border-strong flex items-center gap-2 rounded-md border px-5 py-2.5 font-medium text-foreground text-sm transition-all hover:bg-muted active:scale-[0.98]"
                   >
@@ -174,6 +175,7 @@ export function Home() {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2">
               <button
+                type="button"
                 onClick={() => setDemoOpen(true)}
                 className="group inline-flex items-center gap-2.5 rounded-md bg-foreground px-6 py-3 font-medium text-background text-sm transition-all hover:opacity-90 active:scale-[0.98]"
               >
@@ -222,10 +224,9 @@ export function Home() {
             <br className="hidden sm:block" /> assembled automatically.
           </SectionHeading>
 
-          <div role="list" className="border-t border-border">
+          <ul className="border-t border-border">
             {capabilities.map((c, i) => (
-              <motion.div
-                role="listitem"
+              <motion.li
                 key={c.term}
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -247,9 +248,9 @@ export function Home() {
                 <span className="font-mono text-[11px] whitespace-nowrap text-hint/70 md:text-right">
                   {c.tag}
                 </span>
-              </motion.div>
+              </motion.li>
             ))}
-          </div>
+          </ul>
         </section>
 
         <section

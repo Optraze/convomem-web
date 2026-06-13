@@ -184,7 +184,7 @@ export function ScenarioPlayer() {
     }
     advance.current = window.setTimeout(tick, 700)
     return () => window.clearTimeout(advance.current)
-  }, [active, reduce, scn.beats.length])
+  }, [reduce, scn])
 
   const Icon = scn.icon
 
@@ -197,6 +197,7 @@ export function ScenarioPlayer() {
           const TabIcon = s.icon
           return (
             <button
+              type="button"
               key={s.key}
               onClick={() => setActive(i)}
               className={`group flex-1 flex items-center gap-2 px-3 sm:px-4 py-3 text-left transition-colors ${on ? 'bg-background' : 'hover:bg-muted/50'}`}
@@ -214,7 +215,7 @@ export function ScenarioPlayer() {
                 >
                   {s.title}
                 </span>
-                <span className="font-mono block text-hint text-[9px] tracking-[0.1em] uppercase truncate">
+                <span className="font-mono block text-hint text-[9px] tracking-widest uppercase truncate">
                   {s.channel.split(' · ')[0]}
                 </span>
               </span>
@@ -232,7 +233,7 @@ export function ScenarioPlayer() {
               {scn.channel}
             </span>
           </div>
-          <span className="font-mono text-hint text-[10px] tracking-[0.1em] uppercase">
+          <span className="font-mono text-hint text-[10px] tracking-widest uppercase">
             {scn.when}
           </span>
         </div>
@@ -243,11 +244,11 @@ export function ScenarioPlayer() {
             initial={reduce ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="space-y-3 min-h-[260px]"
+            className="space-y-3 min-h-65"
           >
             {scn.beats.map((b, i) => (
               <Bubble
-                key={i}
+                key={b.text}
                 beat={b}
                 show={i < step}
                 typing={i === step - 1}
@@ -260,10 +261,10 @@ export function ScenarioPlayer() {
 
       {/* progress ticks */}
       <div className="flex items-center gap-1.5 px-4 sm:px-6 pb-4">
-        {SCENARIOS.map((_, i) => (
+        {SCENARIOS.map((s, i) => (
           <span
-            key={i}
-            className={`h-[3px] rounded-full transition-all duration-500 ${i === active ? 'w-7 bg-foreground' : 'w-3 bg-border-strong'}`}
+            key={s.key}
+            className={`h-0.75 rounded-full transition-all duration-500 ${i === active ? 'w-7 bg-foreground' : 'w-3 bg-border-strong'}`}
           />
         ))}
         <span className="font-mono ml-auto text-hint text-[10px] tracking-[0.14em] uppercase">

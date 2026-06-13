@@ -413,8 +413,8 @@ export function groupConversations(
         channel: chI >= 0 ? normalizeChannel(r[chI]) : 'CHAT',
       })
     }
-    const g = groups.get(key)!
-    if (g.messages.length < 20) {
+    const g = groups.get(key)
+    if (g && g.messages.length < 20) {
       g.messages.push({
         role: roleI >= 0 ? normalizeRole(r[roleI]) : 'user',
         content,
@@ -423,7 +423,8 @@ export function groupConversations(
   })
 
   return order
-    .map((k) => groups.get(k)!)
+    .map((k) => groups.get(k))
+    .filter((g): g is MappedConversation => Boolean(g))
     .filter((c) => c.messages.length > 0)
     .slice(0, MAX_CONVERSATIONS)
 }

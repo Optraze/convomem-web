@@ -145,10 +145,10 @@ export function CsvMapper({
           text.
         </p>
       ) : (
-        <div className="space-y-3 max-h-[300px] overflow-y-auto scrollbar-hide pr-0.5">
+        <div className="space-y-3 max-h-75 overflow-y-auto scrollbar-hide pr-0.5">
           {convs.map((c, i) => (
             <div
-              key={`conv-${i}`}
+              key={`${c.channel}-${c.messages[0].content}`}
               className="rounded-lg border border-border bg-background overflow-hidden"
             >
               <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-muted/40">
@@ -161,16 +161,16 @@ export function CsvMapper({
                 </span>
               </div>
               <div className="px-3 py-2 space-y-1.5">
-                {c.messages.slice(0, 6).map((m, j) => (
+                {c.messages.slice(0, 6).map((m) => (
                   <div
-                    key={`msg-${i}-${j}`}
+                    key={`${c.channel}-${m.content}`}
                     className={`flex ${m.role === 'assistant' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
                       className={`${BUBBLE} ${m.role === 'assistant' ? 'bg-foreground text-background' : 'bg-muted text-foreground'}`}
                     >
                       <span
-                        className={`font-mono block text-[9px] tracking-[0.1em] uppercase mb-0.5 ${m.role === 'assistant' ? 'text-background/55' : 'text-hint'}`}
+                        className={`font-mono block text-[9px] tracking-widest uppercase mb-0.5 ${m.role === 'assistant' ? 'text-background/55' : 'text-hint'}`}
                       >
                         {m.role === 'assistant' ? 'agent' : 'user'}
                       </span>

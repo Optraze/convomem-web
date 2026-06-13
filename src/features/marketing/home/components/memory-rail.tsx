@@ -16,6 +16,7 @@ export function MemoryRail({
           return (
             <li key={section.id}>
               <button
+                type="button"
                 onClick={() => onJump(section.id)}
                 className="group flex w-full items-center gap-2.5 text-left"
                 title={section.label}

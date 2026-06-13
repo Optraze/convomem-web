@@ -68,6 +68,7 @@ export function MarketingNavbar() {
           </a>
 
           <button
+            type="button"
             onClick={() => setMobileOpen((open) => !open)}
             className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-muted md:hidden"
             aria-label="Menu"
