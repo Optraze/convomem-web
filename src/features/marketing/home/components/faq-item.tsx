@@ -22,7 +22,7 @@ export function FaqItem({
       className="border-t border-border not-last:border-b-0"
     >
       <AccordionTrigger className="group gap-4 rounded-none py-5 hover:no-underline">
-        <span className="tnum mt-1 font-mono text-[11px] tracking-[0.1em] text-hint/60">
+        <span className="tnum mt-1 font-mono text-[11px] tracking-[0.1em] text-hint/80">
           {index}
         </span>
         <span

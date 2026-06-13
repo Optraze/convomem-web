@@ -26,7 +26,7 @@ export function MemoryRail({
                   className={`tnum font-mono text-[10px] transition-colors ${
                     isActive
                       ? 'text-foreground'
-                      : 'text-hint/50 group-hover:text-hint'
+                      : 'text-hint/70 group-hover:text-hint'
                   }`}
                 >
                   {String(index).padStart(2, '0')}

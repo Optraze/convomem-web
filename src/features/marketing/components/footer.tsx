@@ -55,7 +55,7 @@ export function MarketingFooter() {
 
           {footerColumns.map((column) => (
             <div key={column.heading}>
-              <p className="mb-3 font-mono text-[11px] tracking-[0.16em] text-hint/70 uppercase">
+              <p className="mb-3 font-mono text-[11px] tracking-[0.16em] text-hint/90 uppercase">
                 {column.heading}
               </p>
               <div className="space-y-2">
@@ -86,10 +86,10 @@ export function MarketingFooter() {
         </div>
 
         <div className="flex flex-col items-center justify-between gap-3 border-t border-border pt-8 sm:flex-row">
-          <p className="font-mono text-[11px] text-hint/60">
+          <p className="font-mono text-[11px] text-hint/80">
             © {new Date().getFullYear()} ConvoMem
           </p>
-          <p className="font-mono text-[11px] tracking-[0.12em] text-hint/60">
+          <p className="font-mono text-[11px] tracking-[0.12em] text-hint/80">
             API-first · On-prem on Custom · Zero lock-in
           </p>
         </div>

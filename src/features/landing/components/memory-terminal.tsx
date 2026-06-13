@@ -465,7 +465,7 @@ export function MemoryTerminal() {
               }}
               rows={3}
               placeholder="Try: &quot;Hey — my order #4471 still hasn't shipped and it's been a week. Pretty frustrated honestly.&quot;"
-              className="w-full resize-none bg-background border border-border rounded-lg px-3.5 py-3 text-foreground placeholder:text-hint/60 focus:outline-none focus:border-foreground/30 focus:ring-1 focus:ring-foreground/10 transition-all"
+              className="w-full resize-none bg-background border border-border rounded-lg px-3.5 py-3 text-foreground placeholder:text-hint/80 focus:outline-none focus:border-foreground/30 focus:ring-1 focus:ring-foreground/10 transition-all"
               style={{ fontSize: '13px', lineHeight: 1.6 }}
             />
             <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2.5">
@@ -512,7 +512,7 @@ export function MemoryTerminal() {
               />
             </div>
             <p className="font-mono mt-3 flex items-center gap-1.5 text-hint text-[10px] leading-relaxed">
-              <ShieldCheck size={10} className="text-hint/60" />
+              <ShieldCheck size={10} className="text-hint/80" />
               {fileName ? <>file · {fileName} · </> : null}
               up to {MAX_CONVERSATIONS} conversations · nothing is stored
             </p>

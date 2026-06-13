@@ -149,7 +149,7 @@ function ContactPage() {
 
       <section className="mx-auto grid w-full max-w-5xl gap-12 px-5 pt-28 pb-14 sm:px-8 sm:pt-32 sm:pb-20 lg:grid-cols-[0.85fr_1.15fr] lg:items-start lg:gap-16">
         <div className="lg:sticky lg:top-24">
-          <div className="mb-7 inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.22em] text-hint/70 uppercase">
+          <div className="mb-7 inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase">
             <Mail className="size-3.5 text-emerald-400" />
             Get in touch
           </div>

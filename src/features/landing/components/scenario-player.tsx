@@ -200,6 +200,7 @@ export function ScenarioPlayer() {
               type="button"
               key={s.key}
               onClick={() => setActive(i)}
+              aria-label={s.title}
               className={`group flex-1 flex items-center gap-2 px-3 sm:px-4 py-3 text-left transition-colors ${on ? 'bg-background' : 'hover:bg-muted/50'}`}
             >
               <TabIcon

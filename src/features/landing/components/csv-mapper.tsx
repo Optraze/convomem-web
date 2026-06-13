@@ -170,7 +170,7 @@ export function CsvMapper({
                       className={`${BUBBLE} ${m.role === 'assistant' ? 'bg-foreground text-background' : 'bg-muted text-foreground'}`}
                     >
                       <span
-                        className={`font-mono block text-[9px] tracking-widest uppercase mb-0.5 ${m.role === 'assistant' ? 'text-background/55' : 'text-hint'}`}
+                        className={`font-mono block text-[9px] tracking-widest uppercase mb-0.5 ${m.role === 'assistant' ? 'text-background/70' : 'text-hint'}`}
                       >
                         {m.role === 'assistant' ? 'agent' : 'user'}
                       </span>

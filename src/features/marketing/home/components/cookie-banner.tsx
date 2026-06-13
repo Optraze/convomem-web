@@ -18,7 +18,7 @@ export function CookieBanner() {
       className="fixed inset-x-0 bottom-0 z-[100] border-t border-border bg-background/95 px-5 py-4 backdrop-blur-xl"
     >
       <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between gap-4 px-5 sm:flex-row sm:items-center">
-        <p className="text-[12.5px] leading-[1.6] text-subtle/80">
+        <p className="text-[12.5px] leading-[1.6] text-subtle">
           We keep only essential cookies to run the site, plus optional
           analytics to improve it. Your call.
         </p>

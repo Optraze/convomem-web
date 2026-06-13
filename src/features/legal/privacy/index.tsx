@@ -90,7 +90,7 @@ export function PrivacyPolicy() {
           transition={{ duration: 0.45 }}
           className="lg:sticky lg:top-24 lg:self-start"
         >
-          <div className="mb-7 inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.22em] text-hint/70 uppercase">
+          <div className="mb-7 inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase">
             <Shield className="size-3.5 text-emerald-400" />
             Legal
           </div>
@@ -103,7 +103,7 @@ export function PrivacyPolicy() {
           </p>
 
           <div className="mt-8 rounded-2xl border border-border bg-surface p-4">
-            <p className="font-mono text-[11px] tracking-[0.16em] text-hint/70 uppercase">
+            <p className="font-mono text-[11px] tracking-[0.16em] text-hint/90 uppercase">
               Last updated
             </p>
             <p className="mt-2 text-sm text-foreground">{updatedAt}</p>

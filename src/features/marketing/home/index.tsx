@@ -85,7 +85,7 @@ export function Home() {
                 transition={{ duration: 0.6, ease: EASE }}
               >
                 <div className="mb-6 flex items-center gap-4 sm:mb-10">
-                  <span className="tnum font-mono text-[11px] tracking-[0.2em] text-hint/60">
+                  <span className="tnum font-mono text-[11px] tracking-[0.2em] text-hint/80">
                     00
                   </span>
                   <span className="h-px w-12 bg-foreground/15" />
@@ -161,7 +161,7 @@ export function Home() {
                     <dd className="tnum font-mono text-[clamp(24px,2.4vw,36px)] leading-none font-semibold tracking-[-0.03em] text-foreground">
                       <span>{s.value}</span>
                     </dd>
-                    <dt className="mt-2.5 font-mono text-[10px] tracking-[0.16em] text-hint/70 uppercase">
+                    <dt className="mt-2.5 font-mono text-[10px] tracking-[0.16em] text-hint/90 uppercase">
                       {s.label}
                     </dt>
                   </div>
@@ -246,7 +246,7 @@ export function Home() {
                 className="group -mx-4 grid grid-cols-1 gap-x-8 gap-y-2 rounded-md border-b border-border px-4 py-6 transition-colors hover:bg-muted/40 md:grid-cols-[auto_1fr_auto] md:items-baseline"
               >
                 <div className="flex items-baseline gap-4 md:w-64">
-                  <span className="tnum font-mono text-[11px] text-hint/60">
+                  <span className="tnum font-mono text-[11px] text-hint/80">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <h3 className="font-semibold text-[17px] tracking-[-0.01em] text-foreground transition-transform group-hover:translate-x-0.5">
@@ -256,7 +256,7 @@ export function Home() {
                 <p className="max-w-xl text-[13.5px] leading-[1.7] text-muted-foreground">
                   {c.desc}
                 </p>
-                <span className="font-mono text-[11px] whitespace-nowrap text-hint/70 md:text-right">
+                <span className="font-mono text-[11px] whitespace-nowrap text-hint/90 md:text-right">
                   {c.tag}
                 </span>
               </motion.li>
@@ -287,7 +287,7 @@ export function Home() {
                   <span className="tnum font-mono text-[clamp(30px,5vw,52px)] leading-none font-semibold tracking-[-0.04em] text-foreground">
                     {p.step}
                   </span>
-                  <span className="font-mono text-[10px] tracking-[0.2em] text-hint/60 uppercase">
+                  <span className="font-mono text-[10px] tracking-[0.2em] text-hint/80 uppercase">
                     step
                   </span>
                 </div>
@@ -319,7 +319,7 @@ export function Home() {
                   }`}
                 >
                   {hi && (
-                    <span className="absolute top-6 right-6 font-mono text-[9px] tracking-[0.18em] text-background/60 uppercase">
+                    <span className="absolute top-6 right-6 font-mono text-[9px] tracking-[0.18em] text-background/70 uppercase">
                       popular
                     </span>
                   )}
@@ -332,7 +332,7 @@ export function Home() {
                   </h3>
                   <p
                     className={`mt-1 text-xs ${
-                      hi ? 'text-background/55' : 'text-muted-foreground'
+                      hi ? 'text-background/70' : 'text-muted-foreground'
                     }`}
                   >
                     {plan.description}
@@ -351,7 +351,7 @@ export function Home() {
                         </span>
                         <span
                           className={`ml-1 text-[13px] ${
-                            hi ? 'text-background/45' : 'text-hint/70'
+                            hi ? 'text-background/65' : 'text-hint/90'
                           }`}
                         >
                           /{plan.period}
@@ -378,7 +378,7 @@ export function Home() {
                         />
                         <span
                           className={`text-xs leading-normal ${
-                            hi ? 'text-background/75' : 'text-subtle/80'
+                            hi ? 'text-background/75' : 'text-subtle'
                           }`}
                         >
                           {f}
@@ -426,7 +426,7 @@ export function Home() {
           <div className="border-border-strong bg-surface relative overflow-hidden rounded-2xl border px-5 py-10 text-center sm:px-12 sm:py-14">
             <div className="bg-blueprint pointer-events-none absolute inset-0 mask-[radial-gradient(ellipse_at_center,black,transparent_75%)] text-foreground opacity-[0.4]" />
             <div className="relative">
-              <p className="mb-4 font-mono text-[11px] tracking-[0.24em] text-hint/70 uppercase sm:mb-5">
+              <p className="mb-4 font-mono text-[11px] tracking-[0.24em] text-hint/90 uppercase sm:mb-5">
                 Every conversation remembered · from the first call
               </p>
               <h2 className="mx-auto max-w-2xl text-balance font-semibold text-[clamp(22px,4.5vw,52px)] leading-[1.05] tracking-[-0.04em] text-foreground">
