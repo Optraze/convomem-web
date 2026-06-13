@@ -50,20 +50,17 @@ bun --bun run check
 ```
 
 
-## Deploy with Cloudflare Workers
+## Deploy with Netlify
 
-This project uses the official `@cloudflare/vite-plugin` for Cloudflare Workers deployment.
+This project uses Nitro as a server adapter. Netlify auto-detects the configuration — no extra config needed.
 
 ```bash
 bun run build
-wrangler deploy
 ```
 
-For local development with Workers:
-
-```bash
-bun run dev:worker
-```
+Set these in the Netlify dashboard:
+- **Publish directory**: `.output/public`
+- **Functions directory**: `.output/server`
 
 
 

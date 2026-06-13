@@ -1,5 +1,5 @@
+import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
-import { cloudflare } from '@cloudflare/vite-plugin'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { devtools } from '@tanstack/devtools-vite'
@@ -10,9 +10,9 @@ const config = defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
   plugins: [
     command === 'serve' && devtools(),
-    cloudflare({ viteEnvironment: { name: 'ssr' } }),
+    nitro({ compatibilityDate: 'latest' }),
     tailwindcss(),
-    tanstackStart({ srcDirectory: 'src' }),
+    tanstackStart(),
     viteReact(),
     babel({ presets: [reactCompilerPreset()] }),
   ],
