@@ -4,9 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev --port 3000",
+    "dev:worker": "wrangler dev",
     "generate-routes": "tsr generate",
     "build": "vite build",
     "preview": "vite preview",
+    "deploy": "wrangler deploy",
     "test": "vitest run",
     "format": "biome format",
     "lint": "biome lint",
@@ -49,6 +51,7 @@
     "@vitejs/plugin-react": "^6",
     "babel-plugin-react-compiler": "^1.0.0",
     "typescript": "^6",
-    "vite": "^8"
+    "vite": "^8",
+    "wrangler": "latest"
   }
 }

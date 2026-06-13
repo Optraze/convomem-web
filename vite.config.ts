@@ -10,7 +10,16 @@ const config = defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
   plugins: [
     command === 'serve' && devtools(),
-    nitro(),
+    nitro({
+      preset: 'cloudflare_module',
+      logLevel: 3,
+      debug: command === 'serve',
+      cloudflare: {
+        wrangler: {
+          compatibility_date: '2025-01-01',
+        },
+      },
+    }),
     tailwindcss(),
     tanstackStart({ srcDirectory: 'src' }),
     viteReact(),

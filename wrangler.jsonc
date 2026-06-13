@@ -1,0 +1,15 @@
+{
+  // Wrangler configuration for Cloudflare Workers
+  // Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
+  "name": "convomem-web",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": ".output/server/index.mjs",
+  "assets": {
+    "directory": ".output/public",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
