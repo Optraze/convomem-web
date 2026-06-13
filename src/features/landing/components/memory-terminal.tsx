@@ -392,10 +392,17 @@ export function MemoryTerminal() {
       }}
       className={`relative rounded-xl border bg-surface overflow-hidden transition-colors ${drag ? 'border-foreground' : 'border-border-strong'}`}
     >
+      {/* top accent */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-foreground/25 to-transparent" />
       {/* terminal chrome */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-        <div className="flex items-center gap-2.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-foreground caret-blink" />
+      <div className="relative flex items-center justify-between px-4 py-2.5 border-b border-border">
+        <div className="flex items-center gap-3">
+          {/* window controls */}
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-border-strong/60" />
+            <span className="w-2.5 h-2.5 rounded-full bg-border-strong/60" />
+            <span className="w-2.5 h-2.5 rounded-full bg-border-strong/60" />
+          </div>
           <span className="font-mono text-subtle text-[12px]">
             memory.pipeline
           </span>
@@ -459,28 +466,29 @@ export function MemoryTerminal() {
                   run(text)
               }}
               rows={3}
-              placeholder="“Hey — my order #4471 still hasn't shipped and it's been a week. Pretty frustrated honestly.”"
-              className="w-full resize-none bg-background border border-border rounded-lg px-3.5 py-3 text-foreground placeholder:text-hint focus:outline-none focus:border-border-strong transition-colors"
+              placeholder="Try: &quot;Hey — my order #4471 still hasn't shipped and it's been a week. Pretty frustrated honestly.&quot;"
+              className="w-full resize-none bg-background border border-border rounded-lg px-3.5 py-3 text-foreground placeholder:text-hint/60 focus:outline-none focus:border-foreground/30 focus:ring-1 focus:ring-foreground/10 transition-all"
               style={{ fontSize: '13px', lineHeight: 1.6 }}
             />
             <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2.5">
               <button
                 onClick={() => text.trim() && run(text)}
                 disabled={!text.trim() || rateLimited}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-foreground text-background disabled:opacity-30 hover:opacity-90 transition-opacity"
+                className="group flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-foreground text-background disabled:opacity-30 hover:bg-foreground/90 transition-all"
                 style={{ fontSize: '13px', fontWeight: 500 }}
               >
                 {rateLimited ? (
                   <>Retry in {retryAfter}s</>
                 ) : (
                   <>
-                    Run the pipeline <ArrowRight size={14} />
+                    Run the pipeline
+                    <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
                   </>
                 )}
               </button>
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-border-strong text-foreground hover:bg-muted transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-border-strong text-foreground hover:bg-muted transition-colors"
                 style={{ fontSize: '13px', fontWeight: 500 }}
               >
                 <Upload size={13} /> Drop a CSV
@@ -500,11 +508,11 @@ export function MemoryTerminal() {
               />
             </div>
             <p
-              className="font-mono mt-3 text-hint text-[10px] leading-relaxed"
+              className="font-mono mt-3 flex items-center gap-1.5 text-hint text-[10px] leading-relaxed"
             >
+              <ShieldCheck size={10} className="text-hint/60" />
               {fileName ? <>file · {fileName} · </> : null}
-              up to {MAX_CONVERSATIONS} conversations · runs the real extraction
-              model · nothing is stored
+              up to {MAX_CONVERSATIONS} conversations · nothing is stored
             </p>
             {rateLimited && (
               <p

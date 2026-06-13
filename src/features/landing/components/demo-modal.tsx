@@ -85,7 +85,7 @@ export function DemoModal({
             className="relative w-full sm:max-w-3xl h-full sm:h-auto sm:max-h-[88vh] flex flex-col bg-surface border border-border-strong sm:rounded-2xl overflow-hidden shadow-2xl shadow-black/10"
           >
             {/* header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border flex-shrink-0">
+            <div className="relative flex items-center justify-between px-5 py-3.5 border-b border-border flex-shrink-0">
               <div className="flex items-center gap-3">
                 <span
                   className="inline-flex items-center justify-center w-6 h-6 rounded-[6px] bg-foreground"
@@ -100,11 +100,10 @@ export function DemoModal({
                   >
                     Live pipeline
                   </p>
-                  <p
-                    className="font-mono text-hint text-[10px] tracking-[0.12em] uppercase mt-1"
-                  >
+                  <span className="inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded-full bg-muted text-hint font-mono text-[9px] tracking-[0.08em] uppercase">
+                    <span className="w-1 h-1 rounded-full bg-foreground animate-pulse" />
                     real model · nothing stored
-                  </p>
+                  </span>
                 </div>
               </div>
               <button
@@ -115,6 +114,8 @@ export function DemoModal({
               >
                 <X size={16} />
               </button>
+              {/* accent line */}
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
             </div>
             {/* body */}
             <div className="flex-1 overflow-y-auto scrollbar-hide p-5">

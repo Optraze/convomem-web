@@ -3,8 +3,7 @@ import { extractFacts, parseConversations, parseCsvTable } from './extractor'
 import type { CsvTable, MappedConversation } from './extractor'
 
 const BASE_URL =
-  (typeof process !== 'undefined' ? process.env.VITE_API_URL : undefined) ??
-  'https://api.convomem.com'
+  import.meta.env.VITE_API_URL ?? 'https://api.convomem.com'
 
 /* ─────────────────────────────────────────────────────────────────────────
    use-demo-pipeline — drives the live demo against the REAL backend pipeline

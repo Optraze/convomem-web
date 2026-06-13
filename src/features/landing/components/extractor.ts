@@ -12,7 +12,7 @@
 export const MAX_CONVERSATIONS = 5
 
 /** Mirrors the Prisma enum used server-side. */
-export type MemoryType =
+type MemoryType =
   | 'fact'
   | 'preference'
   | 'intent'
@@ -22,23 +22,15 @@ export type MemoryType =
   | 'context'
   | 'technical'
 
-export type Sentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE'
+type Sentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE'
 
-export interface Fact {
+interface Fact {
   content: string
   memoryType: MemoryType
   sentiment: Sentiment
   confidence: number // 0..1
   isSensitive: boolean // PII detected → would be redacted at rest
   tags: string[]
-}
-
-export interface ConversationResult {
-  id: string
-  source: string // "chat" | "voice" | "email" | "sms"
-  transcript: string // the raw (already PII-masked) message
-  facts: Fact[]
-  reply: string // the agent's memory-aware next turn
 }
 
 /* ── PII patterns: detected and masked BEFORE anything is "stored" ───────── */
@@ -231,25 +223,6 @@ export function extractFacts(raw: string): Fact[] {
   return facts.slice(0, 6)
 }
 
-/** Compose a memory-aware "next turn" reply that cites the captured facts. */
-export function composeReply(facts: Fact[]): string {
-  const order = facts.find((f) => /order/.test(f.content))
-  const neg = facts.find((f) => f.sentiment === 'NEGATIVE')
-  const intent = facts.find((f) => f.memoryType === 'intent')
-  const name = facts
-    .find((f) => /name ·/.test(f.content))
-    ?.content.split('· ')[1]
-
-  const hi = name ? `Welcome back, ${name}.` : 'Welcome back.'
-  if (order && neg)
-    return `${hi} I see ${order.content} is still delayed — let me make this right before we go further.`
-  if (intent)
-    return `${hi} Last time you mentioned wanting to ${intent.content.replace(/^(intends to|intent · )/, '')} — want to pick up there?`
-  if (neg)
-    return `${hi} I know last time was frustrating — I've got the full history, so you won't have to repeat yourself.`
-  return `${hi} I already have your history on file — no need to start from scratch.`
-}
-
 /* ── CSV / transcript parsing ─────────────────────────────────────────────
    Accepts real CSVs (quoted fields, commas inside quotes) and raw pasted
    text. Detects a message-bearing column; otherwise treats each line as a
@@ -399,7 +372,7 @@ export function guessMapping(columns: string[]): CsvMapping {
 }
 
 /** Map a free-text role value to the binary role the pipeline understands. */
-export function normalizeRole(v: string): DemoRole {
+function normalizeRole(v: string): DemoRole {
   return /agent|assistant|bot|support|\brep\b|system|admin|operator/i.test(
     v || ''
   )
@@ -453,20 +426,6 @@ export function groupConversations(
     .map((k) => groups.get(k)!)
     .filter((c) => c.messages.length > 0)
     .slice(0, MAX_CONVERSATIONS)
-}
-
-export function buildResults(input: string): ConversationResult[] {
-  return parseConversations(input).map((c, i) => {
-    const { masked } = maskPII(c.text)
-    const facts = extractFacts(c.text)
-    return {
-      id: `cust_${(0xa7ce + i * 0x131).toString(16).slice(0, 4)}`,
-      source: SOURCES.includes(c.source) ? c.source : 'chat',
-      transcript: masked,
-      facts,
-      reply: composeReply(facts),
-    }
-  })
 }
 
 /* Sample dataset for the "load sample" affordance — realistic, varied. */

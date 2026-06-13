@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect } from 'react'
 import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 
