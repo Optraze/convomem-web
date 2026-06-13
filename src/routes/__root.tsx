@@ -84,6 +84,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           href: appCss,
         },
         {
+          rel: 'modulepreload',
+          href: '/assets/inter-latin-wght-normal-Dx4kXJAl.woff2',
+          as: 'font',
+          type: 'font/woff2',
+          crossOrigin: 'anonymous',
+        },
+        {
+          rel: 'modulepreload',
+          href: '/assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2',
+          as: 'font',
+          type: 'font/woff2',
+          crossOrigin: 'anonymous',
+        },
+        {
           rel: 'icon',
           href: '/favicon.svg',
           type: 'image/svg+xml',

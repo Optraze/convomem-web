@@ -10,9 +10,27 @@ const config = defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
   plugins: [
     command === 'serve' && devtools(),
-    nitro({ compatibilityDate: 'latest' }),
+    nitro({
+      compatibilityDate: 'latest',
+      prerender: {
+        routes: ['/', '/contact', '/privacy', '/terms'],
+      },
+      compressPublicAssets: {
+        gzip: true,
+        brotli: true,
+      },
+      routeRules: {
+        '/': { prerender: true },
+        '/contact': { prerender: true },
+        '/privacy': { prerender: true },
+        '/terms': { prerender: true },
+        '/assets/**': {
+          headers: { 'cache-control': 'public, max-age=31536000, immutable' },
+        },
+      },
+    }),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({ srcDirectory: 'src' }),
     viteReact(),
     babel({ presets: [reactCompilerPreset()] }),
   ],

@@ -1,11 +1,20 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { Link } from '@tanstack/react-router'
 
 import { Accordion } from '@/components/ui/accordion'
-import { DemoModal } from '@/features/landing/components/demo-modal.tsx'
-import { ScenarioPlayer } from '@/features/landing/components/scenario-player.tsx'
+
+const DemoModal = lazy(() =>
+  import('@/features/landing/components/demo-modal.tsx').then((m) => ({
+    default: m.DemoModal,
+  }))
+)
+const ScenarioPlayer = lazy(() =>
+  import('@/features/landing/components/scenario-player.tsx').then((m) => ({
+    default: m.ScenarioPlayer,
+  }))
+)
 
 import { MarketingFooter } from '../components/footer.tsx'
 import { MarketingNavbar } from '../components/navbar.tsx'
@@ -210,7 +219,9 @@ export function Home() {
                 an expansion. In each one, the agent already knows the story.
               </p>
             </div>
-            <ScenarioPlayer />
+            <Suspense>
+              <ScenarioPlayer />
+            </Suspense>
           </div>
         </section>
 
@@ -442,7 +453,9 @@ export function Home() {
 
       <MarketingFooter />
 
-      <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
+      <Suspense>
+        <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
+      </Suspense>
       <CookieBanner />
     </div>
   )
