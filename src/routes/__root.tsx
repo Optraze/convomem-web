@@ -9,6 +9,8 @@ import type React from 'react'
 
 import { Devtools } from '@/components/devtools'
 import { ThemeProvider, themeScript } from '@/components/theme-provider'
+import { GeneralError } from '@/features/errors/general-error'
+import { NotFoundError } from '@/features/errors/not-found'
 import {
   getSeoUrl,
   SITE_DESCRIPTION,
@@ -136,12 +138,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         },
       ],
     }),
-    notFoundComponent: () => (
-      <main className="container mx-auto p-4 pt-16">
-        <h1>404</h1>
-        <p>The requested page could not be found.</p>
-      </main>
-    ),
+    notFoundComponent: NotFoundError,
+    errorComponent: GeneralError,
     shellComponent: RootDocument,
   }
 )
