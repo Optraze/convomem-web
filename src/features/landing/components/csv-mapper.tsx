@@ -1,9 +1,13 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, X } from 'lucide-react'
-import type { CsvTable, CsvMapping, MappedConversation } from './extractor'
+
+import type { CsvMapping, CsvTable, MappedConversation } from './extractor'
+
+import { Button } from '@/components/ui/button'
+
 import {
-  guessMapping,
   groupConversations,
+  guessMapping,
   MAX_CONVERSATIONS,
 } from './extractor'
 
@@ -25,9 +29,7 @@ function FieldSelect({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span
-        className="font-mono text-hint text-[10px] tracking-[0.16em] uppercase"
-      >
+      <span className="font-mono text-hint text-[10px] tracking-[0.16em] uppercase">
         {label}
         {!optional && <span className="text-foreground"> *</span>}
       </span>
@@ -78,9 +80,7 @@ export function CsvMapper({
     <div className="p-4 sm:p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <span className="font-mono text-subtle text-[12px]">
-            map columns
-          </span>
+          <span className="font-mono text-subtle text-[12px]">map columns</span>
           <p className="text-hint mt-0.5" style={{ fontSize: '11px' }}>
             {totalRows} row{totalRows === 1 ? '' : 's'} · matched to{' '}
             {convs.length} conversation{convs.length === 1 ? '' : 's'}
@@ -89,13 +89,15 @@ export function CsvMapper({
               : ''}
           </p>
         </div>
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
           onClick={onCancel}
           aria-label="Cancel"
-          className="w-7 h-7 flex items-center justify-center rounded-md text-hint hover:text-foreground hover:bg-muted transition-colors"
         >
           <X size={14} />
-        </button>
+        </Button>
       </div>
 
       {/* Column mapping controls */}
@@ -134,9 +136,7 @@ export function CsvMapper({
       </div>
 
       {/* Chat-bubble preview, grouped by conversation */}
-      <div
-        className="font-mono text-hint text-[10px] tracking-[0.16em] uppercase mb-2"
-      >
+      <div className="font-mono text-hint text-[10px] tracking-[0.16em] uppercase mb-2">
         preview
       </div>
       {convs.length === 0 ? (
@@ -191,21 +191,23 @@ export function CsvMapper({
       )}
 
       <div className="mt-5 flex items-center gap-2.5">
-        <button
+        <Button
+          type="button"
           onClick={() => valid && onRun(convs)}
           disabled={!valid}
-          className="flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-foreground text-background disabled:opacity-30 hover:opacity-90 transition-opacity"
-          style={{ fontSize: '13px', fontWeight: 500 }}
         >
           Run {convs.length} conversation{convs.length === 1 ? '' : 's'}{' '}
           <ArrowRight size={14} />
-        </button>
-        <button
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
           onClick={onCancel}
-          className="font-mono text-hint hover:text-foreground transition-colors text-[11px]"
+          className="font-mono text-[11px]"
         >
           cancel
-        </button>
+        </Button>
       </div>
     </div>
   )

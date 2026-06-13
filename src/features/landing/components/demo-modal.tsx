@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { X } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+
+import { Button } from '@/components/ui/button'
+
 import { MemoryTerminal } from './memory-terminal'
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -59,7 +62,7 @@ export function DemoModal({
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[120] flex items-start sm:items-center justify-center p-0 sm:p-6">
+        <div className="fixed inset-0 z-120 flex items-start sm:items-center justify-center p-0 sm:p-6">
           {/* backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -106,14 +109,16 @@ export function DemoModal({
                   </span>
                 </div>
               </div>
-              <button
+              <Button
                 ref={closeRef}
+                type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={onClose}
                 aria-label="Close demo"
-                className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
                 <X size={16} />
-              </button>
+              </Button>
               {/* accent line */}
               <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
             </div>

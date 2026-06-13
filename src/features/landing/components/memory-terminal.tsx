@@ -1,23 +1,27 @@
 import { useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
 import {
+  Activity,
   ArrowRight,
-  Upload,
-  RotateCcw,
-  ShieldCheck,
   Check,
   Loader2,
   Minus,
-  Activity,
+  RotateCcw,
+  ShieldCheck,
+  Upload,
 } from 'lucide-react'
-import { SAMPLE_CSV, MAX_CONVERSATIONS } from './extractor'
-import { CsvMapper } from './csv-mapper'
+import { AnimatePresence, motion } from 'motion/react'
+
 import type {
-  DemoFact,
-  StageEvent,
   ConvState,
+  DemoFact,
   InsightsResult,
+  StageEvent,
 } from './use-demo-pipeline'
+
+import { Button } from '@/components/ui/button'
+
+import { CsvMapper } from './csv-mapper'
+import { MAX_CONVERSATIONS, SAMPLE_CSV } from './extractor'
 import { useDemoPipeline } from './use-demo-pipeline'
 
 const SENT: Record<DemoFact['sentiment'], { mark: string; label: string }> = {
@@ -99,9 +103,7 @@ function StageRow({
           <span className="w-1.5 h-1.5 rounded-full border border-border-strong" />
         )}
       </span>
-      <span
-        className="font-mono text-hint tnum text-[10px] w-5 flex-shrink-0 mt-0.5"
-      >
+      <span className="font-mono text-hint tnum text-[10px] w-5 flex-shrink-0 mt-0.5">
         S{stage}
       </span>
       <div className="flex-1 min-w-0">
@@ -174,9 +176,7 @@ function FactRow({ fact, index }: { fact: DemoFact; index: number }) {
       transition={{ duration: 0.3 }}
       className="flex items-start gap-3 py-2 border-b border-border last:border-0"
     >
-      <span
-        className="font-mono text-hint tnum text-[10px] mt-0.5 w-4 flex-shrink-0"
-      >
+      <span className="font-mono text-hint tnum text-[10px] mt-0.5 w-4 flex-shrink-0">
         {String(index + 1).padStart(2, '0')}
       </span>
       <div className="flex-1 min-w-0">
@@ -204,9 +204,7 @@ function FactRow({ fact, index }: { fact: DemoFact; index: number }) {
           {fact.expiresAt && (
             <>
               <span className="text-ghost">·</span>
-              <span className="font-mono text-hint text-[10px]">
-                ttl
-              </span>
+              <span className="font-mono text-hint text-[10px]">ttl</span>
             </>
           )}
         </div>
@@ -287,15 +285,11 @@ function InsightsPanel({
         className={`flex items-center gap-2 px-3.5 py-2 border-b border-border ${nested ? 'bg-surface/60' : 'bg-muted/40'}`}
       >
         <Activity size={12} className="text-foreground" />
-        <span className="font-mono text-subtle text-[11px]">
-          {title}
-        </span>
+        <span className="font-mono text-subtle text-[11px]">{title}</span>
       </div>
       <div className="px-3.5 py-3 space-y-3">
         <div className="flex items-center gap-3 flex-wrap">
-          <span
-            className="font-mono text-hint text-[10px] tracking-[0.14em] uppercase"
-          >
+          <span className="font-mono text-hint text-[10px] tracking-[0.14em] uppercase">
             sentiment
           </span>
           <span
@@ -409,32 +403,29 @@ export function MemoryTerminal() {
         </div>
         <div className="flex items-center gap-3">
           {phase === 'running' && (
-            <span
-              className="font-mono text-hint text-[10px] tracking-[0.14em] uppercase scan-text"
-            >
+            <span className="font-mono text-hint text-[10px] tracking-[0.14em] uppercase scan-text">
               live · processing
             </span>
           )}
           {phase === 'mapping' && (
-            <span
-              className="font-mono text-hint text-[10px] tracking-[0.12em] uppercase"
-            >
+            <span className="font-mono text-hint text-[10px] tracking-[0.12em] uppercase">
               map · preview
             </span>
           )}
           {(phase === 'done' || phase === 'error') && (
             <>
-              <span
-                className="font-mono text-hint text-[10px] tracking-[0.12em] uppercase"
-              >
+              <span className="font-mono text-hint text-[10px] tracking-[0.12em] uppercase">
                 {mode === 'offline' ? 'offline preview' : 'live · real model'}
               </span>
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={resetAll}
-                className="font-mono flex items-center gap-1.5 text-hint hover:text-foreground transition-colors text-[10px] tracking-[0.12em] uppercase"
+                className="font-mono text-[10px] tracking-[0.12em] uppercase"
               >
                 <RotateCcw size={11} /> reset
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -449,9 +440,7 @@ export function MemoryTerminal() {
             exit={{ opacity: 0 }}
             className="p-4 sm:p-5"
           >
-            <label
-              className="font-mono block text-hint text-[10px] tracking-[0.18em] uppercase mb-2.5"
-            >
+            <label className="font-mono block text-hint text-[10px] tracking-[0.18em] uppercase mb-2.5">
               paste a real message — run it through the real pipeline
             </label>
             <textarea
@@ -471,34 +460,40 @@ export function MemoryTerminal() {
               style={{ fontSize: '13px', lineHeight: 1.6 }}
             />
             <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2.5">
-              <button
+              <Button
+                type="button"
                 onClick={() => text.trim() && run(text)}
                 disabled={!text.trim() || rateLimited}
-                className="group flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-foreground text-background disabled:opacity-30 hover:bg-foreground/90 transition-all"
-                style={{ fontSize: '13px', fontWeight: 500 }}
+                className="group"
               >
                 {rateLimited ? (
                   <>Retry in {retryAfter}s</>
                 ) : (
                   <>
                     Run the pipeline
-                    <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+                    <ArrowRight
+                      size={14}
+                      className="transition-transform group-hover:translate-x-0.5"
+                    />
                   </>
                 )}
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-border-strong text-foreground hover:bg-muted transition-colors"
-                style={{ fontSize: '13px', fontWeight: 500 }}
               >
                 <Upload size={13} /> Drop a CSV
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => prepareCsv(SAMPLE_CSV)}
-                className="font-mono text-hint hover:text-foreground transition-colors text-[11px] sm:ml-1"
+                className="font-mono text-[11px] sm:ml-1"
               >
                 or load sample →
-              </button>
+              </Button>
               <input
                 ref={fileRef}
                 type="file"
@@ -507,17 +502,13 @@ export function MemoryTerminal() {
                 onChange={(e) => onFile(e.target.files?.[0] ?? undefined)}
               />
             </div>
-            <p
-              className="font-mono mt-3 flex items-center gap-1.5 text-hint text-[10px] leading-relaxed"
-            >
+            <p className="font-mono mt-3 flex items-center gap-1.5 text-hint text-[10px] leading-relaxed">
               <ShieldCheck size={10} className="text-hint/60" />
               {fileName ? <>file · {fileName} · </> : null}
               up to {MAX_CONVERSATIONS} conversations · nothing is stored
             </p>
             {rateLimited && (
-              <p
-                className="font-mono mt-2 text-subtle text-[10px] leading-relaxed"
-              >
+              <p className="font-mono mt-2 text-subtle text-[10px] leading-relaxed">
                 Rate limited · retry in {retryAfter}s
               </p>
             )}
@@ -545,9 +536,7 @@ export function MemoryTerminal() {
               <InsightsPanel ins={insights} title="across all conversations" />
             )}
             {error && (
-              <p className="font-mono text-subtle text-[11px] px-1">
-                {error}
-              </p>
+              <p className="font-mono text-subtle text-[11px] px-1">{error}</p>
             )}
             {phase === 'done' && (
               <div className="flex items-center justify-between pt-1">
@@ -555,9 +544,7 @@ export function MemoryTerminal() {
                   {totalFacts} facts · {convs.length}{' '}
                   {convs.length === 1 ? 'conversation' : 'conversations'}
                 </span>
-                <span
-                  className="font-mono inline-flex items-center gap-1.5 text-hint text-[10px] tracking-[0.12em] uppercase"
-                >
+                <span className="font-mono inline-flex items-center gap-1.5 text-hint text-[10px] tracking-[0.12em] uppercase">
                   <ShieldCheck size={11} /> nothing stored
                 </span>
               </div>

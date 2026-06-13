@@ -7,7 +7,8 @@ export const Route = createFileRoute('/privacy')({
   head: () => ({
     meta: createPageMeta({
       title: `Privacy Policy — ${SITE_NAME}`,
-      description: 'Read the ConvoMem Privacy Policy to learn how we collect, use, protect, and retain information.',
+      description:
+        'Read the ConvoMem Privacy Policy to learn how we collect, use, protect, and retain information.',
       path: '/privacy',
     }),
     links: [{ rel: 'canonical', href: getSeoUrl('/privacy') }],

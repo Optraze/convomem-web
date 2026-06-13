@@ -4,7 +4,6 @@ import { motion, useReducedMotion } from 'motion/react'
 import { Link } from '@tanstack/react-router'
 
 import { Accordion } from '@/components/ui/accordion'
-
 import { DemoModal } from '@/features/landing/components/demo-modal.tsx'
 import { ScenarioPlayer } from '@/features/landing/components/scenario-player.tsx'
 

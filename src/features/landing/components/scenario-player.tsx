@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
-import { Phone, MessageSquare, Headphones, Check } from 'lucide-react'
+import { Check, Headphones, MessageSquare, Phone } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 
 /* ─────────────────────────────────────────────────────────────────────────
    ScenarioPlayer — an auto-playing, looping "film" of real customer moments.
@@ -131,9 +131,7 @@ function Bubble({
       className={`flex flex-col ${isAgent ? 'items-start' : 'items-end'}`}
     >
       {isAgent && beat.recall && (
-        <span
-          className="font-mono mb-1.5 inline-flex items-center gap-1.5 text-hint text-[10px] tracking-[0.04em]"
-        >
+        <span className="font-mono mb-1.5 inline-flex items-center gap-1.5 text-hint text-[10px] tracking-[0.04em]">
           <Check size={10} className="text-foreground" /> {beat.recall}
         </span>
       )}
@@ -216,9 +214,7 @@ export function ScenarioPlayer() {
                 >
                   {s.title}
                 </span>
-                <span
-                  className="font-mono block text-hint text-[9px] tracking-[0.1em] uppercase truncate"
-                >
+                <span className="font-mono block text-hint text-[9px] tracking-[0.1em] uppercase truncate">
                   {s.channel.split(' · ')[0]}
                 </span>
               </span>
@@ -236,9 +232,7 @@ export function ScenarioPlayer() {
               {scn.channel}
             </span>
           </div>
-          <span
-            className="font-mono text-hint text-[10px] tracking-[0.1em] uppercase"
-          >
+          <span className="font-mono text-hint text-[10px] tracking-[0.1em] uppercase">
             {scn.when}
           </span>
         </div>
@@ -272,9 +266,7 @@ export function ScenarioPlayer() {
             className={`h-[3px] rounded-full transition-all duration-500 ${i === active ? 'w-7 bg-foreground' : 'w-3 bg-border-strong'}`}
           />
         ))}
-        <span
-          className="font-mono ml-auto text-hint text-[10px] tracking-[0.14em] uppercase"
-        >
+        <span className="font-mono ml-auto text-hint text-[10px] tracking-[0.14em] uppercase">
           auto-playing
         </span>
       </div>
