@@ -11,7 +11,6 @@ import { ThemeProvider, themeScript } from '@/components/theme-provider'
 import appCss from '@/styles.css?url'
 
 import { Devtools } from '@/components/devtools'
-import { SessionExpiredDialog } from '@/features/auth/components/session-expired-dialog'
 import {
   getSeoUrl,
   SITE_DESCRIPTION,
@@ -141,7 +140,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider>
           {children}
-          <SessionExpiredDialog />
         </ThemeProvider>
         <Devtools />
         <Scripts />

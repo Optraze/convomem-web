@@ -12,15 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ContactRouteImport } from './routes/contact'
-import { Route as OnboardingRouteRouteImport } from './routes/onboarding/route'
-import { Route as authRouteRouteImport } from './routes/(auth)/route'
-import { Route as appRouteRouteImport } from './routes/(app)/route'
-import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
-import { Route as authSignupRouteImport } from './routes/(auth)/signup'
-import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
-import { Route as authLoginRouteImport } from './routes/(auth)/login'
-import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -37,132 +29,40 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OnboardingRouteRoute = OnboardingRouteRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authRouteRoute = authRouteRouteImport.update({
-  id: '/(auth)',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const appRouteRoute = appRouteRouteImport.update({
-  id: '/(app)',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => OnboardingRouteRoute,
-} as any)
 const marketingIndexRoute = marketingIndexRouteImport.update({
   id: '/(marketing)/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const authSignupRoute = authSignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => authRouteRoute,
-} as any)
-const authResetPasswordRoute = authResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => authRouteRoute,
-} as any)
-const authLoginRoute = authLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => authRouteRoute,
-} as any)
-const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => authRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
-  '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/forgot-password': typeof authForgotPasswordRoute
-  '/login': typeof authLoginRoute
-  '/reset-password': typeof authResetPasswordRoute
-  '/signup': typeof authSignupRoute
   '/': typeof marketingIndexRoute
-  '/onboarding/': typeof OnboardingIndexRoute
 }
 export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/forgot-password': typeof authForgotPasswordRoute
-  '/login': typeof authLoginRoute
-  '/reset-password': typeof authResetPasswordRoute
-  '/signup': typeof authSignupRoute
   '/': typeof marketingIndexRoute
-  '/onboarding': typeof OnboardingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/(app)': typeof appRouteRoute
-  '/(auth)': typeof authRouteRouteWithChildren
-  '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/(auth)/forgot-password': typeof authForgotPasswordRoute
-  '/(auth)/login': typeof authLoginRoute
-  '/(auth)/reset-password': typeof authResetPasswordRoute
-  '/(auth)/signup': typeof authSignupRoute
   '/(marketing)/': typeof marketingIndexRoute
-  '/onboarding/': typeof OnboardingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/onboarding'
-    | '/contact'
-    | '/privacy'
-    | '/terms'
-    | '/forgot-password'
-    | '/login'
-    | '/reset-password'
-    | '/signup'
-    | '/'
-    | '/onboarding/'
+  fullPaths: '/contact' | '/privacy' | '/terms' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/contact'
-    | '/privacy'
-    | '/terms'
-    | '/forgot-password'
-    | '/login'
-    | '/reset-password'
-    | '/signup'
-    | '/'
-    | '/onboarding'
-  id:
-    | '__root__'
-    | '/(app)'
-    | '/(auth)'
-    | '/onboarding'
-    | '/contact'
-    | '/privacy'
-    | '/terms'
-    | '/(auth)/forgot-password'
-    | '/(auth)/login'
-    | '/(auth)/reset-password'
-    | '/(auth)/signup'
-    | '/(marketing)/'
-    | '/onboarding/'
+  to: '/contact' | '/privacy' | '/terms' | '/'
+  id: '__root__' | '/contact' | '/privacy' | '/terms' | '/(marketing)/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  appRouteRoute: typeof appRouteRoute
-  authRouteRoute: typeof authRouteRouteWithChildren
-  OnboardingRouteRoute: typeof OnboardingRouteRouteWithChildren
   ContactRoute: typeof ContactRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
@@ -192,34 +92,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)': {
-      id: '/(auth)'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof authRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(app)': {
-      id: '/(app)'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof appRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding/': {
-      id: '/onboarding/'
-      path: '/'
-      fullPath: '/onboarding/'
-      preLoaderRoute: typeof OnboardingIndexRouteImport
-      parentRoute: typeof OnboardingRouteRoute
-    }
     '/(marketing)/': {
       id: '/(marketing)/'
       path: '/'
@@ -227,71 +99,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/signup': {
-      id: '/(auth)/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof authSignupRouteImport
-      parentRoute: typeof authRouteRoute
-    }
-    '/(auth)/reset-password': {
-      id: '/(auth)/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof authResetPasswordRouteImport
-      parentRoute: typeof authRouteRoute
-    }
-    '/(auth)/login': {
-      id: '/(auth)/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof authLoginRouteImport
-      parentRoute: typeof authRouteRoute
-    }
-    '/(auth)/forgot-password': {
-      id: '/(auth)/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof authForgotPasswordRouteImport
-      parentRoute: typeof authRouteRoute
-    }
   }
 }
 
-interface authRouteRouteChildren {
-  authForgotPasswordRoute: typeof authForgotPasswordRoute
-  authLoginRoute: typeof authLoginRoute
-  authResetPasswordRoute: typeof authResetPasswordRoute
-  authSignupRoute: typeof authSignupRoute
-}
-
-const authRouteRouteChildren: authRouteRouteChildren = {
-  authForgotPasswordRoute: authForgotPasswordRoute,
-  authLoginRoute: authLoginRoute,
-  authResetPasswordRoute: authResetPasswordRoute,
-  authSignupRoute: authSignupRoute,
-}
-
-const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
-  authRouteRouteChildren,
-)
-
-interface OnboardingRouteRouteChildren {
-  OnboardingIndexRoute: typeof OnboardingIndexRoute
-}
-
-const OnboardingRouteRouteChildren: OnboardingRouteRouteChildren = {
-  OnboardingIndexRoute: OnboardingIndexRoute,
-}
-
-const OnboardingRouteRouteWithChildren = OnboardingRouteRoute._addFileChildren(
-  OnboardingRouteRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
-  appRouteRoute: appRouteRoute,
-  authRouteRoute: authRouteRouteWithChildren,
-  OnboardingRouteRoute: OnboardingRouteRouteWithChildren,
   ContactRoute: ContactRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
