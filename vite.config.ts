@@ -11,14 +11,13 @@ const config = defineConfig(({ command }) => ({
   plugins: [
     command === 'serve' && devtools(),
     nitro({
-      preset: 'cloudflare_module',
+      preset: (process.env.NITRO_PRESET as string) || 'cloudflare_module',
       logLevel: 3,
       debug: command === 'serve',
       cloudflare: {
         wrangler: {
           name: 'convomem',
           compatibility_date: '2025-01-01',
-          compatibility_flags: ['nodejs_compat'],
         },
       },
     }),
