@@ -50,18 +50,20 @@ bun --bun run check
 ```
 
 
-## Deploy with Nitro
+## Deploy with Cloudflare Workers
 
-This project uses Nitro as a generic server adapter, so it can run on any Node-compatible host.
+This project uses the official `@cloudflare/vite-plugin` for Cloudflare Workers deployment.
 
 ```bash
-npm run build
-node dist/server/index.mjs
+bun run build
+wrangler deploy
 ```
 
-The build output is a self-contained Node server. To deploy, push the `dist/` directory to your host (Render, Fly.io, your own VPS, etc.) and run the server command above.
+For local development with Workers:
 
-For host-specific presets (Vercel, Netlify, Cloudflare, AWS Lambda, etc.) and tuning, see https://v3.nitro.build/deploy.
+```bash
+bun run dev:worker
+```
 
 
 

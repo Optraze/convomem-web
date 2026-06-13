@@ -1,7 +1,22 @@
 {
-  // Minimal config for local dev only.
-  // Nitro auto-generates .output/server/wrangler.json at build time.
-  // nodejs_compat is added automatically by the cloudflare_module preset.
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "convomem",
-  "compatibility_date": "2025-01-01"
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": true,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  }
 }

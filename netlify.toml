@@ -1,7 +1,0 @@
-[build]
-  command = "NITRO_PRESET=node_server bun run build"
-  publish = ".output/public"
-
-[functions]
-  directory = ".output/server"
-  node_bundler = "esbuild"

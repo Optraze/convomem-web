@@ -7,7 +7,6 @@ dist-ssr
 .env.*
 !.env.example
 .dev.vars
-.nitro
 .tanstack
 .wrangler
 .output
