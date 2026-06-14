@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 
+import { ContentFooter } from '@/components/content-footer'
 import { CopyMarkdownButton } from '@/components/copy-markdown-button'
 import {
   getAdjacent,
@@ -84,70 +85,77 @@ function ChangelogEntry() {
   if (!MDXContent) throw notFound()
 
   return (
-    <main className="mx-auto max-w-3xl px-5 pt-28 pb-14 sm:px-8 sm:pt-32 sm:pb-20">
-      <div className="flex items-center justify-between">
-        <Link
-          to="/changelog"
-          className="font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase hover:text-foreground"
-        >
-          ← Changelog
-        </Link>
-        <CopyMarkdownButton mdUrl={`/changelog/${slug}.md`} />
-      </div>
-      <article className="mt-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-[clamp(24px,4vw,36px)] font-semibold tracking-[-0.02em] text-foreground">
-            {frontmatter.title}
-          </h1>
-          {frontmatter.date && (
-            <time
-              dateTime={frontmatter.date}
-              className="font-mono text-xs text-muted-foreground"
-            >
-              {formatDate(frontmatter.date)}
-            </time>
-          )}
+    <>
+      <main className="mx-auto max-w-3xl px-5 pt-28 pb-14 sm:px-8 sm:pt-32 sm:pb-20">
+        <div className="flex items-center justify-between">
+          <Link
+            to="/changelog"
+            className="font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase hover:text-foreground"
+          >
+            ← Changelog
+          </Link>
+          <CopyMarkdownButton mdUrl={`/changelog/${slug}.md`} />
         </div>
-        <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
-          {frontmatter.description}
-        </p>
-        <div className="prose mt-8 max-w-none">
-          <MDXContent />
-        </div>
-      </article>
+        <article className="mt-6">
+          <div className="flex items-center gap-3">
+            <h1 className="text-[clamp(24px,4vw,36px)] font-semibold tracking-[-0.02em] text-foreground">
+              {frontmatter.title}
+            </h1>
+            {frontmatter.date && (
+              <time
+                dateTime={frontmatter.date}
+                className="font-mono text-xs text-muted-foreground"
+              >
+                {formatDate(frontmatter.date)}
+              </time>
+            )}
+          </div>
+          <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
+            {frontmatter.description}
+          </p>
+          <div className="prose mt-8 max-w-none">
+            <MDXContent />
+          </div>
+        </article>
 
-      {(prevMeta || nextMeta) && (
-        <nav className="mt-12 grid gap-4 border-t border-border pt-8 sm:grid-cols-2">
-          {prevMeta ? (
-            <Link
-              to="/changelog/$slug"
-              params={{ slug: prevMeta.slug }}
-              className="rounded-lg border border-border p-4 transition-colors hover:bg-muted/40"
-            >
-              <span className="text-xs text-muted-foreground">← Newer</span>
-              <span className="mt-1 block font-medium text-foreground">
-                {prevMeta.frontmatter.title}
-              </span>
-            </Link>
-          ) : (
-            <span />
-          )}
-          {nextMeta ? (
-            <Link
-              to="/changelog/$slug"
-              params={{ slug: nextMeta.slug }}
-              className="rounded-lg border border-border p-4 text-right transition-colors hover:bg-muted/40"
-            >
-              <span className="text-xs text-muted-foreground">Older →</span>
-              <span className="mt-1 block font-medium text-foreground">
-                {nextMeta.frontmatter.title}
-              </span>
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      )}
-    </main>
+        {(prevMeta || nextMeta) && (
+          <nav className="mt-12 grid gap-4 border-t border-border pt-8 sm:grid-cols-2">
+            {prevMeta ? (
+              <Link
+                to="/changelog/$slug"
+                params={{ slug: prevMeta.slug }}
+                className="rounded-lg border border-border p-4 transition-colors hover:bg-muted/40"
+              >
+                <span className="text-xs text-muted-foreground">
+                  ← Newer
+                </span>
+                <span className="mt-1 block font-medium text-foreground">
+                  {prevMeta.frontmatter.title}
+                </span>
+              </Link>
+            ) : (
+              <span />
+            )}
+            {nextMeta ? (
+              <Link
+                to="/changelog/$slug"
+                params={{ slug: nextMeta.slug }}
+                className="rounded-lg border border-border p-4 text-right transition-colors hover:bg-muted/40"
+              >
+                <span className="text-xs text-muted-foreground">
+                  Older →
+                </span>
+                <span className="mt-1 block font-medium text-foreground">
+                  {nextMeta.frontmatter.title}
+                </span>
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        )}
+      </main>
+      <ContentFooter />
+    </>
   )
 }

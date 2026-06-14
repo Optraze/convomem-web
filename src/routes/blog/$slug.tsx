@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 
+import { ContentFooter } from '@/components/content-footer'
 import { CopyMarkdownButton } from '@/components/copy-markdown-button'
 import {
   getAdjacent,
@@ -90,85 +91,93 @@ function BlogPost() {
   if (!MDXContent) throw notFound()
 
   return (
-    <main className="mx-auto max-w-3xl px-5 pt-28 pb-14 sm:px-8 sm:pt-32 sm:pb-20">
-      <Link
-        to="/blog"
-        className="font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase hover:text-foreground"
-      >
-        ← Blog
-      </Link>
-      <article className="mt-6">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          {frontmatter.date && (
-            <time dateTime={frontmatter.date}>
-              {formatDate(frontmatter.date)}
-            </time>
-          )}
-          {frontmatter.author && (
-            <>
-              <span>·</span>
-              <span>{frontmatter.author}</span>
-            </>
-          )}
-          <span>·</span>
-          <span>{readingTime} min read</span>
-          <CopyMarkdownButton mdUrl={`/blog/${slug}.md`} className="ml-auto" />
-        </div>
-        <h1 className="mt-3 text-[clamp(24px,4vw,36px)] font-semibold tracking-[-0.02em] text-foreground">
-          {frontmatter.title}
-        </h1>
-        <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
-          {frontmatter.description}
-        </p>
-        {frontmatter.tags && frontmatter.tags.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {frontmatter.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground uppercase"
-              >
-                {tag}
-              </span>
-            ))}
+    <>
+      <main className="mx-auto max-w-3xl px-5 pt-28 pb-14 sm:px-8 sm:pt-32 sm:pb-20">
+        <Link
+          to="/blog"
+          className="font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase hover:text-foreground"
+        >
+          ← Blog
+        </Link>
+        <article className="mt-6">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {frontmatter.date && (
+              <time dateTime={frontmatter.date}>
+                {formatDate(frontmatter.date)}
+              </time>
+            )}
+            {frontmatter.author && (
+              <>
+                <span>·</span>
+                <span>{frontmatter.author}</span>
+              </>
+            )}
+            <span>·</span>
+            <span>{readingTime} min read</span>
+            <CopyMarkdownButton
+              mdUrl={`/blog/${slug}.md`}
+              className="ml-auto"
+            />
           </div>
-        )}
-        <div className="prose mt-8 max-w-none">
-          <MDXContent />
-        </div>
-      </article>
+          <h1 className="mt-3 text-[clamp(24px,4vw,36px)] font-semibold tracking-[-0.02em] text-foreground">
+            {frontmatter.title}
+          </h1>
+          <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
+            {frontmatter.description}
+          </p>
+          {frontmatter.tags && frontmatter.tags.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {frontmatter.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground uppercase"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="prose mt-8 max-w-none">
+            <MDXContent />
+          </div>
+        </article>
 
-      {(prevMeta || nextMeta) && (
-        <nav className="mt-12 grid gap-4 border-t border-border pt-8 sm:grid-cols-2">
-          {prevMeta ? (
-            <Link
-              to="/blog/$slug"
-              params={{ slug: prevMeta.slug }}
-              className="rounded-lg border border-border p-4 transition-colors hover:bg-muted/40"
-            >
-              <span className="text-xs text-muted-foreground">← Previous</span>
-              <span className="mt-1 block font-medium text-foreground">
-                {prevMeta.frontmatter.title}
-              </span>
-            </Link>
-          ) : (
-            <span />
-          )}
-          {nextMeta ? (
-            <Link
-              to="/blog/$slug"
-              params={{ slug: nextMeta.slug }}
-              className="rounded-lg border border-border p-4 text-right transition-colors hover:bg-muted/40"
-            >
-              <span className="text-xs text-muted-foreground">Next →</span>
-              <span className="mt-1 block font-medium text-foreground">
-                {nextMeta.frontmatter.title}
-              </span>
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      )}
-    </main>
+        {(prevMeta || nextMeta) && (
+          <nav className="mt-12 grid gap-4 border-t border-border pt-8 sm:grid-cols-2">
+            {prevMeta ? (
+              <Link
+                to="/blog/$slug"
+                params={{ slug: prevMeta.slug }}
+                className="rounded-lg border border-border p-4 transition-colors hover:bg-muted/40"
+              >
+                <span className="text-xs text-muted-foreground">
+                  ← Previous
+                </span>
+                <span className="mt-1 block font-medium text-foreground">
+                  {prevMeta.frontmatter.title}
+                </span>
+              </Link>
+            ) : (
+              <span />
+            )}
+            {nextMeta ? (
+              <Link
+                to="/blog/$slug"
+                params={{ slug: nextMeta.slug }}
+                className="rounded-lg border border-border p-4 text-right transition-colors hover:bg-muted/40"
+              >
+                <span className="text-xs text-muted-foreground">Next →</span>
+                <span className="mt-1 block font-medium text-foreground">
+                  {nextMeta.frontmatter.title}
+                </span>
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        )}
+      </main>
+      <ContentFooter />
+    </>
   )
 }

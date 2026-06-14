@@ -6,6 +6,7 @@ import type React from 'react'
 import type { Toc } from '@/lib/content'
 import type { DocSearchEntry, ResolvedNavGroup } from '../nav'
 
+import { ContentFooter } from '@/components/content-footer'
 import { Logo } from '@/components/logo.tsx'
 
 import { DocsSearch } from './docs-search'
@@ -106,6 +107,8 @@ export function DocsLayout({
           )}
         </div>
       </div>
+
+      <ContentFooter />
 
       {/* Mobile sidebar drawer */}
       {mobileNav && (
