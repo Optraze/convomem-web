@@ -3,6 +3,7 @@ import { ArrowRight, RotateCcw, ShieldCheck, Upload } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 import { ConvCard } from './conv-card'
 import { CsvMapper } from './csv-mapper'
@@ -69,24 +70,10 @@ export function MemoryTerminal() {
         setDrag(false)
         onFile(e.dataTransfer.files?.[0])
       }}
-      className={`relative rounded-xl border bg-surface overflow-hidden transition-colors ${drag ? 'border-foreground' : 'border-border-strong'}`}
+      className={cn('transition-colors', drag && 'bg-foreground/5')}
     >
-      {/* top accent */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-foreground/25 to-transparent" />
-      {/* terminal chrome */}
-      <div className="relative flex items-center justify-between px-4 py-2.5 border-b border-border">
-        <div className="flex items-center gap-3">
-          {/* window controls */}
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-border-strong/60" />
-            <span className="w-2.5 h-2.5 rounded-full bg-border-strong/60" />
-            <span className="w-2.5 h-2.5 rounded-full bg-border-strong/60" />
-          </div>
-          <span className="font-mono text-subtle text-[12px]">
-            memory.pipeline
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
+      {phase !== 'idle' && (
+        <div className="flex items-center justify-end gap-3 py-2.5 border-b border-border">
           {phase === 'running' && (
             <span className="font-mono text-hint text-[10px] tracking-[0.14em] uppercase scan-text">
               live · processing
@@ -114,7 +101,7 @@ export function MemoryTerminal() {
             </>
           )}
         </div>
-      </div>
+      )}
 
       <AnimatePresence mode="wait">
         {showInput ? (
@@ -123,7 +110,6 @@ export function MemoryTerminal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="p-4 sm:p-5"
           >
             <label
               htmlFor="demo-message"
@@ -216,7 +202,7 @@ export function MemoryTerminal() {
             key="output"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="p-4 sm:p-5 space-y-3 max-h-150 overflow-y-auto scrollbar-hide"
+            className="space-y-3 max-h-150 overflow-y-auto scrollbar-hide"
           >
             {convs.map((c, i) => (
               <ConvCard key={c.index} c={c} n={i} />
