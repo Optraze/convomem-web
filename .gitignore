@@ -15,3 +15,6 @@ todos.json
 .cta.json
 .idea/
 sitespeed-result
+
+# Generated at build time (see prebuild script)
+public/og/

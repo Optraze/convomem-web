@@ -1,9 +1,9 @@
+import { MDXProvider } from '@mdx-js/react'
 import {
   createRootRouteWithContext,
   HeadContent,
   Scripts,
 } from '@tanstack/react-router'
-import { MDXProvider } from '@mdx-js/react'
 
 import type { QueryClient } from '@tanstack/react-query'
 import type React from 'react'

@@ -5,15 +5,7 @@ import { BaseTemplate } from '@/components/og/base-template'
 import { BlogTemplate } from '@/components/og/blog-template'
 import { ChangelogTemplate } from '@/components/og/changelog-template'
 import { DocsTemplate } from '@/components/og/docs-template'
-
-let fontCache: ArrayBuffer | null = null
-
-async function getFont(): Promise<ArrayBuffer> {
-  if (fontCache) return fontCache
-  const res = await fetch('https://takumi.kane.tw/fonts/Inter.woff2')
-  fontCache = await res.arrayBuffer()
-  return fontCache
-}
+import { loadOgFonts } from '@/components/og/fonts'
 
 export const Route = createFileRoute('/api/og')({
   server: {
@@ -61,13 +53,10 @@ export const Route = createFileRoute('/api/og')({
         return new ImageResponse(template, {
           width: 1200,
           height: 630,
-          fonts: [
-            {
-              name: 'Inter',
-              data: getFont,
-              style: 'normal',
-            },
-          ],
+          fonts: loadOgFonts(),
+          headers: {
+            'Cache-Control': 'public, max-age=31536000, immutable',
+          },
         })
       },
     },

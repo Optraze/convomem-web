@@ -1,0 +1,53 @@
+---
+title: "Retrieving context"
+description: "Fetch the most relevant memory for a subject and inject it into your prompts."
+status: "published"
+---
+
+Retrieval is where memory pays off. At the start of a new interaction, ask ConvoMem for
+the context most relevant to what's happening now.
+
+## Basic retrieval
+
+```typescript title="retrieve.ts"
+const { facts } = await convomem.retrieve({
+  subjectId: 'cust_123',
+  query: 'billing question about the Pro plan',
+  limit: 10,
+})
+```
+
+The `query` is optional. When provided, ConvoMem ranks facts by relevance to it; when
+omitted, you get the most durable, recent facts for the subject.
+
+## Injecting into a prompt
+
+Most teams render retrieved facts into a system prompt:
+
+```typescript title="prompt.ts"
+const memory = facts.map((f) => `- ${f.statement}`).join('\n')
+
+const system = `You are a support agent. Known context about this customer:\n${memory}`
+```
+
+<Callout type="tip" title="Keep it tight">
+Retrieve a small, high-signal set (5–15 facts). Flooding the prompt with low-confidence
+memory hurts quality more than it helps.
+</Callout>
+
+## Filtering
+
+Narrow results by category or minimum confidence:
+
+```typescript title="filter.ts"
+const { facts } = await convomem.retrieve({
+  subjectId: 'cust_123',
+  categories: ['preference', 'account'],
+  minConfidence: 0.6,
+})
+```
+
+## What's next
+
+Wire retrieval into your agent loop, then set up [Webhooks](/docs/webhooks) to react to
+new facts as they're extracted.

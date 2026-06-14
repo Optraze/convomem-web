@@ -1,16 +1,21 @@
+import { useMemo } from 'react'
+import { createFileRoute, Link, notFound } from '@tanstack/react-router'
+
+import { DocsLayout } from '@/features/docs/components/docs-layout'
+import { DocPager } from '@/features/docs/components/docs-pager'
 import {
-  createFileRoute,
-  Link,
-  notFound,
-  useLoaderData,
-} from '@tanstack/react-router'
-import { getContent } from '@/lib/content'
+  buildDocSearchIndex,
+  getDocAdjacent,
+  getDocGroup,
+  resolveDocsNav,
+} from '@/features/docs/nav'
+import { getContentMeta, getMdxComponent } from '@/lib/content'
 import { getOgImageUrl } from '@/lib/og'
 import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo'
 
 export const Route = createFileRoute('/docs/$slug')({
   loader: ({ params }) => {
-    const doc = getContent('docs', params.slug)
+    const doc = getContentMeta('docs', params.slug)
     if (!doc) throw notFound()
     return doc
   },
@@ -19,59 +24,112 @@ export const Route = createFileRoute('/docs/$slug')({
     const { slug, frontmatter } = loaderData
     const ogImage = getOgImageUrl({
       type: 'docs',
+      slug,
       title: frontmatter.title,
       description: frontmatter.description,
     })
+    const url = getSeoUrl(`/docs/${slug}`)
+    const group = getDocGroup(slug)
 
     return {
       meta: createPageMeta({
-        title: `${frontmatter.title} — ${SITE_NAME}`,
+        title: `${frontmatter.title} — ${SITE_NAME} Docs`,
         description: frontmatter.description,
         path: `/docs/${slug}`,
         ogImage,
       }),
-      links: [{ rel: 'canonical', href: getSeoUrl(`/docs/${slug}`) }],
+      links: [{ rel: 'canonical', href: url }],
+      scripts: [
+        {
+          type: 'application/ld+json',
+          children: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'TechArticle',
+            headline: frontmatter.title,
+            description: frontmatter.description,
+            url,
+            ...(frontmatter.date && { datePublished: frontmatter.date }),
+            ...(frontmatter.updated && { dateModified: frontmatter.updated }),
+            author: { '@type': 'Organization', name: SITE_NAME },
+          }),
+        },
+        {
+          type: 'application/ld+json',
+          children: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Docs',
+                item: getSeoUrl('/docs'),
+              },
+              ...(group
+                ? [{ '@type': 'ListItem', position: 2, name: group }]
+                : []),
+              {
+                '@type': 'ListItem',
+                position: group ? 3 : 2,
+                name: frontmatter.title,
+                item: url,
+              },
+            ],
+          }),
+        },
+      ],
     }
   },
   component: DocPage,
 })
 
 function DocPage() {
-  const data = useLoaderData({ from: '/docs/$slug' }) as {
-    slug: string
-    frontmatter: {
-      title: string
-      description: string
-    }
-  }
-  const { slug, frontmatter } = data
+  const { slug, frontmatter, toc } = Route.useLoaderData()
 
-  const mod = import.meta.glob('/src/content/docs/*.mdx', { eager: true })[
-    `/src/content/docs/${slug}.mdx`
-  ] as { default: React.ComponentType } | undefined
-
-  if (!mod) throw notFound()
-  const MDXContent = mod.default
+  const nav = useMemo(() => resolveDocsNav(), [])
+  const searchIndex = useMemo(() => buildDocSearchIndex(), [])
+  const group = getDocGroup(slug)
+  const { prev, next } = getDocAdjacent(slug)
+  const MDXContent = getMdxComponent('docs', slug)
+  if (!MDXContent) throw notFound()
 
   return (
-    <main className="mx-auto max-w-3xl px-5 pt-28 pb-14 sm:px-8 sm:pt-32 sm:pb-20">
-      <Link
-        to="/docs"
-        className="font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase hover:text-foreground"
+    <DocsLayout
+      nav={nav}
+      searchIndex={searchIndex}
+      currentSlug={slug}
+      toc={toc}
+    >
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-1.5 text-xs text-muted-foreground"
       >
-        ← Documentation
-      </Link>
-      <article className="mt-6">
-        <h1 className="text-[clamp(24px,4vw,36px)] font-semibold tracking-[-0.02em] text-foreground">
+        <Link to="/docs" className="hover:text-foreground">
+          Docs
+        </Link>
+        {group && (
+          <>
+            <span>/</span>
+            <span>{group}</span>
+          </>
+        )}
+        <span>/</span>
+        <span className="text-foreground">{frontmatter.title}</span>
+      </nav>
+
+      <article className="mt-5">
+        <h1 className="text-[clamp(26px,4vw,38px)] font-semibold tracking-[-0.02em] text-foreground">
           {frontmatter.title}
         </h1>
         <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
           {frontmatter.description}
         </p>
-        <div className="prose mt-8 max-w-none text-[15px] leading-7 text-foreground">
+        <div className="prose mt-8 max-w-none">
           <MDXContent />
         </div>
       </article>
-    </main>
+
+      <DocPager prev={prev} next={next} />
+    </DocsLayout>
   )
 }

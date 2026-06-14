@@ -1,0 +1,52 @@
+---
+title: "The memory model"
+description: "How ConvoMem turns raw conversations into durable, scored, retrievable facts."
+status: "published"
+---
+
+Understanding ConvoMem's data model makes everything else click. There are three core
+entities: **conversations**, **facts**, and **subjects**.
+
+## Conversations
+
+A conversation is an ordered list of messages tied to a subject (usually a customer).
+You submit conversations as they happen or in batches.
+
+```typescript title="capture.ts"
+await convomem.capture({
+  subjectId: 'cust_123',
+  channel: 'chat',
+  messages: [
+    { role: 'user', content: 'I want to upgrade to the Pro plan' },
+    { role: 'assistant', content: 'Done — you are on Pro now.' },
+  ],
+})
+```
+
+## Facts
+
+Facts are the atomic unit of memory. The extraction pipeline reads a conversation and
+emits structured facts, each with metadata:
+
+| Field | Description |
+| --- | --- |
+| `statement` | The fact in natural language |
+| `category` | e.g. `preference`, `account`, `intent` |
+| `confidence` | 0–1 score from the extractor |
+| `durability` | How long the fact is expected to stay true |
+
+### Durability scoring
+
+Not all facts age the same way. "Prefers email over phone" is durable; "is asking about
+order #4471" is ephemeral. ConvoMem scores each fact so retrieval can weight long-lived
+context higher.
+
+<Callout type="note" title="Redaction happens first">
+PII is detected and masked **before** facts are stored. See
+[Authentication & security](/docs/authentication) for the full data-handling model.
+</Callout>
+
+## Subjects
+
+A subject groups all conversations and facts for one entity. Retrieval is always scoped
+to a subject, which is how ConvoMem assembles a coherent memory for each customer.

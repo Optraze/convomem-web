@@ -5,18 +5,6 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://convomem.com/contact</loc>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://convomem.com/privacy</loc>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://convomem.com/terms</loc>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://convomem.com/blog</loc>
     <priority>0.8</priority>
   </url>
@@ -29,15 +17,53 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://convomem.com/contact</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/privacy</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/terms</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://convomem.com/blog/introducing-convomem</loc>
-    <priority>0.5</priority>
+    <lastmod>2026-06-10</lastmod>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://convomem.com/docs/getting-started</loc>
-    <priority>0.5</priority>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/introduction</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/installation</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/memory-model</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/retrieval</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/authentication</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/webhooks</loc>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://convomem.com/changelog/v1.0.0</loc>
-    <priority>0.5</priority>
+    <lastmod>2026-06-01</lastmod>
+    <priority>0.6</priority>
   </url>
 </urlset>

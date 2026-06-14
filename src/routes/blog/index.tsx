@@ -40,18 +40,22 @@ function BlogIndex() {
             params={{ slug: post.slug }}
             className="block rounded-lg border border-border p-5 transition-colors hover:bg-muted/40"
           >
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <time dateTime={post.frontmatter.date}>
-                {new Date(post.frontmatter.date).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </time>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              {post.frontmatter.date && (
+                <time dateTime={post.frontmatter.date}>
+                  {new Date(post.frontmatter.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </time>
+              )}
+              <span>·</span>
+              <span>{post.readingTime} min read</span>
               {post.frontmatter.tags?.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono uppercase"
+                  className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] uppercase"
                 >
                   {tag}
                 </span>

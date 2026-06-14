@@ -1,0 +1,51 @@
+---
+title: "Installation"
+description: "Install the ConvoMem SDK and authenticate your first request."
+status: "published"
+---
+
+The ConvoMem SDK is published on npm and works in any runtime that supports `fetch`
+(Node.js 18+, Bun, Deno, and edge runtimes).
+
+## Install the SDK
+
+```bash title="Terminal"
+npm install @convomem/sdk
+```
+
+Or with your package manager of choice:
+
+```bash title="Terminal"
+bun add @convomem/sdk
+pnpm add @convomem/sdk
+```
+
+## Get an API key
+
+Create a key from the [dashboard](https://app.convomem.com/settings/keys). Keys are
+scoped per environment — use separate keys for development and production.
+
+<Callout type="warning" title="Keep keys server-side">
+Never expose an API key in client-side code. All ConvoMem calls should originate from
+your backend or an edge function.
+</Callout>
+
+## Initialize the client
+
+```typescript title="convomem.ts"
+import { ConvoMem } from '@convomem/sdk'
+
+export const convomem = new ConvoMem({
+  apiKey: process.env.CONVOMEM_API_KEY!,
+})
+```
+
+## Verify the connection
+
+```typescript title="verify.ts"
+const { ok } = await convomem.health()
+console.log(ok ? 'Connected' : 'Check your API key')
+```
+
+Once this returns `true`, continue to the [Quick start](/docs/getting-started) to capture
+your first conversation.

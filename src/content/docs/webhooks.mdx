@@ -1,0 +1,58 @@
+---
+title: "Webhooks"
+description: "Subscribe to fact and conversation events to react to memory in real time."
+status: "published"
+---
+
+Webhooks let your systems react the moment ConvoMem extracts new memory — without
+polling.
+
+## Registering an endpoint
+
+```typescript title="register.ts"
+await convomem.webhooks.create({
+  url: 'https://api.yourapp.com/hooks/convomem',
+  events: ['fact.created', 'conversation.captured'],
+})
+```
+
+## Event payload
+
+Every delivery is a signed JSON POST:
+
+```json title="fact.created"
+{
+  "event": "fact.created",
+  "subjectId": "cust_123",
+  "fact": {
+    "statement": "Prefers email over phone",
+    "category": "preference",
+    "confidence": 0.82
+  }
+}
+```
+
+## Verifying signatures
+
+Each request includes an `X-ConvoMem-Signature` header. Verify it before trusting the
+payload:
+
+```typescript title="verify.ts"
+import { verifyWebhook } from '@convomem/sdk'
+
+const valid = verifyWebhook({
+  payload: rawBody,
+  signature: req.headers['x-convomem-signature'],
+  secret: process.env.CONVOMEM_WEBHOOK_SECRET!,
+})
+```
+
+<Callout type="warning" title="Always verify">
+Unverified webhook payloads should be rejected — anyone who learns your URL could
+otherwise POST to it.
+</Callout>
+
+## Retries
+
+Failed deliveries (non-2xx responses) are retried with exponential backoff for up to 24
+hours.

@@ -1,0 +1,48 @@
+---
+title: "Authentication & security"
+description: "API keys, scopes, PII redaction, and how ConvoMem handles sensitive data."
+status: "published"
+---
+
+ConvoMem is built to hold sensitive customer data responsibly. This guide covers how you
+authenticate and how your data is protected.
+
+## API keys
+
+Every request is authenticated with a bearer token:
+
+```typescript title="request.ts"
+const res = await fetch('https://api.convomem.com/v1/retrieve', {
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${process.env.CONVOMEM_API_KEY}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ subjectId: 'cust_123' }),
+})
+```
+
+### Scopes
+
+Keys can be restricted to specific scopes:
+
+- `capture` — submit conversations
+- `retrieve` — read memory
+- `admin` — manage subjects and keys
+
+<Callout type="danger" title="Rotate compromised keys immediately">
+If a key leaks, revoke it from the dashboard. Revocation takes effect within seconds and
+cannot be undone.
+</Callout>
+
+## PII redaction
+
+Before any fact is persisted, ConvoMem runs detection for emails, phone numbers, card
+numbers, and other sensitive patterns, replacing them with typed placeholders. The
+original values are never written to long-term storage.
+
+## Data residency
+
+Choose where your data lives at the project level. On-prem and single-tenant deployments
+are available for regulated workloads — see the [changelog](/changelog) for the latest
+availability.

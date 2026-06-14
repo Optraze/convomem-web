@@ -1,64 +1,100 @@
+import {
+  AlertTriangleIcon,
+  CheckCircle2Icon,
+  HashIcon,
+  InfoIcon,
+  LightbulbIcon,
+  OctagonAlertIcon,
+} from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
 import type React from 'react'
 
+import { CodeBlock } from '@/components/mdx/code-block'
+
+/**
+ * Heading with an anchor affordance. The `id` is supplied by rehype-slug (see
+ * vite.config), which is the same id the extracted table of contents links to.
+ */
 function Heading({
   as: Tag,
+  id,
   children,
   ...props
 }: {
-  as: 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  as: 'h2' | 'h3' | 'h4'
+  id?: string
   children?: React.ReactNode
-}) {
-  const id = String(children)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
+} & React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <Tag id={id} {...props}>
-      <a href={`#${id}`} className="no-underline hover:underline">
-        {children}
-      </a>
+    <Tag id={id} className="group scroll-mt-24" {...props}>
+      {children}
+      {id && (
+        <a
+          href={`#${id}`}
+          aria-label="Link to this section"
+          className="ml-2 inline-flex align-middle text-hint no-underline opacity-0 transition group-hover:opacity-100 hover:text-foreground"
+        >
+          <HashIcon className="size-4" />
+        </a>
+      )}
     </Tag>
   )
 }
 
+const calloutConfig = {
+  note: {
+    icon: InfoIcon,
+    label: 'Note',
+    cls: 'border-blue-500/30 bg-blue-500/[0.06] text-blue-600 dark:text-blue-400',
+  },
+  tip: {
+    icon: LightbulbIcon,
+    label: 'Tip',
+    cls: 'border-emerald-500/30 bg-emerald-500/[0.06] text-emerald-600 dark:text-emerald-400',
+  },
+  warning: {
+    icon: AlertTriangleIcon,
+    label: 'Warning',
+    cls: 'border-amber-500/30 bg-amber-500/[0.06] text-amber-600 dark:text-amber-400',
+  },
+  danger: {
+    icon: OctagonAlertIcon,
+    label: 'Danger',
+    cls: 'border-destructive/30 bg-destructive/[0.06] text-destructive',
+  },
+  success: {
+    icon: CheckCircle2Icon,
+    label: 'Success',
+    cls: 'border-emerald-500/30 bg-emerald-500/[0.06] text-emerald-600 dark:text-emerald-400',
+  },
+} as const
+
+type CalloutType = keyof typeof calloutConfig
+
 function Callout({
-  type = 'info',
+  type = 'note',
+  title,
   children,
 }: {
-  type?: 'info' | 'warning' | 'error' | 'success'
+  type?: CalloutType | 'info' | 'error'
+  title?: string
   children: React.ReactNode
 }) {
-  const styles = {
-    info: 'border-blue-500/30 bg-blue-500/5',
-    warning: 'border-yellow-500/30 bg-yellow-500/5',
-    error: 'border-destructive/30 bg-destructive/5',
-    success: 'border-emerald-500/30 bg-emerald-500/5',
-  }
-  const labels = {
-    info: 'Info',
-    warning: 'Warning',
-    error: 'Error',
-    success: 'Success',
-  }
+  // Accept legacy aliases used in earlier content.
+  const key: CalloutType =
+    type === 'info' ? 'note' : type === 'error' ? 'danger' : type
+  const { icon: Icon, label, cls } = calloutConfig[key]
   return (
-    <div className={`my-6 rounded-lg border p-4 ${styles[type]}`} role="alert">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-foreground">
-        {labels[type]}
-      </p>
-      <div className="text-[14px] leading-7 text-muted-foreground [&>p]:m-0">
-        {children}
+    <div className={`my-6 flex gap-3 rounded-lg border p-4 ${cls}`} role="note">
+      <Icon className="mt-0.5 size-5 shrink-0" />
+      <div className="min-w-0">
+        <p className="mb-1 text-sm font-semibold">{title ?? label}</p>
+        <div className="text-[14px] leading-7 text-foreground/90 [&>p]:m-0 [&>p+p]:mt-2">
+          {children}
+        </div>
       </div>
     </div>
-  )
-}
-
-function InlineCode({ children }: { children: React.ReactNode }) {
-  return (
-    <code className="rounded bg-muted px-1.5 py-0.5 text-[13px] font-mono text-foreground">
-      {children}
-    </code>
   )
 }
 
@@ -95,7 +131,7 @@ function MdxLink({
 
 function MdxTable({ children }: { children: React.ReactNode }) {
   return (
-    <div className="my-6 overflow-x-auto">
+    <div className="my-6 overflow-x-auto rounded-lg border border-border">
       <table className="w-full border-collapse text-[14px]">{children}</table>
     </div>
   )
@@ -134,7 +170,7 @@ export const mdxComponents = {
     <Heading as="h4" {...props} />
   ),
   a: MdxLink,
-  code: InlineCode,
+  pre: CodeBlock,
   table: MdxTable,
   img: MdxImage,
   Callout,

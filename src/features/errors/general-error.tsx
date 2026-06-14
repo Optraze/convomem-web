@@ -1,5 +1,5 @@
-import { Link, useRouter } from '@tanstack/react-router'
 import { useEffect } from 'react'
+import { Link, useRouter } from '@tanstack/react-router'
 
 export function GeneralError({ error }: { error: Error }) {
   const router = useRouter()
