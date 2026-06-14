@@ -16,8 +16,10 @@ const footerColumns = [
   {
     heading: 'Resources',
     items: [
+      { label: 'Blog', href: '/blog' },
+      { label: 'Docs', href: '/docs' },
+      { label: 'Changelog', href: '/changelog' },
       { label: 'Contact', href: '/contact' },
-      { label: 'Support', href: '/contact' },
     ],
   },
   {

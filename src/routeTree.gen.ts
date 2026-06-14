@@ -12,7 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DocsIndexRouteImport } from './routes/docs/index'
+import { Route as ChangelogIndexRouteImport } from './routes/changelog/index'
+import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
+import { Route as DocsSlugRouteImport } from './routes/docs/$slug'
+import { Route as ChangelogSlugRouteImport } from './routes/changelog/$slug'
+import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -29,9 +35,39 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
+  id: '/docs/',
+  path: '/docs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogIndexRoute = ChangelogIndexRouteImport.update({
+  id: '/changelog/',
+  path: '/changelog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const marketingIndexRoute = marketingIndexRouteImport.update({
   id: '/(marketing)/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsSlugRoute = DocsSlugRouteImport.update({
+  id: '/docs/$slug',
+  path: '/docs/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogSlugRoute = ChangelogSlugRouteImport.update({
+  id: '/changelog/$slug',
+  path: '/changelog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -39,34 +75,89 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/': typeof marketingIndexRoute
+  '/blog/': typeof BlogIndexRoute
+  '/changelog/': typeof ChangelogIndexRoute
+  '/docs/': typeof DocsIndexRoute
 }
 export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/': typeof marketingIndexRoute
+  '/blog': typeof BlogIndexRoute
+  '/changelog': typeof ChangelogIndexRoute
+  '/docs': typeof DocsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/(marketing)/': typeof marketingIndexRoute
+  '/blog/': typeof BlogIndexRoute
+  '/changelog/': typeof ChangelogIndexRoute
+  '/docs/': typeof DocsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/contact' | '/privacy' | '/terms' | '/'
+  fullPaths:
+    | '/contact'
+    | '/privacy'
+    | '/terms'
+    | '/blog/$slug'
+    | '/changelog/$slug'
+    | '/docs/$slug'
+    | '/'
+    | '/blog/'
+    | '/changelog/'
+    | '/docs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/contact' | '/privacy' | '/terms' | '/'
-  id: '__root__' | '/contact' | '/privacy' | '/terms' | '/(marketing)/'
+  to:
+    | '/contact'
+    | '/privacy'
+    | '/terms'
+    | '/blog/$slug'
+    | '/changelog/$slug'
+    | '/docs/$slug'
+    | '/'
+    | '/blog'
+    | '/changelog'
+    | '/docs'
+  id:
+    | '__root__'
+    | '/contact'
+    | '/privacy'
+    | '/terms'
+    | '/blog/$slug'
+    | '/changelog/$slug'
+    | '/docs/$slug'
+    | '/(marketing)/'
+    | '/blog/'
+    | '/changelog/'
+    | '/docs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  BlogSlugRoute: typeof BlogSlugRoute
+  ChangelogSlugRoute: typeof ChangelogSlugRoute
+  DocsSlugRoute: typeof DocsSlugRoute
   marketingIndexRoute: typeof marketingIndexRoute
+  BlogIndexRoute: typeof BlogIndexRoute
+  ChangelogIndexRoute: typeof ChangelogIndexRoute
+  DocsIndexRoute: typeof DocsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,11 +183,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs/': {
+      id: '/docs/'
+      path: '/docs'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof DocsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog/': {
+      id: '/changelog/'
+      path: '/changelog'
+      fullPath: '/changelog/'
+      preLoaderRoute: typeof ChangelogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(marketing)/': {
       id: '/(marketing)/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof marketingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs/$slug': {
+      id: '/docs/$slug'
+      path: '/docs/$slug'
+      fullPath: '/docs/$slug'
+      preLoaderRoute: typeof DocsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog/$slug': {
+      id: '/changelog/$slug'
+      path: '/changelog/$slug'
+      fullPath: '/changelog/$slug'
+      preLoaderRoute: typeof ChangelogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -106,7 +239,13 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  BlogSlugRoute: BlogSlugRoute,
+  ChangelogSlugRoute: ChangelogSlugRoute,
+  DocsSlugRoute: DocsSlugRoute,
   marketingIndexRoute: marketingIndexRoute,
+  BlogIndexRoute: BlogIndexRoute,
+  ChangelogIndexRoute: ChangelogIndexRoute,
+  DocsIndexRoute: DocsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

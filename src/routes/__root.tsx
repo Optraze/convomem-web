@@ -3,11 +3,13 @@ import {
   HeadContent,
   Scripts,
 } from '@tanstack/react-router'
+import { MDXProvider } from '@mdx-js/react'
 
 import type { QueryClient } from '@tanstack/react-query'
 import type React from 'react'
 
 import { Devtools } from '@/components/devtools'
+import { mdxComponents } from '@/components/mdx-components'
 import { ThemeProvider, themeScript } from '@/components/theme-provider'
 import { GeneralError } from '@/features/errors/general-error'
 import { NotFoundError } from '@/features/errors/not-found'
@@ -151,7 +153,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <MDXProvider components={mdxComponents}>{children}</MDXProvider>
+        </ThemeProvider>
         <Devtools />
         <Scripts />
       </body>

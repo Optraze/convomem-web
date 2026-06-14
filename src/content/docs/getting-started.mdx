@@ -1,0 +1,44 @@
+---
+title: "Getting Started"
+description: "Set up ConvoMem in under 5 minutes."
+status: "published"
+---
+
+## Prerequisites
+
+- A ConvoMem account ([sign up free](https://app.convomem.com/register))
+- Node.js 18+ or any runtime that supports fetch
+
+## Installation
+
+```bash
+npm install @convomem/sdk
+```
+
+## Quick start
+
+```typescript
+import { ConvoMem } from '@convomem/sdk'
+
+const client = new ConvoMem({
+  apiKey: process.env.CONVOMEM_API_KEY,
+})
+
+// Capture a conversation
+await client.capture({
+  channel: 'chat',
+  messages: [
+    { role: 'user', content: 'I need help with my order' },
+    { role: 'assistant', content: 'Of course! What seems to be the issue?' }
+  ]
+})
+
+// Retrieve context
+const memory = await client.retrieve({ customerId: 'cust_123' })
+console.log(memory.facts)
+```
+
+## Next steps
+
+- Read the [API Reference](/docs/api-reference) for all available methods
+- Check out the [Blog](/blog) for guides and best practices

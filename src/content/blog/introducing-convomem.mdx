@@ -1,0 +1,51 @@
+---
+title: "Introducing ConvoMem"
+description: "How we built a memory layer for conversational AI that gives every customer interaction context."
+date: "2026-06-10"
+tags: ["launch", "ai", "memory"]
+author: "ConvoMem Team"
+status: "published"
+---
+
+## Why customer memory matters
+
+Every time a customer contacts support, they start from zero. The agent doesn't know about last week's issue, the preferences they mentioned, or the decision they made.
+
+ConvoMem fixes this by providing a **memory layer** for conversational AI. It captures, stores, and retrieves customer context automatically.
+
+## How it works
+
+1. **Capture** — Every conversation is processed through our extraction pipeline
+2. **Store** — Facts are categorized, scored for durability, and stored with metadata
+3. **Retrieve** — When a new conversation starts, relevant context is injected automatically
+
+```typescript
+import { ConvoMem } from '@convomem/sdk'
+
+const client = new ConvoMem({ apiKey: process.env.CONVOMEM_API_KEY })
+
+// Store a conversation
+await client.capture({
+  channel: 'chat',
+  messages: [
+    { role: 'user', content: 'I need help with my order #4471' },
+    { role: 'assistant', content: 'I see your order was delayed. Let me fix that.' }
+  ]
+})
+
+// Retrieve context for the next interaction
+const context = await client.retrieve({
+  customerId: 'cust_123',
+  limit: 10
+})
+```
+
+## What's next
+
+We're working on:
+
+- **Real-time streaming** — capture conversations as they happen
+- **Custom memory types** — define your own categories beyond the built-in ones
+- **On-prem deployment** — run ConvoMem entirely on your own infrastructure
+
+Stay tuned for updates.
