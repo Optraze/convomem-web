@@ -18,3 +18,7 @@ sitespeed-result
 
 # Generated at build time (see prebuild script)
 public/og/
+public/llms.txt
+public/blog/*.md
+public/docs/*.md
+public/changelog/*.md

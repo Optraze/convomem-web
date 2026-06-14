@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 
+import { CopyMarkdownButton } from '@/components/copy-markdown-button'
 import { DocsLayout } from '@/features/docs/components/docs-layout'
 import { DocPager } from '@/features/docs/components/docs-pager'
 import {
@@ -38,7 +39,14 @@ export const Route = createFileRoute('/docs/$slug')({
         path: `/docs/${slug}`,
         ogImage,
       }),
-      links: [{ rel: 'canonical', href: url }],
+      links: [
+        { rel: 'canonical', href: url },
+        {
+          rel: 'alternate',
+          type: 'text/markdown',
+          href: getSeoUrl(`/docs/${slug}.md`),
+        },
+      ],
       scripts: [
         {
           type: 'application/ld+json',
@@ -102,19 +110,22 @@ function DocPage() {
     >
       <nav
         aria-label="Breadcrumb"
-        className="flex items-center gap-1.5 text-xs text-muted-foreground"
+        className="flex items-center justify-between gap-1.5 text-xs text-muted-foreground"
       >
-        <Link to="/docs" className="hover:text-foreground">
-          Docs
-        </Link>
-        {group && (
-          <>
-            <span>/</span>
-            <span>{group}</span>
-          </>
-        )}
-        <span>/</span>
-        <span className="text-foreground">{frontmatter.title}</span>
+        <div className="flex items-center gap-1.5">
+          <Link to="/docs" className="hover:text-foreground">
+            Docs
+          </Link>
+          {group && (
+            <>
+              <span>/</span>
+              <span>{group}</span>
+            </>
+          )}
+          <span>/</span>
+          <span className="text-foreground">{frontmatter.title}</span>
+        </div>
+        <CopyMarkdownButton mdUrl={`/docs/${slug}.md`} />
       </nav>
 
       <article className="mt-5">

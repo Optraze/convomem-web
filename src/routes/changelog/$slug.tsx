@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 
+import { CopyMarkdownButton } from '@/components/copy-markdown-button'
 import {
   getAdjacent,
   getAllContent,
@@ -42,7 +43,14 @@ export const Route = createFileRoute('/changelog/$slug')({
         path: `/changelog/${slug}`,
         ogImage,
       }),
-      links: [{ rel: 'canonical', href: url }],
+      links: [
+        { rel: 'canonical', href: url },
+        {
+          rel: 'alternate',
+          type: 'text/markdown',
+          href: getSeoUrl(`/changelog/${slug}.md`),
+        },
+      ],
       scripts: [
         {
           type: 'application/ld+json',
@@ -77,12 +85,15 @@ function ChangelogEntry() {
 
   return (
     <main className="mx-auto max-w-3xl px-5 pt-28 pb-14 sm:px-8 sm:pt-32 sm:pb-20">
-      <Link
-        to="/changelog"
-        className="font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase hover:text-foreground"
-      >
-        ← Changelog
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          to="/changelog"
+          className="font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase hover:text-foreground"
+        >
+          ← Changelog
+        </Link>
+        <CopyMarkdownButton mdUrl={`/changelog/${slug}.md`} />
+      </div>
       <article className="mt-6">
         <div className="flex items-center gap-3">
           <h1 className="text-[clamp(24px,4vw,36px)] font-semibold tracking-[-0.02em] text-foreground">

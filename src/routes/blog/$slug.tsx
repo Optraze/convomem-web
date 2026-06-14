@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 
+import { CopyMarkdownButton } from '@/components/copy-markdown-button'
 import {
   getAdjacent,
   getAllContent,
@@ -44,7 +45,14 @@ export const Route = createFileRoute('/blog/$slug')({
         path: `/blog/${slug}`,
         ogImage,
       }),
-      links: [{ rel: 'canonical', href: url }],
+      links: [
+        { rel: 'canonical', href: url },
+        {
+          rel: 'alternate',
+          type: 'text/markdown',
+          href: getSeoUrl(`/blog/${slug}.md`),
+        },
+      ],
       scripts: [
         {
           type: 'application/ld+json',
@@ -104,6 +112,7 @@ function BlogPost() {
           )}
           <span>·</span>
           <span>{readingTime} min read</span>
+          <CopyMarkdownButton mdUrl={`/blog/${slug}.md`} className="ml-auto" />
         </div>
         <h1 className="mt-3 text-[clamp(24px,4vw,36px)] font-semibold tracking-[-0.02em] text-foreground">
           {frontmatter.title}

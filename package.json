@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
-    "prebuild": "bun scripts/generate-sitemap.ts && bun scripts/generate-og.tsx",
+    "prebuild": "bun scripts/generate-sitemap.ts && bun scripts/generate-og.tsx && bun scripts/generate-llms.ts",
     "generate-og": "bun scripts/generate-og.tsx",
     "build": "vite build",
     "preview": "vite preview",
