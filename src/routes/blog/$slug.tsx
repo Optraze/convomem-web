@@ -4,22 +4,53 @@ import {
   notFound,
   useLoaderData,
 } from '@tanstack/react-router'
+
 import { getContent } from '@/lib/content'
+import { getOgImageUrl } from '@/lib/og'
 import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo'
 
 export const Route = createFileRoute('/blog/$slug')({
-  head: ({ params }) => ({
-    meta: createPageMeta({
-      title: `${SITE_NAME} — Blog`,
-      description: 'Blog post on the ConvoMem platform.',
-      path: `/blog/${params.slug}`,
-    }),
-    links: [{ rel: 'canonical', href: getSeoUrl(`/blog/${params.slug}`) }],
-  }),
   loader: ({ params }) => {
     const post = getContent('blog', params.slug)
     if (!post) throw notFound()
     return post
+  },
+  head: ({ loaderData }) => {
+    if (!loaderData) return {}
+    const { slug, frontmatter } = loaderData
+    const ogImage = getOgImageUrl({
+      type: 'blog',
+      title: frontmatter.title,
+      description: frontmatter.description,
+      date: frontmatter.date,
+      author: frontmatter.author,
+      tags: frontmatter.tags,
+    })
+
+    return {
+      meta: createPageMeta({
+        title: `${frontmatter.title} — ${SITE_NAME}`,
+        description: frontmatter.description,
+        path: `/blog/${slug}`,
+        ogImage,
+      }),
+      links: [{ rel: 'canonical', href: getSeoUrl(`/blog/${slug}`) }],
+      scripts: [
+        {
+          type: 'application/ld+json',
+          children: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: frontmatter.title,
+            description: frontmatter.description,
+            datePublished: frontmatter.date,
+            author: frontmatter.author
+              ? { '@type': 'Person', name: frontmatter.author }
+              : { '@type': 'Organization', name: SITE_NAME },
+          }),
+        },
+      ],
+    }
   },
   component: BlogPost,
 })

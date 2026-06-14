@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
+    "prebuild": "bun scripts/generate-sitemap.ts",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -41,6 +42,7 @@
     "shiki": "^4.2.0",
     "tailwind-merge": "latest",
     "tailwindcss": "^4.1.18",
+    "takumi-js": "^1.8.5",
     "tw-animate-css": "latest",
     "zod": "^4.3.6"
   },

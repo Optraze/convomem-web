@@ -4,23 +4,35 @@ import {
   notFound,
   useLoaderData,
 } from '@tanstack/react-router'
-
 import { getContent } from '@/lib/content'
+import { getOgImageUrl } from '@/lib/og'
 import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo'
 
 export const Route = createFileRoute('/changelog/$slug')({
-  head: ({ params }) => ({
-    meta: createPageMeta({
-      title: `${SITE_NAME} — Changelog`,
-      description: 'Changelog for the ConvoMem platform.',
-      path: `/changelog/${params.slug}`,
-    }),
-    links: [{ rel: 'canonical', href: getSeoUrl(`/changelog/${params.slug}`) }],
-  }),
   loader: ({ params }) => {
     const entry = getContent('changelog', params.slug)
     if (!entry) throw notFound()
     return entry
+  },
+  head: ({ loaderData }) => {
+    if (!loaderData) return {}
+    const { slug, frontmatter } = loaderData
+    const ogImage = getOgImageUrl({
+      type: 'changelog',
+      title: frontmatter.title,
+      description: frontmatter.description,
+      date: frontmatter.date,
+    })
+
+    return {
+      meta: createPageMeta({
+        title: `${frontmatter.title} — ${SITE_NAME}`,
+        description: frontmatter.description,
+        path: `/changelog/${slug}`,
+        ogImage,
+      }),
+      links: [{ rel: 'canonical', href: getSeoUrl(`/changelog/${slug}`) }],
+    }
   },
   component: ChangelogEntry,
 })

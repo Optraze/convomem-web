@@ -5,21 +5,33 @@ import {
   useLoaderData,
 } from '@tanstack/react-router'
 import { getContent } from '@/lib/content'
+import { getOgImageUrl } from '@/lib/og'
 import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo'
 
 export const Route = createFileRoute('/docs/$slug')({
-  head: ({ params }) => ({
-    meta: createPageMeta({
-      title: `${SITE_NAME} — Docs`,
-      description: 'Documentation for the ConvoMem platform.',
-      path: `/docs/${params.slug}`,
-    }),
-    links: [{ rel: 'canonical', href: getSeoUrl(`/docs/${params.slug}`) }],
-  }),
   loader: ({ params }) => {
     const doc = getContent('docs', params.slug)
     if (!doc) throw notFound()
     return doc
+  },
+  head: ({ loaderData }) => {
+    if (!loaderData) return {}
+    const { slug, frontmatter } = loaderData
+    const ogImage = getOgImageUrl({
+      type: 'docs',
+      title: frontmatter.title,
+      description: frontmatter.description,
+    })
+
+    return {
+      meta: createPageMeta({
+        title: `${frontmatter.title} — ${SITE_NAME}`,
+        description: frontmatter.description,
+        path: `/docs/${slug}`,
+        ogImage,
+      }),
+      links: [{ rel: 'canonical', href: getSeoUrl(`/docs/${slug}`) }],
+    }
   },
   component: DocPage,
 })

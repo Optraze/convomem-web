@@ -19,6 +19,7 @@ import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
 import { Route as DocsSlugRouteImport } from './routes/docs/$slug'
 import { Route as ChangelogSlugRouteImport } from './routes/changelog/$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
+import { Route as ApiOgRouteImport } from './routes/api/og'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -70,11 +71,17 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOgRoute = ApiOgRouteImport.update({
+  id: '/api/og',
+  path: '/api/og',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/api/og': typeof ApiOgRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/changelog/$slug': typeof ChangelogSlugRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/api/og': typeof ApiOgRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/changelog/$slug': typeof ChangelogSlugRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/api/og': typeof ApiOgRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/changelog/$slug': typeof ChangelogSlugRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/privacy'
     | '/terms'
+    | '/api/og'
     | '/blog/$slug'
     | '/changelog/$slug'
     | '/docs/$slug'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/privacy'
     | '/terms'
+    | '/api/og'
     | '/blog/$slug'
     | '/changelog/$slug'
     | '/docs/$slug'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/privacy'
     | '/terms'
+    | '/api/og'
     | '/blog/$slug'
     | '/changelog/$slug'
     | '/docs/$slug'
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  ApiOgRoute: typeof ApiOgRoute
   BlogSlugRoute: typeof BlogSlugRoute
   ChangelogSlugRoute: typeof ChangelogSlugRoute
   DocsSlugRoute: typeof DocsSlugRoute
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/og': {
+      id: '/api/og'
+      path: '/api/og'
+      fullPath: '/api/og'
+      preLoaderRoute: typeof ApiOgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -239,6 +259,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  ApiOgRoute: ApiOgRoute,
   BlogSlugRoute: BlogSlugRoute,
   ChangelogSlugRoute: ChangelogSlugRoute,
   DocsSlugRoute: DocsSlugRoute,

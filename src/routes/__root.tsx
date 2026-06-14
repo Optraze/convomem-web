@@ -138,6 +138,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         {
           children: themeScript,
         },
+        {
+          type: 'application/ld+json',
+          children: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: SITE_NAME,
+            url: getSeoUrl('/'),
+            logo: getSeoUrl('/logo.svg'),
+          }),
+        },
       ],
     }),
     notFoundComponent: NotFoundError,
