@@ -126,9 +126,7 @@ function ChangelogEntry() {
                 params={{ slug: prevMeta.slug }}
                 className="rounded-lg border border-border p-4 transition-colors hover:bg-muted/40"
               >
-                <span className="text-xs text-muted-foreground">
-                  ← Newer
-                </span>
+                <span className="text-xs text-muted-foreground">← Newer</span>
                 <span className="mt-1 block font-medium text-foreground">
                   {prevMeta.frontmatter.title}
                 </span>
@@ -142,9 +140,7 @@ function ChangelogEntry() {
                 params={{ slug: nextMeta.slug }}
                 className="rounded-lg border border-border p-4 text-right transition-colors hover:bg-muted/40"
               >
-                <span className="text-xs text-muted-foreground">
-                  Older →
-                </span>
+                <span className="text-xs text-muted-foreground">Older →</span>
                 <span className="mt-1 block font-medium text-foreground">
                   {nextMeta.frontmatter.title}
                 </span>

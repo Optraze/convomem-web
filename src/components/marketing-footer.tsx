@@ -1,9 +1,8 @@
 import { Link } from '@tanstack/react-router'
 
-import { Logo } from '@/components/logo.tsx'
+import { Logo } from '@/components/logo'
 import { ThemeSwitcher } from '@/components/theme-switcher'
-
-import { useMarketingNavigation } from '../hooks/use-marketing-navigation.ts'
+import { useMarketingNavigation } from '@/hooks/use-marketing-navigation'
 
 const footerColumns = [
   {

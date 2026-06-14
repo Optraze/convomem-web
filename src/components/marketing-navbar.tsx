@@ -3,9 +3,8 @@ import { Menu, X } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Link } from '@tanstack/react-router'
 
-import { Logo } from '@/components/logo.tsx'
-
-import { useMarketingNavigation } from '../hooks/use-marketing-navigation.ts'
+import { Logo } from '@/components/logo'
+import { useMarketingNavigation } from '@/hooks/use-marketing-navigation'
 
 const APP_URL = 'https://app.convomem.com'
 

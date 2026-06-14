@@ -12,10 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as ChangelogIndexRouteImport } from './routes/changelog/index'
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
-import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
 import { Route as DocsSlugRouteImport } from './routes/docs/$slug'
 import { Route as ChangelogSlugRouteImport } from './routes/changelog/$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
@@ -36,6 +36,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsIndexRoute = DocsIndexRouteImport.update({
   id: '/docs/',
   path: '/docs/',
@@ -49,11 +54,6 @@ const ChangelogIndexRoute = ChangelogIndexRouteImport.update({
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const marketingIndexRoute = marketingIndexRouteImport.update({
-  id: '/(marketing)/',
-  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsSlugRoute = DocsSlugRouteImport.update({
@@ -78,6 +78,7 @@ const ApiOgRoute = ApiOgRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -85,12 +86,12 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/changelog/$slug': typeof ChangelogSlugRoute
   '/docs/$slug': typeof DocsSlugRoute
-  '/': typeof marketingIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/changelog/': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -98,13 +99,13 @@ export interface FileRoutesByTo {
   '/blog/$slug': typeof BlogSlugRoute
   '/changelog/$slug': typeof ChangelogSlugRoute
   '/docs/$slug': typeof DocsSlugRoute
-  '/': typeof marketingIndexRoute
   '/blog': typeof BlogIndexRoute
   '/changelog': typeof ChangelogIndexRoute
   '/docs': typeof DocsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -112,7 +113,6 @@ export interface FileRoutesById {
   '/blog/$slug': typeof BlogSlugRoute
   '/changelog/$slug': typeof ChangelogSlugRoute
   '/docs/$slug': typeof DocsSlugRoute
-  '/(marketing)/': typeof marketingIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/changelog/': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
@@ -120,6 +120,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/contact'
     | '/privacy'
     | '/terms'
@@ -127,12 +128,12 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/changelog/$slug'
     | '/docs/$slug'
-    | '/'
     | '/blog/'
     | '/changelog/'
     | '/docs/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/contact'
     | '/privacy'
     | '/terms'
@@ -140,12 +141,12 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/changelog/$slug'
     | '/docs/$slug'
-    | '/'
     | '/blog'
     | '/changelog'
     | '/docs'
   id:
     | '__root__'
+    | '/'
     | '/contact'
     | '/privacy'
     | '/terms'
@@ -153,13 +154,13 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/changelog/$slug'
     | '/docs/$slug'
-    | '/(marketing)/'
     | '/blog/'
     | '/changelog/'
     | '/docs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   ContactRoute: typeof ContactRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
@@ -167,7 +168,6 @@ export interface RootRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
   ChangelogSlugRoute: typeof ChangelogSlugRoute
   DocsSlugRoute: typeof DocsSlugRoute
-  marketingIndexRoute: typeof marketingIndexRoute
   BlogIndexRoute: typeof BlogIndexRoute
   ChangelogIndexRoute: typeof ChangelogIndexRoute
   DocsIndexRoute: typeof DocsIndexRoute
@@ -196,6 +196,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs/': {
       id: '/docs/'
       path: '/docs'
@@ -215,13 +222,6 @@ declare module '@tanstack/react-router' {
       path: '/blog'
       fullPath: '/blog/'
       preLoaderRoute: typeof BlogIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/': {
-      id: '/(marketing)/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof marketingIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs/$slug': {
@@ -256,6 +256,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   ContactRoute: ContactRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
@@ -263,7 +264,6 @@ const rootRouteChildren: RootRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
   ChangelogSlugRoute: ChangelogSlugRoute,
   DocsSlugRoute: DocsSlugRoute,
-  marketingIndexRoute: marketingIndexRoute,
   BlogIndexRoute: BlogIndexRoute,
   ChangelogIndexRoute: ChangelogIndexRoute,
   DocsIndexRoute: DocsIndexRoute,

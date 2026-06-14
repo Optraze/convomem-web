@@ -7,7 +7,7 @@ import type { Toc } from '@/lib/content'
 import type { DocSearchEntry, ResolvedNavGroup } from '../nav'
 
 import { ContentFooter } from '@/components/content-footer'
-import { Logo } from '@/components/logo.tsx'
+import { Logo } from '@/components/logo'
 
 import { DocsSearch } from './docs-search'
 import { DocsSidebar } from './docs-sidebar'

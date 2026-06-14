@@ -3,28 +3,28 @@ import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { Link } from '@tanstack/react-router'
 
+import { MarketingFooter } from '@/components/marketing-footer'
+import { MarketingNavbar } from '@/components/marketing-navbar'
 import { Accordion } from '@/components/ui/accordion'
+import { useMarketingNavigation } from '@/hooks/use-marketing-navigation'
 
 const DemoModal = lazy(() =>
-  import('@/features/landing/components/demo-modal.tsx').then((m) => ({
+  import('./components/demo/demo-modal').then((m) => ({
     default: m.DemoModal,
   }))
 )
 const ScenarioPlayer = lazy(() =>
-  import('@/features/landing/components/scenario-player.tsx').then((m) => ({
+  import('./components/scenario-player').then((m) => ({
     default: m.ScenarioPlayer,
   }))
 )
 
-import { MarketingFooter } from '../components/footer.tsx'
-import { MarketingNavbar } from '../components/navbar.tsx'
-import { useMarketingNavigation } from '../hooks/use-marketing-navigation.ts'
-import { CookieBanner } from './components/cookie-banner.tsx'
-import { Crosshair } from './components/crosshair.tsx'
-import { FaqItem } from './components/faq-item.tsx'
-import { MemoryRail } from './components/memory-rail.tsx'
-import { SectionHeading } from './components/section-heading.tsx'
-import { SectionLabel } from './components/section-label.tsx'
+import { CookieBanner } from './components/cookie-banner'
+import { Crosshair } from './components/crosshair'
+import { FaqItem } from './components/faq-item'
+import { MemoryRail } from './components/memory-rail'
+import { SectionHeading } from './components/section-heading'
+import { SectionLabel } from './components/section-label'
 import {
   capabilities,
   EASE,
@@ -32,8 +32,8 @@ import {
   faqs,
   pipeline,
   SECTIONS,
-} from './data.ts'
-import { useActiveSection } from './hooks/use-active-section.ts'
+} from './data'
+import { useActiveSection } from './hooks/use-active-section'
 
 const trustItems = ['7-day trial', 'No card', 'On-prem on Custom'] as const
 

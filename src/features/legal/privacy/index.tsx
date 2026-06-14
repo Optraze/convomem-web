@@ -18,8 +18,8 @@ import { Link } from '@tanstack/react-router'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { MarketingFooter } from '@/features/marketing/components/footer.tsx'
-import { MarketingNavbar } from '@/features/marketing/components/navbar.tsx'
+import { MarketingFooter } from '@/components/marketing-footer'
+import { MarketingNavbar } from '@/components/marketing-navbar'
 
 const updatedAt = 'April 24, 2026'
 
