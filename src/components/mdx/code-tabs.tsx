@@ -6,7 +6,7 @@ import curlIcon from '@/assets/icons/curl.svg'
 import pythonIcon from '@/assets/icons/python.svg'
 import rustIcon from '@/assets/icons/rust.svg'
 import typescriptIcon from '@/assets/icons/typescript.svg'
-import { cn } from '@/lib/utils'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const LANGUAGES = ['curl', 'typescript', 'python', 'rust'] as const
 type Language = (typeof LANGUAGES)[number]
@@ -83,31 +83,32 @@ export function CodeTabs({ children }: { children: React.ReactNode }) {
   const tabs = Array.isArray(children) ? children : [children]
   const validTabs = tabs.filter(
     (tab): tab is React.ReactElement<CodeTabProps> =>
-      tab != null && typeof tab === 'object' && 'props' in tab && LANGUAGES.includes(tab.props.language),
+      tab != null &&
+      typeof tab === 'object' &&
+      'props' in tab &&
+      LANGUAGES.includes(tab.props.language)
   )
 
   if (validTabs.length === 0) return null
 
-  const activeTab = validTabs.find((tab) => tab.props.language === active) ?? validTabs[0]
+  const activeValue = validTabs.some((tab) => tab.props.language === active)
+    ? active
+    : validTabs[0].props.language
 
   return (
-    <div className="my-6 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      {/* Language tabs */}
-      <div className="flex items-center gap-1 border-b border-border bg-muted/30 px-2 pt-2">
+    <Tabs
+      value={activeValue}
+      onValueChange={(value) => ctx?.setActive(value as Language)}
+      className="my-6 flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+    >
+      <TabsList className="h-auto w-full justify-start gap-1 rounded-none border-b border-border bg-muted/30 px-2 pt-2 pb-0 group-data-horizontal/tabs:h-auto">
         {validTabs.map((tab) => {
           const lang = tab.props.language
-          const isActive = lang === active
           return (
-            <button
+            <TabsTrigger
               key={lang}
-              type="button"
-              onClick={() => ctx?.setActive(lang)}
-              className={cn(
-                'flex items-center gap-2 rounded-t-lg px-3 py-2 text-sm font-medium transition-all',
-                isActive
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-              )}
+              value={lang}
+              className="flex-none gap-2 !rounded-t-lg !rounded-b-none px-3 py-2"
             >
               <img
                 src={LANGUAGE_ICONS[lang]}
@@ -116,23 +117,21 @@ export function CodeTabs({ children }: { children: React.ReactNode }) {
                 aria-hidden="true"
               />
               {LANGUAGE_LABELS[lang]}
-            </button>
+            </TabsTrigger>
           )
         })}
-      </div>
+      </TabsList>
 
-      {/* Code content */}
-      <div className="relative">
-        {activeTab.props.filename && (
-          <div className="absolute top-0 left-0 z-10 border-b border-r border-border bg-muted/60 px-3 py-1 font-mono text-xs text-muted-foreground backdrop-blur-sm">
-            {activeTab.props.filename}
-          </div>
-        )}
-        <div className="[&>pre]:!m-0 [&>pre]:!rounded-none [&>pre]:!border-0 [&>pre]:!bg-transparent">
-          {activeTab.props.children}
-        </div>
-      </div>
-    </div>
+      {validTabs.map((tab) => (
+        <TabsContent
+          key={tab.props.language}
+          value={tab.props.language}
+          className="[&_[data-rehype-pretty-code-figure]]:!my-0 [&_pre]:!m-0 [&_pre]:!rounded-none [&_pre]:!border-0 [&_pre]:!bg-transparent"
+        >
+          {tab.props.children}
+        </TabsContent>
+      ))}
+    </Tabs>
   )
 }
 
