@@ -1,0 +1,322 @@
+---
+title: "Customers"
+description: "Create, look up, and manage customer profiles."
+status: "published"
+---
+
+Customers are the core identity entity in ConvoMem. All memories and conversations are
+scoped to a customer.
+
+## Lookup
+
+Find a customer by email, phone, external ID, or customer ID. This is the most common
+way to identify a customer at the start of a conversation.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "$BASE_URL/customers/lookup?email=alice@example.com"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="lookup.ts">
+  ```typescript
+  const result = await client.customers.lookup({
+    email: 'alice@example.com',
+  })
+
+  if (result.found) {
+    console.log('Customer:', result.customer.id)
+  }
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="lookup.py">
+  ```python
+  from convomem import CustomerLookupParams
+
+  result = client.customers.lookup(
+      CustomerLookupParams(email="alice@example.com")
+  )
+
+  if result.found:
+      print(f"Customer: {result.customer.id}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::CustomerLookupParams;
+
+  let result = client.lookup_customer(
+      &CustomerLookupParams {
+          email: Some("alice@example.com".into()),
+          ..Default::default()
+      }
+  ).await?;
+
+  if result.found {
+      println!("Customer: {}", result.customer.unwrap().id);
+  }
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Create
+
+Create a new customer profile. You can provide any combination of identity fields.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "$BASE_URL/customers" \
+    -d '{"name": "Alice", "email": "alice@example.com"}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="create.ts">
+  ```typescript
+  const customer = await client.customers.create({
+    name: 'Alice',
+    email: 'alice@example.com',
+  })
+
+  console.log('Created:', customer.id)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="create.py">
+  ```python
+  from convomem import CustomerCreateRequest
+
+  customer = client.customers.create(
+      CustomerCreateRequest(name="Alice", email="alice@example.com")
+  )
+
+  print(f"Created: {customer.id}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::CustomerCreateRequest;
+
+  let customer = client.create_customer(
+      &CustomerCreateRequest {
+          name: Some("Alice".into()),
+          email: Some("alice@example.com".into()),
+          ..Default::default()
+      }
+  ).await?;
+
+  println!("Created: {}", customer.id);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## List
+
+List all customers with pagination.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "$BASE_URL/customers?page=1&limit=20"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="list.ts">
+  ```typescript
+  const { customers, total } = await client.customers.list({
+    page: 1,
+    limit: 20,
+  })
+
+  console.log(`Showing ${customers.length} of ${total} customers`)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="list.py">
+  ```python
+  result = client.customers.list(page=1, limit=20)
+
+  print(f"Showing {len(result.customers)} of {result.total} customers")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let result = client.list_customers(Some(1), Some(20)).await?;
+
+  println!("Showing {} of {} customers", result.customers.len(), result.total);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Get
+
+Retrieve a single customer by ID.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "$BASE_URL/customers/cust_123"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="get.ts">
+  ```typescript
+  const customer = await client.customers.get('cust_123')
+  console.log(customer.name, customer.email)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="get.py">
+  ```python
+  customer = client.customers.get("cust_123")
+  print(customer.name, customer.email)
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let customer = client.get_customer("cust_123").await?;
+  println!("{} {:?}", customer.name, customer.email);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Update
+
+Update customer fields. Only provided fields are changed.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X PATCH -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "$BASE_URL/customers/cust_123" \
+    -d '{"name": "Alice Smith"}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="update.ts">
+  ```typescript
+  const updated = await client.customers.update('cust_123', {
+    name: 'Alice Smith',
+  })
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="update.py">
+  ```python
+  from convomem import CustomerUpdateRequest
+
+  updated = client.customers.update(
+      "cust_123",
+      CustomerUpdateRequest(name="Alice Smith"),
+  )
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::CustomerUpdateRequest;
+
+  let updated = client.update_customer(
+      "cust_123",
+      &CustomerUpdateRequest {
+          name: Some("Alice Smith".into()),
+          ..Default::default()
+      }
+  ).await?;
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Delete
+
+Delete a customer and all associated data. This cannot be undone.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X DELETE -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "$BASE_URL/customers/cust_123"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="delete.ts">
+  ```typescript
+  await client.customers.delete('cust_123')
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="delete.py">
+  ```python
+  client.customers.delete("cust_123")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  client.delete_customer("cust_123").await?;
+  ```
+  </CodeTab>
+</CodeTabs>
+
+<Callout type="danger" title="Permanent deletion">
+Deleting a customer removes all their conversations, memories, and associated data.
+This action cannot be undone.
+</Callout>
+
+## Handoff
+
+Get a handoff briefing for a customer — a summary of their history, key memories, and
+sentiment, ready to inject into a support agent's context.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "$BASE_URL/customers/handoff?customerId=cust_123"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="handoff.ts">
+  ```typescript
+  const handoff = await client.customers.handoff({
+    customerId: 'cust_123',
+  })
+
+  console.log('Summary:', handoff.summary)
+  console.log('Key memories:', handoff.keyMemories)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="handoff.py">
+  ```python
+  from convomem import HandoffParams
+
+  handoff = client.customers.handoff(
+      HandoffParams(customer_id="cust_123")
+  )
+
+  print(f"Summary: {handoff.summary}")
+  print(f"Key memories: {handoff.key_memories}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::HandoffParams;
+
+  let handoff = client.handoff(
+      &HandoffParams {
+          customer_id: Some("cust_123".into()),
+          ..Default::default()
+      }
+  ).await?;
+
+  println!("Summary: {:?}", handoff.summary);
+  println!("Key memories: {:?}", handoff.key_memories);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Response fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `id` | string | Unique customer identifier |
+| `name` | string | Customer name |
+| `email` | string | Email address |
+| `phone` | string | Phone number |
+| `externalId` | string | External system identifier |
+| `metadata` | object | Custom metadata |
+| `createdAt` | string | ISO-8601 creation timestamp |
+| `updatedAt` | string | ISO-8601 last update timestamp |

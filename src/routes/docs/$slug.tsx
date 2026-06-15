@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 
+import { LanguageProvider } from '@/components/mdx/code-tabs'
 import { CopyMarkdownButton } from '@/components/copy-markdown-button'
 import { DocsLayout } from '@/features/docs/components/docs-layout'
 import { DocPager } from '@/features/docs/components/docs-pager'
@@ -100,47 +101,48 @@ function DocPage() {
   const { prev, next } = getDocAdjacent(slug)
   const MDXContent = getMdxComponent('docs', slug)
   if (!MDXContent) throw notFound()
-
   return (
-    <DocsLayout
-      nav={nav}
-      searchIndex={searchIndex}
-      currentSlug={slug}
-      toc={toc}
-    >
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center justify-between gap-1.5 text-xs text-muted-foreground"
+    <LanguageProvider>
+      <DocsLayout
+        nav={nav}
+        searchIndex={searchIndex}
+        currentSlug={slug}
+        toc={toc}
       >
-        <div className="flex items-center gap-1.5">
-          <Link to="/docs" className="hover:text-foreground">
-            Docs
-          </Link>
-          {group && (
-            <>
-              <span>/</span>
-              <span>{group}</span>
-            </>
-          )}
-          <span>/</span>
-          <span className="text-foreground">{frontmatter.title}</span>
-        </div>
-        <CopyMarkdownButton mdUrl={`/docs/${slug}.md`} />
-      </nav>
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center justify-between gap-1.5 text-xs text-muted-foreground"
+        >
+          <div className="flex items-center gap-1.5">
+            <Link to="/docs" className="hover:text-foreground">
+              Docs
+            </Link>
+            {group && (
+              <>
+                <span>/</span>
+                <span>{group}</span>
+              </>
+            )}
+            <span>/</span>
+            <span className="text-foreground">{frontmatter.title}</span>
+          </div>
+          <CopyMarkdownButton mdUrl={`/docs/${slug}.md`} />
+        </nav>
 
-      <article className="mt-5">
-        <h1 className="text-[clamp(26px,4vw,38px)] font-semibold tracking-[-0.02em] text-foreground">
-          {frontmatter.title}
-        </h1>
-        <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
-          {frontmatter.description}
-        </p>
-        <div className="prose mt-8 max-w-none">
-          <MDXContent />
-        </div>
-      </article>
+        <article className="mt-5">
+          <h1 className="text-[clamp(26px,4vw,38px)] font-semibold tracking-[-0.02em] text-foreground">
+            {frontmatter.title}
+          </h1>
+          <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
+            {frontmatter.description}
+          </p>
+          <div className="prose mt-8 max-w-none">
+            <MDXContent />
+          </div>
+        </article>
 
-      <DocPager prev={prev} next={next} />
-    </DocsLayout>
+        <DocPager prev={prev} next={next} />
+      </DocsLayout>
+    </LanguageProvider>
   )
 }

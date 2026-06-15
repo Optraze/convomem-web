@@ -1,0 +1,205 @@
+---
+title: "Conversations"
+description: "Start, list, end, and escalate conversations."
+status: "published"
+---
+
+Conversations track customer sessions across channels. An active conversation is reused
+for subsequent captures until it ends or times out.
+
+## Start
+
+Begin a new conversation for a customer.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "$BASE_URL/customers/cust_123/conversations" \
+    -d '{"channel": "CHAT"}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="start.ts">
+  ```typescript
+  const conversation = await client.conversations.start('cust_123', 'CHAT')
+
+  console.log('Conversation:', conversation.id)
+  console.log('Status:', conversation.status)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="start.py">
+  ```python
+  conversation = client.conversations.start("cust_123", "CHAT")
+
+  print(f"Conversation: {conversation.id}")
+  print(f"Status: {conversation.status}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let conversation = client.start_conversation("cust_123", "CHAT").await?;
+
+  println!("Conversation: {}", conversation.id);
+  println!("Status: {}", conversation.status);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## List
+
+List all conversations for a customer with pagination.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "$BASE_URL/customers/cust_123/conversations?page=1&limit=20"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="list.ts">
+  ```typescript
+  const { conversations, total } = await client.conversations.list('cust_123', {
+    page: 1,
+    limit: 20,
+  })
+
+  for (const conv of conversations) {
+    console.log(`${conv.id}: ${conv.status} (${conv.channel})`)
+  }
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="list.py">
+  ```python
+  result = client.conversations.list("cust_123", page=1, limit=20)
+
+  for conv in result.conversations:
+      print(f"{conv.id}: {conv.status} ({conv.channel})")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let result = client.list_conversations("cust_123", Some(1), Some(20)).await?;
+
+  for conv in &result.conversations {
+      println!("{}: {} ({})", conv.id, conv.status, conv.channel);
+  }
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## End
+
+End a conversation with an optional outcome.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X PATCH -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "$BASE_URL/customers/cust_123/conversations/conv_456" \
+    -d '{"outcome": "resolved"}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="end.ts">
+  ```typescript
+  const updated = await client.conversations.end(
+    'cust_123',
+    'conv_456',
+    { outcome: 'resolved' },
+  )
+
+  console.log('Status:', updated.status)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="end.py">
+  ```python
+  updated = client.conversations.end(
+      "cust_123",
+      "conv_456",
+      outcome="resolved",
+  )
+
+  print(f"Status: {updated.status}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let updated = client.end_conversation(
+      "cust_123",
+      "conv_456",
+      Some("resolved"),
+  ).await?;
+
+  println!("Status: {}", updated.status);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Escalate
+
+Escalate a conversation to a human agent with a reason.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X PATCH -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "$BASE_URL/customers/cust_123/conversations/conv_456/escalate" \
+    -d '{"reason": "Complex billing dispute"}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="escalate.ts">
+  ```typescript
+  const updated = await client.conversations.escalate(
+    'cust_123',
+    'conv_456',
+    { reason: 'Complex billing dispute' },
+  )
+
+  console.log('Status:', updated.status)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="escalate.py">
+  ```python
+  updated = client.conversations.escalate(
+      "cust_123",
+      "conv_456",
+      reason="Complex billing dispute",
+  )
+
+  print(f"Status: {updated.status}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let updated = client.escalate_conversation(
+      "cust_123",
+      "conv_456",
+      Some("Complex billing dispute"),
+  ).await?;
+
+  println!("Status: {}", updated.status);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Response fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `id` | string | Unique conversation identifier |
+| `customerId` | string | Associated customer ID |
+| `channel` | string | Channel: `VOICE`, `CHAT`, `SMS`, or `EMAIL` |
+| `status` | string | Status: `ACTIVE`, `COMPLETED`, `ESCALATED`, or `ABANDONED` |
+| `startedAt` | string | ISO-8601 start timestamp |
+| `endedAt` | string | ISO-8601 end timestamp (if ended) |
+
+## Channel types
+
+| Value | Description |
+| --- | --- |
+| `CHAT` | Web chat, live chat widget |
+| `VOICE` | Phone call, voice agent |
+| `SMS` | Text message |
+| `EMAIL` | Email thread |

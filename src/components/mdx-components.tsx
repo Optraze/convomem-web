@@ -11,6 +11,7 @@ import { Link } from '@tanstack/react-router'
 import type React from 'react'
 
 import { CodeBlock } from '@/components/mdx/code-block'
+import { CodeTab, CodeTabs } from '@/components/mdx/code-tabs'
 
 /**
  * Heading with an anchor affordance. The `id` is supplied by rehype-slug (see
@@ -174,4 +175,6 @@ export const mdxComponents = {
   table: MdxTable,
   img: MdxImage,
   Callout,
+  CodeTabs,
+  CodeTab,
 }

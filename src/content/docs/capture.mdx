@@ -1,0 +1,198 @@
+---
+title: "Capture"
+description: "Send conversations to ConvoMem for memory extraction."
+status: "published"
+---
+
+## Overview
+
+Capture is the primary way to send data to ConvoMem. It accepts single messages or full
+conversations and returns a capture ID for async processing.
+
+The endpoint resolves customer identity, finds or creates an active conversation session,
+enqueues the message for memory extraction, and returns the session context. No explicit
+start/end lifecycle calls are required.
+
+<Callout type="note" title="Async processing">
+Memory extraction happens asynchronously. The response confirms the message was received
+and routed, but extracted memories may take a few seconds to appear in lookups.
+</Callout>
+
+## Single message
+
+Send a single user message. ConvoMem will associate it with the customer and channel you
+specify.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -X POST https://api.convomem.com/api/v1/capture \
+    -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "message": "I need help with my order",
+      "email": "user@example.com",
+      "channel": "CHAT"
+    }'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="capture.ts">
+  ```typescript
+  const result = await client.capture({
+    message: 'I need help with my order',
+    email: 'user@example.com',
+    channel: 'CHAT',
+  })
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="capture.py">
+  ```python
+  from convomem import CaptureRequest
+
+  result = client.capture(CaptureRequest(
+      message="I need help with my order",
+      email="user@example.com",
+      channel="CHAT",
+  ))
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::CaptureRequest;
+
+  let result = client.capture(&CaptureRequest {
+      message: Some("I need help with my order".into()),
+      email: Some("user@example.com".into()),
+      channel: Some("CHAT".into()),
+      ..Default::default()
+  }).await?;
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Batch messages
+
+Send a full conversation with multiple turns. This is useful when you want to capture both
+the user's message and the assistant's response in a single call.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -X POST https://api.convomem.com/api/v1/capture \
+    -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "messages": [
+        { "role": "user", "content": "What is my current plan?" },
+        { "role": "assistant", "content": "You are on the Pro plan at $49/mo." }
+      ],
+      "channel": "VOICE"
+    }'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="capture.ts">
+  ```typescript
+  const result = await client.capture({
+    messages: [
+      { role: 'user', content: 'What is my current plan?' },
+      { role: 'assistant', content: 'You are on the Pro plan at $49/mo.' },
+    ],
+    channel: 'VOICE',
+  })
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="capture.py">
+  ```python
+  from convomem import CaptureRequest, Message
+
+  result = client.capture(CaptureRequest(
+      messages=[
+          Message(role="user", content="What is my current plan?"),
+          Message(role="assistant", content="You are on the Pro plan at $49/mo."),
+      ],
+      channel="VOICE",
+  ))
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::{CaptureRequest, Message};
+
+  let result = client.capture(&CaptureRequest {
+      messages: Some(vec![
+          Message { role: "user".into(), content: "What is my current plan?".into() },
+          Message { role: "assistant".into(), content: "You are on the Pro plan at $49/mo.".into() },
+      ]),
+      channel: Some("VOICE".into()),
+      ..Default::default()
+  }).await?;
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Request body
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `message` | string | One of `message` or `messages` required | Single user message (max 10,000 chars) |
+| `messages` | array | One of `message` or `messages` required | Full conversation turns with `role` and `content` |
+| `customerId` | uuid | At least one identity field required | Customer UUID |
+| `externalId` | string | At least one identity field required | External system identifier |
+| `email` | string | At least one identity field required | Customer email address |
+| `phoneNumber` | string | At least one identity field required | Customer phone number |
+| `userName` | string | No | Customer display name (backfills placeholder names) |
+| `channel` | enum | No (default: `CHAT`) | `VOICE`, `CHAT`, `SMS`, or `EMAIL` |
+| `idempotencyKey` | string | No | Idempotency key (max 128 chars) |
+
+Each message in the `messages` array has:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `role` | enum | Yes | `user`, `assistant`, or `system` |
+| `content` | string | Yes | The message text |
+
+## Response
+
+| Field | Type | Description |
+|---|---|---|
+| `conversationId` | uuid | The conversation session ID (reused across calls while session is active) |
+| `customerId` | uuid | The resolved or newly created customer ID |
+| `status` | enum | `new` if a new conversation was started, `active` if appended to an existing session |
+| `isNewConversation` | boolean | `true` when this call started a new conversation session |
+| `isNewCustomer` | boolean | `true` when the customer was created by this call |
+
+<Callout type="tip" title="Use idempotencyKey">
+Pass an `idempotencyKey` to safely retry requests without creating duplicate captures.
+ConvoMem deduplicates within a short window using this key.
+</Callout>
+
+## Identity resolution
+
+ConvoMem resolves customers from whichever identity field you provide. You only need to
+supply one:
+
+- **customerId** — Direct lookup by ConvoMem UUID. Fastest and most reliable.
+- **externalId** — Your system's identifier for the customer. ConvoMem maps it to an
+  internal customer record.
+- **email** — Matches by email address. Creates a new customer if no match is found.
+- **phoneNumber** — Matches by phone number. Creates a new customer if no match is found.
+
+When multiple fields are provided, ConvoMem resolves in the order listed above. If the
+customer does not exist, a new profile is created automatically.
+
+<Callout type="warning" title="Consistent identity">
+Use the same identity field across all captures for a given customer. Mixing `email` and
+`externalId` for the same person can create duplicate profiles.
+</Callout>
+
+## Channel types
+
+| Channel | Use case |
+|---|---|
+| `VOICE` | Phone calls, voice agents |
+| `CHAT` | Web chat, in-app messaging (default) |
+| `SMS` | Text message conversations |
+| `EMAIL` | Email thread capture |
+
+The channel is used for analytics and to group conversations. It does not affect how
+messages are processed.

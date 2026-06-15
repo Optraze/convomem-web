@@ -7,38 +7,150 @@ status: "published"
 ## Prerequisites
 
 - A ConvoMem account ([sign up free](https://app.convomem.com/register))
-- Node.js 18+ or any runtime that supports fetch
+- An API key from the [dashboard](https://app.convomem.com/settings/keys)
 
-## Installation
+## Install and initialize
 
-```bash
-npm install @convomem/sdk
-```
+<CodeTabs>
+  <CodeTab language="typescript" filename="Terminal">
+  ```bash
+  npx jsr add @optraze/convomem-sdk
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="Terminal">
+  ```bash
+  pip install convomem
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="Terminal">
+  ```bash
+  cargo add convomem
+  ```
+  </CodeTab>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  export CONVOMEM_API_KEY=sk-org-your-key-here
+  export BASE_URL=https://api.convomem.com/api/v1
+  ```
+  </CodeTab>
+</CodeTabs>
 
 ## Quick start
 
-```typescript
-import { ConvoMem } from '@convomem/sdk'
+Capture a conversation and retrieve context in three steps:
 
-const client = new ConvoMem({
-  apiKey: process.env.CONVOMEM_API_KEY,
-})
+### 1. Capture a conversation
 
-// Capture a conversation
-await client.capture({
-  channel: 'chat',
-  messages: [
-    { role: 'user', content: 'I need help with my order' },
-    { role: 'assistant', content: 'Of course! What seems to be the issue?' }
-  ]
-})
+<CodeTabs>
+  <CodeTab language="typescript" filename="capture.ts">
+  ```typescript
+  import { ConvoMemClient } from '@optraze/convomem-sdk'
 
-// Retrieve context
-const memory = await client.retrieve({ customerId: 'cust_123' })
-console.log(memory.facts)
-```
+  const client = new ConvoMemClient({
+    apiKey: process.env.CONVOMEM_API_KEY!,
+  })
+
+  await client.capture({
+    message: 'I need help with my order',
+    email: 'customer@example.com',
+    channel: 'CHAT',
+  })
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="capture.py">
+  ```python
+  import os
+  from convomem import ConvoMemClient, CaptureRequest
+
+  client = ConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
+
+  client.capture(CaptureRequest(
+      message="I need help with my order",
+      email="customer@example.com",
+      channel="CHAT",
+  ))
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::{ConvoMemClient, CaptureRequest};
+
+  #[tokio::main]
+  async fn main() -> Result<(), Box<dyn std::error::Error>> {
+      let client = ConvoMemClient::new(
+          std::env::var("CONVOMEM_API_KEY")?
+      );
+
+      client.capture(&CaptureRequest {
+          message: Some("I need help with my order".into()),
+          email: Some("customer@example.com".into()),
+          channel: Some("CHAT".into()),
+          ..Default::default()
+      }).await?;
+
+      Ok(())
+  }
+  ```
+  </CodeTab>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "$BASE_URL/capture" \
+    -d '{
+      "message": "I need help with my order",
+      "email": "customer@example.com",
+      "channel": "CHAT"
+    }'
+  ```
+  </CodeTab>
+</CodeTabs>
+
+### 2. Wait for extraction
+
+Memory extraction happens asynchronously. Wait a few seconds for facts to be processed.
+
+### 3. Retrieve context
+
+<CodeTabs>
+  <CodeTab language="typescript" filename="retrieve.ts">
+  ```typescript
+  const { context, memories } = await client.memories.lookup(
+    'cust_123',
+    { topic: 'order issue' },
+  )
+
+  console.log('Context:', context)
+  console.log('Found', memories.length, 'memories')
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="retrieve.py">
+  ```python
+  result = client.memories.lookup("cust_123", "order issue")
+
+  print(f"Context: {result.context}")
+  print(f"Found {len(result.memories)} memories")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let result = client.lookup_memories("cust_123", "order issue").await?;
+
+  println!("Context: {}", result.context);
+  println!("Found {} memories", result.memories.len());
+  ```
+  </CodeTab>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "$BASE_URL/customers/cust_123/memories/lookup?topic=order%20issue"
+  ```
+  </CodeTab>
+</CodeTabs>
 
 ## Next steps
 
-- Read the [API Reference](/docs/api-reference) for all available methods
-- Check out the [Blog](/blog) for guides and best practices
+- [SDK reference](/docs/sdk-reference) — installation and initialization details
+- [Capture](/docs/capture) — send conversations for memory extraction
+- [Customers](/docs/customers) — manage customer profiles
+- [Memories](/docs/memories) — work with extracted facts

@@ -38,7 +38,7 @@ Each request includes an `X-ConvoMem-Signature` header. Verify it before trustin
 payload:
 
 ```typescript title="verify.ts"
-import { verifyWebhook } from '@convomem/sdk'
+import { verifyWebhook } from '@optraze/convomem-sdk'
 
 const valid = verifyWebhook({
   payload: rawBody,

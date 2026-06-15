@@ -1,0 +1,106 @@
+---
+title: "Embed"
+description: "Create short-lived tokens for customer-facing widgets."
+status: "published"
+---
+
+Embed tokens let browser-based widgets access ConvoMem without exposing your API key.
+Mint a short-lived token on your backend, then pass it to the frontend.
+
+<Callout type="warning" title="Never expose API keys client-side">
+Embed tokens are scoped to a single customer and expire after a configurable TTL.
+Always mint them server-side.
+</Callout>
+
+## Create a token
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "$BASE_URL/embed/tokens" \
+    -d '{"customerId": "cust_123", "ttlSeconds": 3600}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="token.ts">
+  ```typescript
+  const { token, expiresIn } = await client.embed.createToken({
+    customerId: 'cust_123',
+    ttlSeconds: 3600,
+  })
+
+  console.log('Token:', token)
+  console.log('Expires in:', expiresIn, 'seconds')
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="token.py">
+  ```python
+  from convomem import EmbedTokenRequest
+
+  result = client.embed.create_token(
+      EmbedTokenRequest(customer_id="cust_123", ttl_seconds=3600)
+  )
+
+  print(f"Token: {result.token}")
+  print(f"Expires in: {result.expires_in} seconds")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::EmbedTokenRequest;
+
+  let result = client.create_embed_token(
+      &EmbedTokenRequest {
+          customer_id: Some("cust_123".into()),
+          ttl_seconds: Some(3600),
+          ..Default::default()
+      }
+  ).await?;
+
+  println!("Token: {}", result.token);
+  println!("Expires in: {} seconds", result.expires_in);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Use in a widget
+
+Pass the token to your frontend widget. The widget uses it to fetch the customer's
+memory context without needing your API key.
+
+```typescript title="frontend.ts"
+// Your backend returns the token from the /embed/tokens endpoint
+const response = await fetch('/api/embed-token', {
+  method: 'POST',
+  body: JSON.stringify({ customerId: 'cust_123' }),
+})
+
+const { token } = await response.json()
+
+// Pass to the ConvoMem widget
+const widget = new ConvoMemWidget({
+  token,
+  container: document.getElementById('chat'),
+})
+```
+
+## Response fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `token` | string | The embed token to use in client-side code |
+| `expiresIn` | number | Time until expiration in seconds |
+| `scope` | string | Token scope (e.g., `handoff:read`) |
+
+## Token lifecycle
+
+1. **Mint** — Your backend calls `/embed/tokens` with a customer ID
+2. **Pass** — Return the token to your frontend
+3. **Use** — The widget includes the token in requests to ConvoMem
+4. **Expire** — After `ttlSeconds`, the token becomes invalid; mint a new one
+
+<Callout type="tip" title="Short-lived tokens">
+Set a short TTL (5–60 minutes) for production use. Longer TTLs increase the window
+of exposure if the token is compromised.
+</Callout>

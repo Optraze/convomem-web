@@ -28,6 +28,17 @@ export const docsNav: DocNavGroup[] = [
     items: [{ slug: 'memory-model' }, { slug: 'retrieval' }],
   },
   {
+    group: 'SDK & API',
+    items: [
+      { slug: 'sdk-reference', label: 'SDK reference' },
+      { slug: 'capture' },
+      { slug: 'customers' },
+      { slug: 'memories' },
+      { slug: 'conversations' },
+      { slug: 'embed' },
+    ],
+  },
+  {
     group: 'Guides',
     items: [{ slug: 'authentication' }, { slug: 'webhooks' }],
   },

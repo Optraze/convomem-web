@@ -1,0 +1,242 @@
+---
+title: "Memories"
+description: "Ingest, look up, and manage customer memories."
+status: "published"
+---
+
+Memories are durable facts extracted from customer conversations. They persist across
+sessions and are retrieved at the start of future interactions.
+
+<Callout type="note" title="Extraction is asynchronous">
+When you ingest a conversation, memory extraction happens in the background. Facts
+become searchable within a few seconds. Build your flows around recall-then-capture,
+not capture-then-immediately-recall.
+</Callout>
+
+## Ingest
+
+Send a conversation for memory extraction. ConvoMem's AI pipeline will analyze the
+messages and extract structured facts.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "$BASE_URL/customers/cust_123/memories/ingest" \
+    -d '{
+      "messages": [
+        {"role": "user", "content": "I prefer email over phone"},
+        {"role": "assistant", "content": "Noted, I have updated your preference."}
+      ],
+      "channel": "CHAT"
+    }'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="ingest.ts">
+  ```typescript
+  const result = await client.memories.ingest('cust_123', {
+    messages: [
+      { role: 'user', content: 'I prefer email over phone' },
+      { role: 'assistant', content: 'Noted, I have updated your preference.' },
+    ],
+    channel: 'CHAT',
+  })
+
+  console.log('Capture ID:', result.captureId)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="ingest.py">
+  ```python
+  from convomem import MemoryIngestRequest, Message
+
+  result = client.memories.ingest(
+      "cust_123",
+      MemoryIngestRequest(
+          messages=[
+              Message(role="user", content="I prefer email over phone"),
+              Message(role="assistant", content="Noted, I have updated your preference."),
+          ],
+          channel="CHAT",
+      ),
+  )
+
+  print(f"Capture ID: {result.capture_id}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::{MemoryIngestRequest, Message};
+
+  let result = client.ingest_memories(
+      "cust_123",
+      &MemoryIngestRequest {
+          messages: vec![
+              Message { role: "user".into(), content: "I prefer email over phone".into() },
+              Message { role: "assistant".into(), content: "Noted, I have updated your preference.".into() },
+          ],
+          channel: Some("CHAT".into()),
+      },
+  ).await?;
+
+  println!("Capture ID: {}", result.capture_id);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Lookup by topic
+
+Retrieve the most relevant memories for a specific topic. ConvoMem ranks facts by
+relevance and returns them with a pre-built context string.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "$BASE_URL/customers/cust_123/memories/lookup?topic=billing"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="lookup.ts">
+  ```typescript
+  const { context, memories } = await client.memories.lookup('cust_123', {
+    topic: 'billing',
+  })
+
+  console.log('Context:', context)
+  console.log('Memories:', memories.length)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="lookup.py">
+  ```python
+  result = client.memories.lookup("cust_123", "billing")
+
+  print(f"Context: {result.context}")
+  print(f"Memories: {len(result.memories)}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let result = client.lookup_memories("cust_123", "billing").await?;
+
+  println!("Context: {}", result.context);
+  println!("Memories: {}", result.memories.len());
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## List
+
+List all memories for a customer with pagination.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "$BASE_URL/customers/cust_123/memories?page=1&limit=20"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="list.ts">
+  ```typescript
+  const { memories, total } = await client.memories.list('cust_123', {
+    page: 1,
+    limit: 20,
+  })
+
+  for (const mem of memories) {
+    console.log(`- ${mem.fact} (${mem.category})`)
+  }
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="list.py">
+  ```python
+  result = client.memories.list("cust_123", page=1, limit=20)
+
+  for mem in result.memories:
+      print(f"- {mem.fact} ({mem.category})")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let result = client.list_memories("cust_123", Some(1), Some(20)).await?;
+
+  for mem in &result.memories {
+      println!("- {:?} ({:?})", mem.fact, mem.category);
+  }
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Add manually
+
+Add a memory directly without going through the extraction pipeline.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "$BASE_URL/customers/cust_123/memories" \
+    -d '{"fact": "Prefers dark mode", "category": "preference"}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="add.ts">
+  ```typescript
+  const memory = await client.memories.add('cust_123', {
+    fact: 'Prefers dark mode',
+    category: 'preference',
+  })
+
+  console.log('Memory ID:', memory.id)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="add.py">
+  ```python
+  from convomem import MemoryAddRequest
+
+  memory = client.memories.add(
+      "cust_123",
+      MemoryAddRequest(fact="Prefers dark mode", category="preference"),
+  )
+
+  print(f"Memory ID: {memory.id}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::MemoryAddRequest;
+
+  let memory = client.add_memory(
+      "cust_123",
+      &MemoryAddRequest {
+          fact: "Prefers dark mode".into(),
+          category: Some("preference".into()),
+          importance: None,
+          memory_type: None,
+      },
+  ).await?;
+
+  println!("Memory ID: {}", memory.id);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Response fields
+
+### Memory
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `id` | string | Unique memory identifier |
+| `fact` | string | The extracted fact in natural language |
+| `category` | string | Category (e.g., `preference`, `account`, `intent`) |
+| `memoryType` | string | Type of memory |
+| `importance` | number | 0–1 importance score |
+| `createdAt` | string | ISO-8601 creation timestamp |
+
+### MemoryContext (lookup response)
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `context` | string | Pre-built context string for prompt injection |
+| `tokenCount` | number | Approximate token count of the context |
+| `memories` | Memory[] | Array of relevant memories |

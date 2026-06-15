@@ -1,13 +1,13 @@
 ---
-title: "Installation"
-description: "Install the ConvoMem SDK and authenticate your first request."
+title: "SDK reference"
+description: "Install and initialize ConvoMem in any language."
 status: "published"
 ---
 
 ConvoMem provides official SDKs for TypeScript, Python, and Rust, plus full REST API
-support via cURL.
+support via cURL or any HTTP client.
 
-## Install the SDK
+## Installation
 
 <CodeTabs>
   <CodeTab language="typescript" filename="Terminal">
@@ -89,8 +89,11 @@ your backend or an edge function. For browser widgets, use [embed tokens](/docs/
   </CodeTab>
   <CodeTab language="curl" filename="Terminal">
   ```bash
+  # Set your API key as an environment variable
   export CONVOMEM_API_KEY=sk-org-your-key-here
-  export BASE_URL=https://api.convomem.com/api/v1
+
+  # All examples use this base URL
+  BASE_URL=https://api.convomem.com/api/v1
   ```
   </CodeTab>
 </CodeTabs>
@@ -124,5 +127,28 @@ your backend or an edge function. For browser widgets, use [embed tokens](/docs/
   </CodeTab>
 </CodeTabs>
 
-Once this succeeds, continue to the [Quick start](/docs/getting-started) to capture
-your first conversation.
+## Base URL
+
+All API requests use this base URL:
+
+```
+https://api.convomem.com/api/v1
+```
+
+## Authentication
+
+Every request requires an `X-API-Key` header with your organization API key:
+
+```http
+X-API-Key: sk-org-your-key-here
+```
+
+<Callout type="note" title="No Bearer prefix">
+ConvoMem uses `X-API-Key` header authentication, not `Authorization: Bearer`.
+</Callout>
+
+## Next steps
+
+- [Capture](/docs/capture) — send conversations for memory extraction
+- [Customers](/docs/customers) — manage customer profiles
+- [Memories](/docs/memories) — work with extracted facts
