@@ -1,3 +1,4 @@
+import readingTimes from 'virtual:reading-times'
 import { z } from 'zod'
 
 import type { Toc } from '@stefanprobst/rehype-extract-toc'
@@ -37,28 +38,10 @@ const changelogModules = import.meta.glob('/src/content/changelog/*.mdx', {
   eager: true,
 }) as Record<string, MdxModule>
 
-const blogRaw = import.meta.glob('/src/content/blog/*.mdx', {
-  query: '?raw',
-  eager: true,
-})
-const docsRaw = import.meta.glob('/src/content/docs/*.mdx', {
-  query: '?raw',
-  eager: true,
-})
-const changelogRaw = import.meta.glob('/src/content/changelog/*.mdx', {
-  query: '?raw',
-  eager: true,
-})
-
 const modulesByType: Record<ContentType, Record<string, MdxModule>> = {
   blog: blogModules,
   docs: docsModules,
   changelog: changelogModules,
-}
-const rawByType: Record<ContentType, Record<string, unknown>> = {
-  blog: blogRaw,
-  docs: docsRaw,
-  changelog: changelogRaw,
 }
 
 export interface ContentMeta {
@@ -74,25 +57,12 @@ function slugFromPath(path: string): string {
   return path.split('/').pop()?.replace('.mdx', '') ?? ''
 }
 
-function readingTimeFor(type: ContentType, slug: string): number {
-  const mod = rawByType[type][`/src/content/${type}/${slug}.mdx`] as
-    | { default?: string }
-    | undefined
-  const raw = mod?.default
-  if (typeof raw !== 'string') return 0
-  const body = raw
-    .replace(/^---[\s\S]*?\n---/, '')
-    .replace(/```[\s\S]*?```/g, '')
-  const words = body.split(/\s+/).filter(Boolean).length
-  return Math.max(1, Math.ceil(words / 200))
-}
-
 function toMeta(type: ContentType, path: string, mod: MdxModule): ContentMeta {
   const slug = slugFromPath(path)
   return {
     slug,
     frontmatter: frontmatterSchema.parse(mod.frontmatter ?? {}),
-    readingTime: readingTimeFor(type, slug),
+    readingTime: readingTimes[type][slug] ?? 1,
     toc: mod.tableOfContents ?? [],
   }
 }

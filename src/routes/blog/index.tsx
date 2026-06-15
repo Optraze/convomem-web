@@ -1,3 +1,4 @@
+import { ArrowRight } from 'lucide-react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 
 import { ContentFooter } from '@/components/content-footer'
@@ -40,7 +41,7 @@ function BlogIndex() {
               key={post.slug}
               to="/blog/$slug"
               params={{ slug: post.slug }}
-              className="block rounded-lg border border-border p-5 transition-colors hover:bg-muted/40"
+              className="group block rounded-lg border border-border p-5 transition-colors hover:border-foreground/15 hover:bg-muted/40"
             >
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 {post.frontmatter.date && (
@@ -66,9 +67,15 @@ function BlogIndex() {
                   </span>
                 ))}
               </div>
-              <h2 className="mt-2 text-lg font-semibold text-foreground">
-                {post.frontmatter.title}
-              </h2>
+              <div className="mt-2 flex items-start justify-between gap-4">
+                <h2 className="text-lg font-semibold text-foreground transition-transform group-hover:translate-x-0.5">
+                  {post.frontmatter.title}
+                </h2>
+                <ArrowRight
+                  size={16}
+                  className="mt-1 shrink-0 text-hint opacity-0 transition-all -translate-x-1 group-hover:translate-x-0 group-hover:opacity-100"
+                />
+              </div>
               <p className="mt-1 text-sm text-muted-foreground">
                 {post.frontmatter.description}
               </p>

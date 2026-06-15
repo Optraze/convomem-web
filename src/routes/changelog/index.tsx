@@ -1,3 +1,4 @@
+import { ArrowRight } from 'lucide-react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 
 import { ContentFooter } from '@/components/content-footer'
@@ -39,27 +40,33 @@ function ChangelogIndex() {
               key={entry.slug}
               to="/changelog/$slug"
               params={{ slug: entry.slug }}
-              className="block rounded-lg border border-border p-5 transition-colors hover:bg-muted/40"
+              className="group block rounded-lg border border-border p-5 transition-colors hover:border-foreground/15 hover:bg-muted/40"
             >
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-semibold text-foreground">
-                  {entry.frontmatter.title}
-                </span>
-                {entry.frontmatter.date && (
-                  <time
-                    dateTime={entry.frontmatter.date}
-                    className="text-xs text-muted-foreground"
-                  >
-                    {new Date(entry.frontmatter.date).toLocaleDateString(
-                      'en-US',
-                      {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      }
-                    )}
-                  </time>
-                )}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 transition-transform group-hover:translate-x-0.5">
+                  <span className="font-mono text-xs font-semibold text-foreground">
+                    {entry.frontmatter.title}
+                  </span>
+                  {entry.frontmatter.date && (
+                    <time
+                      dateTime={entry.frontmatter.date}
+                      className="text-xs text-muted-foreground"
+                    >
+                      {new Date(entry.frontmatter.date).toLocaleDateString(
+                        'en-US',
+                        {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        }
+                      )}
+                    </time>
+                  )}
+                </div>
+                <ArrowRight
+                  size={16}
+                  className="shrink-0 text-hint opacity-0 transition-all -translate-x-1 group-hover:translate-x-0 group-hover:opacity-100"
+                />
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
                 {entry.frontmatter.description}

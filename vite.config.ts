@@ -14,15 +14,32 @@ import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
 
-import { contentFiles } from './scripts/content-files'
+import { contentFiles, readingTimes } from './scripts/content-files'
 
 const blogSlugs = contentFiles('blog').map((f) => f.slug)
 const docsSlugs = contentFiles('docs').map((f) => f.slug)
 const changelogSlugs = contentFiles('changelog').map((f) => f.slug)
 
+const READING_TIMES_MODULE_ID = 'virtual:reading-times'
+
+function readingTimesPlugin() {
+  const resolvedId = `\0${READING_TIMES_MODULE_ID}`
+  return {
+    name: 'reading-times',
+    resolveId(id: string) {
+      if (id === READING_TIMES_MODULE_ID) return resolvedId
+    },
+    load(id: string) {
+      if (id === resolvedId)
+        return `export default ${JSON.stringify(readingTimes())}`
+    },
+  }
+}
+
 const config = defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
   plugins: [
+    readingTimesPlugin(),
     command === 'serve' && devtools(),
     nitro({
       compatibilityDate: 'latest',

@@ -148,12 +148,12 @@ function BlogPost() {
               <Link
                 to="/blog/$slug"
                 params={{ slug: prevMeta.slug }}
-                className="rounded-lg border border-border p-4 transition-colors hover:bg-muted/40"
+                className="group rounded-lg border border-border p-4 transition-colors hover:border-foreground/15 hover:bg-muted/40"
               >
                 <span className="text-xs text-muted-foreground">
                   ← Previous
                 </span>
-                <span className="mt-1 block font-medium text-foreground">
+                <span className="mt-1 block font-medium text-foreground transition-transform group-hover:-translate-x-0.5">
                   {prevMeta.frontmatter.title}
                 </span>
               </Link>
@@ -164,10 +164,10 @@ function BlogPost() {
               <Link
                 to="/blog/$slug"
                 params={{ slug: nextMeta.slug }}
-                className="rounded-lg border border-border p-4 text-right transition-colors hover:bg-muted/40"
+                className="group rounded-lg border border-border p-4 text-right transition-colors hover:border-foreground/15 hover:bg-muted/40"
               >
                 <span className="text-xs text-muted-foreground">Next →</span>
-                <span className="mt-1 block font-medium text-foreground">
+                <span className="mt-1 block font-medium text-foreground transition-transform group-hover:translate-x-0.5">
                   {nextMeta.frontmatter.title}
                 </span>
               </Link>

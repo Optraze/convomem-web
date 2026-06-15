@@ -53,3 +53,26 @@ export function allContentFiles(opts?: {
 export function lastmodOf(file: ContentFile): string | undefined {
   return file.data.updated || file.data.date || undefined
 }
+
+/** Estimated reading time in minutes, ~200 words per minute. */
+export function readingTimeOf(body: string): number {
+  const words = body
+    .replace(/```[\s\S]*?```/g, '')
+    .split(/\s+/)
+    .filter(Boolean).length
+  return Math.max(1, Math.ceil(words / 200))
+}
+
+/** Reading time (minutes) for every content file, keyed by type then slug. */
+export function readingTimes(): Record<ContentType, Record<string, number>> {
+  const result = {} as Record<ContentType, Record<string, number>>
+  for (const type of CONTENT_TYPES) {
+    result[type] = {}
+    for (const path of fg.sync(`src/content/${type}/*.mdx`)) {
+      const { content } = matter(readFileSync(path, 'utf8'))
+      const slug = path.split('/').pop()?.replace('.mdx', '') ?? ''
+      if (slug) result[type][slug] = readingTimeOf(content)
+    }
+  }
+  return result
+}
