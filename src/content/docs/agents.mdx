@@ -1,6 +1,6 @@
 ---
 title: "AI agent integration"
-description: "Wire ConvoMem into any LLM agent as callable tools — with ready-to-paste tool definitions and channel blueprints."
+description: "Wire ConvoMem into any LLM agent as callable tools — with ready-to-paste tool definitions, SDK references, and channel blueprints."
 status: "published"
 ---
 
@@ -70,7 +70,29 @@ or a preference.
 }
 ```
 
-**Maps to:** `GET /api/v1/customers/lookup`
+<CodeTabs>
+  <CodeTab language="curl">
+  ```bash
+  curl "https://api.convomem.com/api/v1/customers/lookup?topic=billing+question&email=alice@example.com&autoCreate=true" \
+    -H "X-API-Key: $CONVOMEM_API_KEY"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript">
+  ```typescript
+  const { context, customer } = await client.lookup(topic, { email, phone, customerId }, { autoCreate: true })
+  ```
+  </CodeTab>
+  <CodeTab language="python">
+  ```python
+  ctx = client.lookup(topic, CustomerIdentity(email=email), auto_create=True)
+  ```
+  </CodeTab>
+  <CodeTab language="rust">
+  ```rust
+  let ctx = client.lookup(topic, &identity, Some(true), None).await?;
+  ```
+  </CodeTab>
+</CodeTabs>
 
 ---
 
@@ -102,7 +124,52 @@ Call after every exchange — the user turn **and** your reply, in order.
 }
 ```
 
-**Maps to:** `POST /api/v1/capture`
+<CodeTabs>
+  <CodeTab language="curl">
+  ```bash
+  curl -X POST https://api.convomem.com/api/v1/capture \
+    -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "messages": [
+        {"role": "user", "content": "I need help with my order"},
+        {"role": "assistant", "content": "Of course, let me look that up."}
+      ],
+      "customerId": "cust_uuid_123",
+      "channel": "CHAT"
+    }'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript">
+  ```typescript
+  // fire-and-forget — don't await
+  client.capture(
+    [{ role: 'user', content: userMsg }, { role: 'assistant', content: reply }],
+    { customerId: customer.id },
+    { channel: 'CHAT' },
+  ).catch(console.error)
+  ```
+  </CodeTab>
+  <CodeTab language="python">
+  ```python
+  # fire-and-forget — run in background task / thread
+  client.capture(
+      [{"role": "user", "content": user_msg}, {"role": "assistant", "content": reply}],
+      CustomerIdentity(customer_id=customer_id),
+      channel="CHAT",
+  )
+  ```
+  </CodeTab>
+  <CodeTab language="rust">
+  ```rust
+  // fire-and-forget via tokio::spawn
+  let c = client.clone();
+  tokio::spawn(async move {
+      let _ = c.capture(messages, &identity, Some("CHAT"), None, None).await;
+  });
+  ```
+  </CodeTab>
+</CodeTabs>
 
 > Send only new turns each call — not the full transcript. Across the conversation,
 > every turn is captured exactly once.
@@ -133,7 +200,29 @@ Targeted mid-conversation recall when you already know who the customer is.
 }
 ```
 
-**Maps to:** `GET /api/v1/customers/memories/lookup`
+<CodeTabs>
+  <CodeTab language="curl">
+  ```bash
+  curl "https://api.convomem.com/api/v1/customers/memories/lookup?topic=billing+plan&email=alice@example.com" \
+    -H "X-API-Key: $CONVOMEM_API_KEY"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript">
+  ```typescript
+  const { context } = await client.lookup(topic, { email, phone, externalId })
+  ```
+  </CodeTab>
+  <CodeTab language="python">
+  ```python
+  ctx = client.lookup(topic, CustomerIdentity(email=email))
+  ```
+  </CodeTab>
+  <CodeTab language="rust">
+  ```rust
+  let ctx = client.lookup(topic, &identity, None, None).await?;
+  ```
+  </CodeTab>
+</CodeTabs>
 
 ---
 
@@ -161,7 +250,29 @@ Call immediately before transferring to a human agent.
 }
 ```
 
-**Maps to:** `GET /api/v1/customers/handoff`
+<CodeTabs>
+  <CodeTab language="curl">
+  ```bash
+  curl "https://api.convomem.com/api/v1/customers/handoff?customerId=cust_uuid_123" \
+    -H "X-API-Key: $CONVOMEM_API_KEY"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript">
+  ```typescript
+  const handoff = await client.getHandoff({ customerId, email, phone })
+  ```
+  </CodeTab>
+  <CodeTab language="python">
+  ```python
+  handoff = client.get_handoff(CustomerIdentity(customer_id=customer_id))
+  ```
+  </CodeTab>
+  <CodeTab language="rust">
+  ```rust
+  let handoff = client.get_handoff(&identity, None, None).await?;
+  ```
+  </CodeTab>
+</CodeTabs>
 
 ---
 
@@ -188,7 +299,31 @@ Call once, when the conversation is genuinely finished.
 }
 ```
 
-**Maps to:** `POST /api/v1/customers/conversations/end`
+<CodeTabs>
+  <CodeTab language="curl">
+  ```bash
+  curl -X POST https://api.convomem.com/api/v1/customers/conversations/end \
+    -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{"customerId":"cust_uuid_123","conversationId":"conv_uuid_456","outcome":"Resolved billing issue"}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript">
+  ```typescript
+  await client.endConversation(conversationId, { customerId }, { outcome: 'Resolved billing issue' })
+  ```
+  </CodeTab>
+  <CodeTab language="python">
+  ```python
+  client.end_conversation(conversation_id, identity, outcome="Resolved billing issue")
+  ```
+  </CodeTab>
+  <CodeTab language="rust">
+  ```rust
+  client.end_conversation(Some(conv_id), &identity, Some("Resolved billing issue")).await?;
+  ```
+  </CodeTab>
+</CodeTabs>
 
 ---
 
@@ -215,7 +350,48 @@ Call when handing off to a human. Pair with `get_handoff_brief`.
 }
 ```
 
-**Maps to:** `POST /api/v1/customers/conversations/escalate`
+<CodeTabs>
+  <CodeTab language="curl">
+  ```bash
+  curl -X POST https://api.convomem.com/api/v1/customers/conversations/escalate \
+    -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{"customerId":"cust_uuid_123","conversationId":"conv_uuid_456","reason":"Complex billing dispute"}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript">
+  ```typescript
+  await client.escalateConversation(conversationId, { customerId }, { reason: 'Complex billing dispute' })
+  ```
+  </CodeTab>
+  <CodeTab language="python">
+  ```python
+  client.escalate_conversation(conversation_id, identity, reason="Complex billing dispute")
+  ```
+  </CodeTab>
+  <CodeTab language="rust">
+  ```rust
+  client.escalate_conversation(Some(conv_id), &identity, Some("Complex billing dispute")).await?;
+  ```
+  </CodeTab>
+</CodeTabs>
+
+---
+
+## URL & SDK reference
+
+| Tool | API endpoint | TypeScript | Python | Rust |
+|------|-------------|-----------|--------|------|
+| `recall_customer_context` | `GET /customers/lookup` | `client.lookup(topic, identity, { autoCreate: true })` | `client.lookup(topic, identity, auto_create=True)` | `client.lookup(topic, &id, Some(true), None)` |
+| `capture_message` | `POST /capture` | `client.capture(msgs, identity, { channel })` | `client.capture(msgs, identity, channel=…)` | `client.capture(msgs, &id, channel, …)` |
+| `search_memories` | `GET /customers/memories/lookup` | `client.lookup(topic, identity)` | `client.lookup(topic, identity)` | `client.lookup(topic, &id, None, None)` |
+| `get_handoff_brief` | `GET /customers/handoff` | `client.getHandoff(identity)` | `client.get_handoff(identity)` | `client.get_handoff(&id, None, None)` |
+| `end_conversation` | `POST /customers/conversations/end` | `client.endConversation(convId, identity, { outcome })` | `client.end_conversation(convId, identity)` | `client.end_conversation(convId, &id, outcome)` |
+| `escalate_conversation` | `POST /customers/conversations/escalate` | `client.escalateConversation(convId, identity, { reason })` | `client.escalate_conversation(convId, identity)` | `client.escalate_conversation(convId, &id, reason)` |
+
+All endpoints under `https://api.convomem.com/api/v1`. Auth header: `X-API-Key: <key>`.
+
+SDK docs: [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)
 
 ---
 
