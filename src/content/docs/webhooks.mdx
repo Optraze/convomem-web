@@ -1,50 +1,75 @@
 ---
 title: "Webhooks"
-description: "Subscribe to fact and conversation events to react to memory in real time."
+description: "Subscribe to ConvoMem events to react to new memories and conversation state changes in real time."
 status: "published"
 ---
 
-Webhooks let your systems react the moment ConvoMem extracts new memory — without
-polling.
+Webhooks let your systems react the moment ConvoMem fires an event — without polling.
+Webhook endpoints are configured in the **dashboard** (Settings → Webhooks). They cannot
+be managed via an org API key.
 
-## Registering an endpoint
+## Live events
 
-```typescript title="register.ts"
-await convomem.webhooks.create({
-  url: 'https://api.yourapp.com/hooks/convomem',
-  events: ['fact.created', 'conversation.captured'],
-})
-```
+| Event | Fires when | Key `data` fields |
+| :-- | :-- | :-- |
+| `memory.captured` | Background extraction commits memories for a capture | `customerId`, `saved`, `skipped`, `captureId`, `conversationId` |
+| `conversation.completed` | A conversation is ended | `conversationId`, `customerId`, `outcome` |
+| `conversation.escalated` | A conversation is escalated | `conversationId`, `customerId`, `reason` |
+
+> `customer.created` appears in the event catalog but is **not currently dispatched** at
+> runtime — don't build on it yet.
 
 ## Event payload
 
-Every delivery is a signed JSON POST:
+Every delivery is a `POST` with an `X-ConvoMem-Signature` header:
 
-```json title="fact.created"
+```json title="memory.captured"
 {
-  "event": "fact.created",
-  "subjectId": "cust_123",
-  "fact": {
-    "statement": "Prefers email over phone",
-    "category": "preference",
-    "confidence": 0.82
+  "event": "memory.captured",
+  "createdAt": "2026-06-17T10:00:00.000Z",
+  "data": {
+    "customerId": "f3b39d1b-2522-4a00-98df-8cdde783ba12",
+    "conversationId": "87c53d10-85f8-4447-920f-b1e847c23a1a",
+    "captureId": "cap_xyz789",
+    "saved": 3,
+    "skipped": 0
   }
 }
 ```
 
 ## Verifying signatures
 
-Each request includes an `X-ConvoMem-Signature` header. Verify it before trusting the
-payload:
+The signature is `sha256=<HMAC-SHA256(rawBody, webhookSecret)>`. Always verify before
+processing — anyone who learns your URL could otherwise POST to it.
+
+Compute the HMAC over the **raw bytes** of the request body, not a re-serialized object.
 
 ```typescript title="verify.ts"
-import { verifyWebhook } from '@optraze/convomem-sdk'
+import crypto from 'node:crypto'
 
-const valid = verifyWebhook({
-  payload: rawBody,
-  signature: req.headers['x-convomem-signature'],
-  secret: process.env.CONVOMEM_WEBHOOK_SECRET!,
-})
+function verifyWebhook(
+  rawBody: Buffer | string,
+  signatureHeader: string,
+  secret: string,
+): boolean {
+  const sig = signatureHeader.replace('sha256=', '')
+  const digest = crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex')
+  const a = Buffer.from(sig, 'hex')
+  const b = Buffer.from(digest, 'hex')
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
+}
+```
+
+```python title="verify.py"
+import hmac, hashlib
+
+def verify_webhook(raw_body: bytes, signature_header: str, secret: str) -> bool:
+    expected = signature_header.replace("sha256=", "")
+    computed = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, computed)
 ```
 
 <Callout type="warning" title="Always verify">
@@ -52,7 +77,15 @@ Unverified webhook payloads should be rejected — anyone who learns your URL co
 otherwise POST to it.
 </Callout>
 
-## Retries
+## Delivery semantics
 
-Failed deliveries (non-2xx responses) are retried with exponential backoff for up to 24
-hours.
+- **Retries** — non-`2xx` or timeout triggers up to **3 retries** with exponential backoff.
+- **Idempotency** — deliveries can repeat; de-duplicate on `(event, conversationId)` or `captureId`.
+- **SSRF protection** — destination URLs must be `https://`. Loopback and cloud metadata addresses are rejected.
+- **Timeout** — your endpoint must respond within 10 s.
+
+## Related
+
+- [Capture](/docs/capture) — triggers `memory.captured` after background extraction
+- [Conversations](/docs/conversations) — triggers `conversation.completed` and `conversation.escalated`
+- [Authentication](/docs/authentication) — API key scopes and security model

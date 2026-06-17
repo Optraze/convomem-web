@@ -1,15 +1,13 @@
 ---
-title: "Getting Started"
-description: "Set up ConvoMem in under 5 minutes."
+title: "Quick start"
+description: "Add persistent memory to your AI agent in under 10 minutes."
 status: "published"
 ---
 
-## Prerequisites
+This guide walks the complete ConvoMem integration loop: capture a conversation, wait for
+extraction, then recall context at the start of the next interaction.
 
-- A ConvoMem account ([sign up free](https://app.convomem.com/register))
-- An API key from the [dashboard](https://app.convomem.com/settings/keys)
-
-## Install and initialize
+## 1. Install
 
 <CodeTabs>
   <CodeTab language="typescript" filename="Terminal">
@@ -30,127 +28,206 @@ status: "published"
   <CodeTab language="curl" filename="Terminal">
   ```bash
   export CONVOMEM_API_KEY=sk-org-your-key-here
-  export BASE_URL=https://api.convomem.com/api/v1
   ```
   </CodeTab>
 </CodeTabs>
 
-## Quick start
+## 2. Initialize
 
-Capture a conversation and retrieve context in three steps:
+Get your API key from the [dashboard](https://app.convomem.com/settings/keys).
 
-### 1. Capture a conversation
+<CodeTabs>
+  <CodeTab language="typescript" filename="client.ts">
+  ```typescript
+  import { ConvoMem } from '@optraze/convomem-sdk'
+
+  const client = new ConvoMem({
+    apiKey: process.env.CONVOMEM_API_KEY!,
+  })
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="client.py">
+  ```python
+  import os
+  from convomem import ConvoMemClient
+
+  client = ConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::ConvoMemClient;
+
+  let client = ConvoMemClient::new(std::env::var("CONVOMEM_API_KEY")?);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## 3. Capture a conversation
+
+Send conversation turns as they happen. ConvoMem resolves the customer from whatever
+identity field you provide — no explicit customer creation needed.
 
 <CodeTabs>
   <CodeTab language="typescript" filename="capture.ts">
   ```typescript
-  import { ConvoMemClient } from '@optraze/convomem-sdk'
-
-  const client = new ConvoMemClient({
-    apiKey: process.env.CONVOMEM_API_KEY!,
-  })
-
-  await client.capture({
-    message: 'I need help with my order',
-    email: 'customer@example.com',
-    channel: 'CHAT',
-  })
+  await client.capture(
+    [
+      { role: 'user', content: 'Hi, I need help with my subscription. I am on the Pro plan.' },
+      { role: 'assistant', content: 'Of course! I can see your Pro plan. What do you need?' },
+    ],
+    { email: 'alice@example.com' },
+    { channel: 'CHAT' },
+  )
   ```
   </CodeTab>
   <CodeTab language="python" filename="capture.py">
   ```python
-  import os
-  from convomem import ConvoMemClient, CaptureRequest
-
-  client = ConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
+  from convomem import CaptureRequest, Message
 
   client.capture(CaptureRequest(
-      message="I need help with my order",
-      email="customer@example.com",
+      messages=[
+          Message(role="user", content="Hi, I need help with my subscription. I am on the Pro plan."),
+          Message(role="assistant", content="Of course! What do you need?"),
+      ],
+      email="alice@example.com",
       channel="CHAT",
   ))
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  use convomem::{ConvoMemClient, CaptureRequest};
+  use convomem::{CaptureRequest, Message};
 
-  #[tokio::main]
-  async fn main() -> Result<(), Box<dyn std::error::Error>> {
-      let client = ConvoMemClient::new(
-          std::env::var("CONVOMEM_API_KEY")?
-      );
-
-      client.capture(&CaptureRequest {
-          message: Some("I need help with my order".into()),
-          email: Some("customer@example.com".into()),
-          channel: Some("CHAT".into()),
-          ..Default::default()
-      }).await?;
-
-      Ok(())
-  }
+  client.capture(&CaptureRequest {
+      messages: Some(vec![
+          Message { role: "user".into(), content: "Hi, I need help with my subscription. I am on the Pro plan.".into() },
+          Message { role: "assistant".into(), content: "Of course! What do you need?".into() },
+      ]),
+      email: Some("alice@example.com".into()),
+      channel: Some("CHAT".into()),
+      ..Default::default()
+  }).await?;
   ```
   </CodeTab>
   <CodeTab language="curl" filename="Terminal">
   ```bash
-  curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
+  curl -s -X POST "https://api.convomem.com/api/v1/capture" \
+    -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "$BASE_URL/capture" \
     -d '{
-      "message": "I need help with my order",
-      "email": "customer@example.com",
+      "messages": [
+        {"role": "user", "content": "Hi, I need help with my subscription. I am on the Pro plan."},
+        {"role": "assistant", "content": "Of course! What do you need?"}
+      ],
+      "email": "alice@example.com",
       "channel": "CHAT"
     }'
   ```
   </CodeTab>
 </CodeTabs>
 
-### 2. Wait for extraction
+## 4. Recall context
 
-Memory extraction happens asynchronously. Wait a few seconds for facts to be processed.
-
-### 3. Retrieve context
+Memory extraction happens in the background. A few seconds later — or at the start of the
+next conversation — look up the relevant context:
 
 <CodeTabs>
-  <CodeTab language="typescript" filename="retrieve.ts">
+  <CodeTab language="typescript" filename="lookup.ts">
   ```typescript
-  const { context, memories } = await client.memories.lookup(
-    'cust_123',
-    { topic: 'order issue' },
+  const { context, memories } = await client.lookup(
+    'subscription and plan details',
+    { email: 'alice@example.com' },
   )
 
-  console.log('Context:', context)
-  console.log('Found', memories.length, 'memories')
+  console.log(context)
+  // → "Alice is on the Pro plan."
+  console.log(`${memories.length} memories found`)
   ```
   </CodeTab>
-  <CodeTab language="python" filename="retrieve.py">
+  <CodeTab language="python" filename="lookup.py">
   ```python
-  result = client.memories.lookup("cust_123", "order issue")
+  result = client.memories.lookup("alice@example.com", "subscription and plan details")
 
   print(f"Context: {result.context}")
-  print(f"Found {len(result.memories)} memories")
+  print(f"Memories: {len(result.memories)}")
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  let result = client.lookup_memories("cust_123", "order issue").await?;
+  let result = client.lookup_memories("alice@example.com", "subscription and plan details").await?;
 
   println!("Context: {}", result.context);
-  println!("Found {} memories", result.memories.len());
+  println!("Memories: {}", result.memories.len());
   ```
   </CodeTab>
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "$BASE_URL/customers/cust_123/memories/lookup?topic=order%20issue"
+    "https://api.convomem.com/api/v1/customers/memories/lookup?email=alice%40example.com&topic=subscription+and+plan+details"
   ```
   </CodeTab>
 </CodeTabs>
 
+## 5. Inject context into your LLM
+
+Drop `context` into the system prompt before every interaction:
+
+```typescript title="agent.ts"
+import OpenAI from 'openai'
+import { ConvoMem } from '@optraze/convomem-sdk'
+
+const client = new ConvoMem({ apiKey: process.env.CONVOMEM_API_KEY! })
+const openai = new OpenAI()
+
+async function chat(userEmail: string, userMessage: string) {
+  // 1. Recall what we know
+  const { context } = await client.lookup(userMessage, { email: userEmail })
+
+  // 2. Build prompt with memory
+  const reply = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: `You are a helpful support agent.\n\nWhat you know about this customer:\n${context}`,
+      },
+      { role: 'user', content: userMessage },
+    ],
+  })
+
+  // 3. Capture the exchange
+  await client.capture(
+    [
+      { role: 'user', content: userMessage },
+      { role: 'assistant', content: reply.choices[0].message.content! },
+    ],
+    { email: userEmail },
+  )
+
+  return reply.choices[0].message.content
+}
+```
+
+## The agent loop
+
+```
+start of session:  lookup(topic, identity)    → inject context into system prompt
+user sends turn:   capture([turns], identity) → queue memory extraction
+repeat each turn
+end of session:    endConversation(id, identity, { outcome })
+```
+
+<Callout type="tip" title="Always recall before capture">
+Look up context at the start of the session, then capture as the conversation unfolds.
+Captured memories take a few seconds to become searchable — don't look up immediately
+after capture.
+</Callout>
+
 ## Next steps
 
-- [SDK reference](/docs/sdk-reference) — installation and initialization details
-- [Capture](/docs/capture) — send conversations for memory extraction
-- [Customers](/docs/customers) — manage customer profiles
-- [Memories](/docs/memories) — work with extracted facts
+- [How it works](/docs/memory-model) — extraction pipeline, identity routing, durability scoring
+- [Capture](/docs/capture) — advanced options, idempotency, channel types
+- [Memories](/docs/memories) — browse, add, update, and delete memories
+- [Customers](/docs/customers) — manage profiles, stats, and duplicates
+- [Handoff](/docs/handoff) — briefings for human agent takeover

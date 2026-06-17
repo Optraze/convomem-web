@@ -1,0 +1,237 @@
+---
+title: "Rust SDK"
+description: "Install, initialize, and use the ConvoMem Rust SDK."
+status: "published"
+---
+
+The ConvoMem Rust SDK is async-first, built on `tokio` and `reqwest`.
+
+## Install
+
+```bash
+cargo add convomem
+```
+
+Or add to `Cargo.toml`:
+
+```toml
+[dependencies]
+convomem = "0.1"
+tokio = { version = "1", features = ["full"] }
+```
+
+## Initialize
+
+```rust
+use convomem::ConvoMemClient;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = ConvoMemClient::new(std::env::var("CONVOMEM_API_KEY")?);
+    Ok(())
+}
+```
+
+With options:
+
+```rust
+use convomem::{ConvoMemClient, ConvoMemConfig};
+
+let client = ConvoMemClient::with_config(ConvoMemConfig {
+    api_key: std::env::var("CONVOMEM_API_KEY")?,
+    timeout_secs: Some(10),
+    max_retries: Some(3),
+});
+```
+
+<Callout type="warning" title="Keep keys server-side">
+Never embed an API key in client-side code. All ConvoMem calls should originate from
+your backend. For browser widgets, use [embed tokens](/docs/embed).
+</Callout>
+
+## Capture
+
+```rust
+use convomem::{CaptureRequest, Message};
+
+let result = client.capture(&CaptureRequest {
+    messages: Some(vec![
+        Message { role: "user".into(), content: "I need help with my order".into() },
+        Message { role: "assistant".into(), content: "Of course, let me look that up.".into() },
+    ]),
+    email: Some("alice@example.com".into()),
+    channel: Some("CHAT".into()),
+    ..Default::default()
+}).await?;
+
+println!("Conversation: {}", result.conversation_id);
+println!("Customer: {}", result.customer_id);
+```
+
+## Look up context
+
+```rust
+let result = client.lookup_memories("alice@example.com", "order and shipping preferences").await?;
+
+println!("Context: {}", result.context);
+for mem in &result.memories {
+    println!("  - {} ({:?})", mem.content, mem.category);
+}
+```
+
+## Memories
+
+```rust
+use convomem::MemoryAddRequest;
+
+// List all memories
+let result = client.list_memories("alice@example.com", Some(1), Some(20)).await?;
+for mem in &result.memories {
+    println!("- {}", mem.content);
+}
+
+// Add manually
+let memory = client.add_memory(
+    "cust_uuid_123",
+    &MemoryAddRequest {
+        content: "Prefers email contact".into(),
+        category: Some("preference".into()),
+        ..Default::default()
+    },
+).await?;
+
+// Update
+client.update_memory(
+    "cust_uuid_123",
+    "mem_uuid_456",
+    Some("Prefers email and text contact"),
+    None,
+).await?;
+
+// Delete
+client.delete_memory("cust_uuid_123", "mem_uuid_456").await?;
+```
+
+## Customers
+
+```rust
+use convomem::{CustomerCreateRequest, CustomerLookupParams, CustomerUpdateRequest};
+
+// Create
+let customer = client.create_customer(&CustomerCreateRequest {
+    name: Some("Alice".into()),
+    email: Some("alice@example.com".into()),
+    ..Default::default()
+}).await?;
+
+// Lookup by any identity field
+let result = client.lookup_customer(&CustomerLookupParams {
+    email: Some("alice@example.com".into()),
+    ..Default::default()
+}).await?;
+if result.found {
+    println!("Customer: {}", result.customer.unwrap().id);
+}
+
+// Get by ID
+let customer = client.get_customer("cust_uuid_123").await?;
+
+// Update
+let updated = client.update_customer(
+    "cust_uuid_123",
+    &CustomerUpdateRequest {
+        name: Some("Alice Smith".into()),
+        ..Default::default()
+    },
+).await?;
+
+// List
+let result = client.list_customers(Some(1), Some(20)).await?;
+println!("{} of {}", result.customers.len(), result.total);
+
+// Stats
+let stats = client.get_customer_stats(None, None).await?;
+println!("Total customers: {}", stats.total_customers);
+
+// Delete
+client.delete_customer("cust_uuid_123").await?;
+```
+
+## Conversations
+
+```rust
+// Start
+let conversation = client.start_conversation("cust_uuid_123", "CHAT").await?;
+println!("Conversation: {}", conversation.id);
+
+// List
+let result = client.list_conversations("cust_uuid_123", Some(1), Some(20)).await?;
+
+// End
+let updated = client.end_conversation(
+    "cust_uuid_123",
+    "conv_uuid_456",
+    Some("Resolved billing issue"),
+).await?;
+
+// Escalate
+let updated = client.escalate_conversation(
+    "cust_uuid_123",
+    "conv_uuid_456",
+    Some("Complex billing dispute"),
+).await?;
+```
+
+## Handoff
+
+```rust
+use convomem::HandoffParams;
+
+let handoff = client.handoff(&HandoffParams {
+    email: Some("alice@example.com".into()),
+    ..Default::default()
+}).await?;
+
+if handoff.found {
+    if let Some(narrative) = &handoff.narrative {
+        println!("Narrative: {}", narrative);
+    }
+    for mem in &handoff.key_memories {
+        println!("  - {}", mem.content);
+    }
+}
+```
+
+## Embed tokens
+
+```rust
+use convomem::EmbedTokenRequest;
+
+let result = client.create_embed_token(&EmbedTokenRequest {
+    customer_id: Some("cust_uuid_123".into()),
+    ttl_seconds: Some(3600),
+    ..Default::default()
+}).await?;
+
+println!("Token: {}", result.token);
+println!("Expires in: {}s", result.expires_in);
+```
+
+## Error handling
+
+```rust
+use convomem::ConvoMemError;
+
+match client.get_customer("cust_uuid_123").await {
+    Ok(customer) => println!("Found: {}", customer.id),
+    Err(ConvoMemError::Api { status, body, .. }) => {
+        println!("API error {}: {:?}", status, body);
+    }
+    Err(e) => println!("Other error: {}", e),
+}
+```
+
+## Other SDKs
+
+- [TypeScript SDK](/docs/sdk-typescript)
+- [Python SDK](/docs/sdk-python)

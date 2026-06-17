@@ -1,6 +1,6 @@
 ---
 title: "Retrieving context"
-description: "Fetch the most relevant memory for a subject and inject it into your prompts."
+description: "Fetch the most relevant memories for a customer and inject them into your prompts."
 status: "published"
 ---
 
@@ -10,44 +10,59 @@ the context most relevant to what's happening now.
 ## Basic retrieval
 
 ```typescript title="retrieve.ts"
-const { facts } = await convomem.retrieve({
-  subjectId: 'cust_123',
-  query: 'billing question about the Pro plan',
-  limit: 10,
-})
+import { ConvoMem } from '@optraze/convomem-sdk'
+
+const client = new ConvoMem({ apiKey: process.env.CONVOMEM_API_KEY! })
+
+const { context, memories, tokenCount } = await client.lookup(
+  'preferred shipping method',
+  { email: 'cust@example.com' },
+)
 ```
 
-The `query` is optional. When provided, ConvoMem ranks facts by relevance to it; when
-omitted, you get the most durable, recent facts for the subject.
+The `topic` drives semantic ranking — ConvoMem returns the memories most relevant to that
+topic. You get back:
+
+- `context` — a newline-separated list of memories, pre-formatted and ready to drop into a
+  system prompt
+- `memories` — the raw `Memory[]` array if you need structured access
+- `tokenCount` — approximate size of the `context` string
 
 ## Injecting into a prompt
 
-Most teams render retrieved facts into a system prompt:
+Most teams drop the `context` string directly into a system prompt:
 
 ```typescript title="prompt.ts"
-const memory = facts.map((f) => `- ${f.statement}`).join('\n')
+const { context } = await client.lookup(
+  userMessage,
+  { customerId: 'cust_uuid_123' },
+)
 
-const system = `You are a support agent. Known context about this customer:\n${memory}`
+const system = `You are a support agent. Known context about this customer:\n${context}`
 ```
 
 <Callout type="tip" title="Keep it tight">
-Retrieve a small, high-signal set (5–15 facts). Flooding the prompt with low-confidence
-memory hurts quality more than it helps.
+The lookup is capped at 10 memories / 800 tokens. Ranking weights:
+`relevance × 0.5 + importance × 0.3 + recency × 0.2`. You get high-signal context,
+not an exhaustive dump.
 </Callout>
 
-## Filtering
+## Listing all memories
 
-Narrow results by category or minimum confidence:
+To browse all stored memories for a customer with pagination, use `listMemories`:
 
-```typescript title="filter.ts"
-const { facts } = await convomem.retrieve({
-  subjectId: 'cust_123',
-  categories: ['preference', 'account'],
-  minConfidence: 0.6,
-})
+```typescript title="list.ts"
+const { memories, total } = await client.listMemories(
+  { customerId: 'cust_uuid_123' },
+  { page: 1, limit: 20, category: 'preference' },
+)
+
+for (const mem of memories) {
+  console.log(`- ${mem.content} (${mem.category})`)
+}
 ```
 
 ## What's next
 
 Wire retrieval into your agent loop, then set up [Webhooks](/docs/webhooks) to react to
-new facts as they're extracted.
+new memories as they're extracted.

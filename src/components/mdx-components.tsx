@@ -12,6 +12,7 @@ import type React from 'react'
 
 import { CodeBlock } from '@/components/mdx/code-block'
 import { CodeTab, CodeTabs } from '@/components/mdx/code-tabs'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 /**
  * Heading with an anchor affordance. The `id` is supplied by rehype-slug (see
@@ -44,31 +45,11 @@ function Heading({
 }
 
 const calloutConfig = {
-  note: {
-    icon: InfoIcon,
-    label: 'Note',
-    cls: 'border-blue-500/30 bg-blue-500/[0.06] text-blue-600 dark:text-blue-400',
-  },
-  tip: {
-    icon: LightbulbIcon,
-    label: 'Tip',
-    cls: 'border-emerald-500/30 bg-emerald-500/[0.06] text-emerald-600 dark:text-emerald-400',
-  },
-  warning: {
-    icon: AlertTriangleIcon,
-    label: 'Warning',
-    cls: 'border-amber-500/30 bg-amber-500/[0.06] text-amber-600 dark:text-amber-400',
-  },
-  danger: {
-    icon: OctagonAlertIcon,
-    label: 'Danger',
-    cls: 'border-destructive/30 bg-destructive/[0.06] text-destructive',
-  },
-  success: {
-    icon: CheckCircle2Icon,
-    label: 'Success',
-    cls: 'border-emerald-500/30 bg-emerald-500/[0.06] text-emerald-600 dark:text-emerald-400',
-  },
+  note:    { icon: InfoIcon,          label: 'Note'    },
+  tip:     { icon: LightbulbIcon,     label: 'Tip'     },
+  warning: { icon: AlertTriangleIcon, label: 'Warning' },
+  danger:  { icon: OctagonAlertIcon,  label: 'Danger'  },
+  success: { icon: CheckCircle2Icon,  label: 'Success' },
 } as const
 
 type CalloutType = keyof typeof calloutConfig
@@ -82,20 +63,17 @@ function Callout({
   title?: string
   children: React.ReactNode
 }) {
-  // Accept legacy aliases used in earlier content.
   const key: CalloutType =
     type === 'info' ? 'note' : type === 'error' ? 'danger' : type
-  const { icon: Icon, label, cls } = calloutConfig[key]
+  const { icon: Icon, label } = calloutConfig[key]
   return (
-    <div className={`my-6 flex gap-3 rounded-lg border p-4 ${cls}`} role="note">
-      <Icon className="mt-0.5 size-5 shrink-0" />
-      <div className="min-w-0">
-        <p className="mb-1 text-sm font-semibold">{title ?? label}</p>
-        <div className="text-[14px] leading-7 text-foreground/90 [&>p]:m-0 [&>p+p]:mt-2">
-          {children}
-        </div>
-      </div>
-    </div>
+    <Alert variant={key} className="my-6">
+      <Icon className="size-5" />
+      <AlertTitle>{title ?? label}</AlertTitle>
+      <AlertDescription className="text-foreground/90 [&>p]:m-0 [&>p+p]:mt-2">
+        {children}
+      </AlertDescription>
+    </Alert>
   )
 }
 

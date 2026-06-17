@@ -16,13 +16,16 @@ Begin a new conversation for a customer.
   ```bash
   curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "$BASE_URL/customers/cust_123/conversations" \
+    "https://api.convomem.com/api/v1/customers/cust_123/conversations" \
     -d '{"channel": "CHAT"}'
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="start.ts">
   ```typescript
-  const conversation = await client.conversations.start('cust_123', 'CHAT')
+  const conversation = await client.startConversation(
+    { customerId: 'cust_123' },
+    { channel: 'CHAT' },
+  )
 
   console.log('Conversation:', conversation.id)
   console.log('Status:', conversation.status)
@@ -54,15 +57,15 @@ List all conversations for a customer with pagination.
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "$BASE_URL/customers/cust_123/conversations?page=1&limit=20"
+    "https://api.convomem.com/api/v1/customers/cust_123/conversations?page=1&limit=20"
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="list.ts">
   ```typescript
-  const { conversations, total } = await client.conversations.list('cust_123', {
-    page: 1,
-    limit: 20,
-  })
+  const { conversations, total } = await client.listConversations(
+    { customerId: 'cust_123' },
+    { page: 1, limit: 20 },
+  )
 
   for (const conv of conversations) {
     console.log(`${conv.id}: ${conv.status} (${conv.channel})`)
@@ -97,15 +100,15 @@ End a conversation with an optional outcome.
   ```bash
   curl -s -X PATCH -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "$BASE_URL/customers/cust_123/conversations/conv_456" \
+    "https://api.convomem.com/api/v1/customers/cust_123/conversations/conv_456" \
     -d '{"outcome": "resolved"}'
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="end.ts">
   ```typescript
-  const updated = await client.conversations.end(
-    'cust_123',
+  const updated = await client.endConversation(
     'conv_456',
+    { customerId: 'cust_123' },
     { outcome: 'resolved' },
   )
 
@@ -145,15 +148,15 @@ Escalate a conversation to a human agent with a reason.
   ```bash
   curl -s -X PATCH -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "$BASE_URL/customers/cust_123/conversations/conv_456/escalate" \
+    "https://api.convomem.com/api/v1/customers/cust_123/conversations/conv_456/escalate" \
     -d '{"reason": "Complex billing dispute"}'
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="escalate.ts">
   ```typescript
-  const updated = await client.conversations.escalate(
-    'cust_123',
+  const updated = await client.escalateConversation(
     'conv_456',
+    { customerId: 'cust_123' },
     { reason: 'Complex billing dispute' },
   )
 
@@ -203,3 +206,11 @@ Escalate a conversation to a human agent with a reason.
 | `VOICE` | Phone call, voice agent |
 | `SMS` | Text message |
 | `EMAIL` | Email thread |
+
+## What's next
+
+- [Capture](/docs/capture) — the primary way to feed conversation turns
+- [Handoff](/docs/handoff) — briefings for escalated conversations
+- [Webhooks](/docs/webhooks) — react to `conversation.completed` and `conversation.escalated`
+
+**SDK:** [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)

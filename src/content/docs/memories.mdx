@@ -23,7 +23,7 @@ messages and extract structured facts.
   ```bash
   curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "$BASE_URL/customers/cust_123/memories/ingest" \
+    "https://api.convomem.com/api/v1/customers/cust_123/memories/ingest" \
     -d '{
       "messages": [
         {"role": "user", "content": "I prefer email over phone"},
@@ -93,7 +93,7 @@ relevance and returns them with a pre-built context string.
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "$BASE_URL/customers/cust_123/memories/lookup?topic=billing"
+    "https://api.convomem.com/api/v1/customers/cust_123/memories/lookup?topic=billing"
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="lookup.ts">
@@ -132,7 +132,7 @@ List all memories for a customer with pagination.
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "$BASE_URL/customers/cust_123/memories?page=1&limit=20"
+    "https://api.convomem.com/api/v1/customers/cust_123/memories?page=1&limit=20"
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="list.ts">
@@ -143,7 +143,7 @@ List all memories for a customer with pagination.
   })
 
   for (const mem of memories) {
-    console.log(`- ${mem.fact} (${mem.category})`)
+    console.log(`- ${mem.content} (${mem.category})`)
   }
   ```
   </CodeTab>
@@ -152,7 +152,7 @@ List all memories for a customer with pagination.
   result = client.memories.list("cust_123", page=1, limit=20)
 
   for mem in result.memories:
-      print(f"- {mem.fact} ({mem.category})")
+      print(f"- {mem.content} ({mem.category})")
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
@@ -160,7 +160,7 @@ List all memories for a customer with pagination.
   let result = client.list_memories("cust_123", Some(1), Some(20)).await?;
 
   for mem in &result.memories {
-      println!("- {:?} ({:?})", mem.fact, mem.category);
+      println!("- {:?} ({:?})", mem.content, mem.category);
   }
   ```
   </CodeTab>
@@ -175,14 +175,14 @@ Add a memory directly without going through the extraction pipeline.
   ```bash
   curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "$BASE_URL/customers/cust_123/memories" \
-    -d '{"fact": "Prefers dark mode", "category": "preference"}'
+    "https://api.convomem.com/api/v1/customers/cust_123/memories" \
+    -d '{"content": "Prefers dark mode", "category": "preference"}'
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="add.ts">
   ```typescript
   const memory = await client.memories.add('cust_123', {
-    fact: 'Prefers dark mode',
+    content: 'Prefers dark mode',
     category: 'preference',
   })
 
@@ -195,7 +195,7 @@ Add a memory directly without going through the extraction pipeline.
 
   memory = client.memories.add(
       "cust_123",
-      MemoryAddRequest(fact="Prefers dark mode", category="preference"),
+      MemoryAddRequest(content="Prefers dark mode", category="preference"),
   )
 
   print(f"Memory ID: {memory.id}")
@@ -208,7 +208,7 @@ Add a memory directly without going through the extraction pipeline.
   let memory = client.add_memory(
       "cust_123",
       &MemoryAddRequest {
-          fact: "Prefers dark mode".into(),
+          content: "Prefers dark mode".into(),
           category: Some("preference".into()),
           importance: None,
           memory_type: None,
@@ -220,6 +220,84 @@ Add a memory directly without going through the extraction pipeline.
   </CodeTab>
 </CodeTabs>
 
+## Update
+
+Update an existing memory's content or category. Requires the customer's `customerId`.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X PATCH -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "https://api.convomem.com/api/v1/customers/cust_123/memories/mem_456" \
+    -d '{"content": "Prefers dark mode and large fonts", "category": "preference"}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="update.ts">
+  ```typescript
+  const updated = await client.updateMemory(
+    'mem_456',
+    { content: 'Prefers dark mode and large fonts', category: 'preference' },
+    { customerId: 'cust_123' },
+  )
+
+  console.log('Updated:', updated.content)
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="update.py">
+  ```python
+  updated = client.memories.update(
+      "cust_123",
+      "mem_456",
+      content="Prefers dark mode and large fonts",
+      category="preference",
+  )
+
+  print(f"Updated: {updated.content}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let updated = client.update_memory(
+      "cust_123",
+      "mem_456",
+      Some("Prefers dark mode and large fonts"),
+      Some("preference"),
+  ).await?;
+
+  println!("Updated: {}", updated.content);
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Delete
+
+Permanently delete a memory. Requires the customer's `customerId`.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X DELETE -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "https://api.convomem.com/api/v1/customers/cust_123/memories/mem_456"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="delete.ts">
+  ```typescript
+  await client.deleteMemory('mem_456', { customerId: 'cust_123' })
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="delete.py">
+  ```python
+  client.memories.delete("cust_123", "mem_456")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  client.delete_memory("cust_123", "mem_456").await?;
+  ```
+  </CodeTab>
+</CodeTabs>
+
 ## Response fields
 
 ### Memory
@@ -227,7 +305,7 @@ Add a memory directly without going through the extraction pipeline.
 | Field | Type | Description |
 | --- | --- | --- |
 | `id` | string | Unique memory identifier |
-| `fact` | string | The extracted fact in natural language |
+| `content` | string | The memory in natural language |
 | `category` | string | Category (e.g., `preference`, `account`, `intent`) |
 | `memoryType` | string | Type of memory |
 | `importance` | number | 0–1 importance score |
@@ -240,3 +318,11 @@ Add a memory directly without going through the extraction pipeline.
 | `context` | string | Pre-built context string for prompt injection |
 | `tokenCount` | number | Approximate token count of the context |
 | `memories` | Memory[] | Array of relevant memories |
+
+## What's next
+
+- [Capture](/docs/capture) — send conversations to the extraction pipeline
+- [Customers](/docs/customers) — manage the profiles that own these memories
+- [How it works](/docs/memory-model) — extraction pipeline, durability scoring, lookup ranking
+
+**SDK:** [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)

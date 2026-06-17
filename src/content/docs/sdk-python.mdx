@@ -1,0 +1,220 @@
+---
+title: "Python SDK"
+description: "Install, initialize, and use the ConvoMem Python SDK."
+status: "published"
+---
+
+The ConvoMem Python SDK supports Python 3.9+ with both sync and async clients.
+
+## Install
+
+```bash
+pip install convomem
+
+# or with uv
+uv add convomem
+```
+
+## Initialize
+
+```python
+import os
+from convomem import ConvoMemClient
+
+client = ConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
+```
+
+Optional configuration:
+
+```python
+client = ConvoMemClient(
+    api_key=os.environ["CONVOMEM_API_KEY"],
+    timeout=10.0,    # seconds (default 10)
+    max_retries=3,   # retries on 429 / 5xx
+)
+```
+
+<Callout type="warning" title="Keep keys server-side">
+Never expose an API key in client-side code. All ConvoMem calls should originate from
+your backend. For browser widgets, use [embed tokens](/docs/embed).
+</Callout>
+
+## Capture
+
+```python
+from convomem import CaptureRequest, Message
+
+result = client.capture(CaptureRequest(
+    messages=[
+        Message(role="user", content="I need help with my order"),
+        Message(role="assistant", content="Of course, let me look that up."),
+    ],
+    email="alice@example.com",
+    channel="CHAT",
+))
+
+print(f"Conversation: {result.conversation_id}")
+print(f"Customer: {result.customer_id}")
+```
+
+## Look up context
+
+```python
+result = client.memories.lookup("alice@example.com", "order and shipping preferences")
+
+print(f"Context: {result.context}")
+for mem in result.memories:
+    print(f"  - {mem.content} ({mem.category})")
+```
+
+## Memories
+
+```python
+# List all memories
+result = client.memories.list("alice@example.com", page=1, limit=20)
+for mem in result.memories:
+    print(f"- {mem.content}")
+
+# Add manually
+from convomem import MemoryAddRequest
+
+memory = client.memories.add(
+    "cust_uuid_123",
+    MemoryAddRequest(content="Prefers email contact", category="preference"),
+)
+
+# Update
+client.memories.update(
+    "cust_uuid_123",
+    "mem_uuid_456",
+    content="Prefers email and text contact",
+)
+
+# Delete
+client.memories.delete("cust_uuid_123", "mem_uuid_456")
+```
+
+## Customers
+
+```python
+from convomem import CustomerCreateRequest, CustomerLookupParams
+
+# Create
+customer = client.customers.create(
+    CustomerCreateRequest(name="Alice", email="alice@example.com")
+)
+
+# Lookup by any identity field
+result = client.customers.lookup(CustomerLookupParams(email="alice@example.com"))
+if result.found:
+    print(f"Customer ID: {result.customer.id}")
+
+# Get by ID
+customer = client.customers.get("cust_uuid_123")
+
+# Update
+from convomem import CustomerUpdateRequest
+updated = client.customers.update(
+    "cust_uuid_123",
+    CustomerUpdateRequest(name="Alice Smith"),
+)
+
+# List
+result = client.customers.list(page=1, limit=20)
+print(f"{len(result.customers)} of {result.total}")
+
+# Stats
+stats = client.customers.get_stats()
+print(f"Total customers: {stats.total_customers}")
+print(f"Total memories: {stats.total_memories}")
+
+# Delete
+client.customers.delete("cust_uuid_123")
+```
+
+## Conversations
+
+```python
+# Start
+conversation = client.conversations.start("cust_uuid_123", "CHAT")
+print(f"Conversation: {conversation.id}")
+
+# List
+result = client.conversations.list("cust_uuid_123", page=1, limit=20)
+
+# End
+updated = client.conversations.end(
+    "cust_uuid_123",
+    "conv_uuid_456",
+    outcome="Resolved billing issue",
+)
+
+# Escalate
+updated = client.conversations.escalate(
+    "cust_uuid_123",
+    "conv_uuid_456",
+    reason="Complex billing dispute",
+)
+```
+
+## Handoff
+
+```python
+from convomem import HandoffParams
+
+handoff = client.customers.handoff(HandoffParams(email="alice@example.com"))
+
+if handoff.found:
+    print(f"Narrative: {handoff.narrative}")
+    for mem in handoff.key_memories:
+        print(f"  - {mem.content}")
+```
+
+## Embed tokens
+
+```python
+from convomem import EmbedTokenRequest
+
+result = client.embed.create_token(
+    EmbedTokenRequest(customer_id="cust_uuid_123", ttl_seconds=3600)
+)
+
+print(f"Token: {result.token}")
+print(f"Expires in: {result.expires_in}s")
+```
+
+## Error handling
+
+```python
+from convomem import ConvoMemApiError
+
+try:
+    customer = client.customers.get("cust_uuid_123")
+except ConvoMemApiError as e:
+    print(f"Status: {e.status_code}")
+    print(f"Body: {e.body}")
+```
+
+## Async client
+
+```python
+import asyncio
+import os
+from convomem import AsyncConvoMemClient, CaptureRequest, Message
+
+async def main():
+    client = AsyncConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
+
+    result = await client.capture(CaptureRequest(
+        messages=[Message(role="user", content="Hello")],
+        email="alice@example.com",
+    ))
+    print(result.conversation_id)
+
+asyncio.run(main())
+```
+
+## Other SDKs
+
+- [TypeScript SDK](/docs/sdk-typescript)
+- [Rust SDK](/docs/sdk-rust)

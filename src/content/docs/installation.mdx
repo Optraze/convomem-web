@@ -90,7 +90,6 @@ your backend or an edge function. For browser widgets, use [embed tokens](/docs/
   <CodeTab language="curl" filename="Terminal">
   ```bash
   export CONVOMEM_API_KEY=sk-org-your-key-here
-  export BASE_URL=https://api.convomem.com/api/v1
   ```
   </CodeTab>
 </CodeTabs>
@@ -119,7 +118,7 @@ your backend or an edge function. For browser widgets, use [embed tokens](/docs/
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "$BASE_URL/customers?limit=1" | jq '.total'
+    "https://api.convomem.com/api/v1/customers?limit=1" | jq '.total'
   ```
   </CodeTab>
 </CodeTabs>

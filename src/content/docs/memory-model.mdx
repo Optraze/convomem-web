@@ -1,52 +1,139 @@
 ---
-title: "The memory model"
-description: "How ConvoMem turns raw conversations into durable, scored, retrievable facts."
+title: "How it works"
+description: "The ConvoMem pipeline — from raw conversation to recalled context."
 status: "published"
 ---
 
-Understanding ConvoMem's data model makes everything else click. There are three core
-entities: **conversations**, **facts**, and **subjects**.
+ConvoMem sits between your AI agent and your customer data. This page covers the full
+pipeline, the data model, and the identity routing pattern that every API method uses.
 
-## Conversations
+## The pipeline
 
-A conversation is an ordered list of messages tied to a subject (usually a customer).
-You submit conversations as they happen or in batches.
-
-```typescript title="capture.ts"
-await convomem.capture({
-  subjectId: 'cust_123',
-  channel: 'chat',
-  messages: [
-    { role: 'user', content: 'I want to upgrade to the Pro plan' },
-    { role: 'assistant', content: 'Done — you are on Pro now.' },
-  ],
-})
+```
+capture()  →  extract  →  store  →  lookup()
 ```
 
-## Facts
+**1. Capture** — You send conversation turns to `POST /capture`. ConvoMem resolves or
+creates the customer, associates turns with the active conversation session, and enqueues
+them for extraction. The response is immediate.
 
-Facts are the atomic unit of memory. The extraction pipeline reads a conversation and
-emits structured facts, each with metadata:
+**2. Extract** — An AI pipeline reads the turns and emits structured memories: facts in
+natural language, each scored for confidence, durability, and category. PII is detected
+and masked before anything is written to storage.
+
+**3. Store** — Memories are indexed for semantic search, linked to the customer, and
+available within a few seconds of capture.
+
+**4. Lookup** — You call `lookup(topic, identity)` and receive a pre-ranked `context`
+string — ready to drop into a system prompt.
+
+<Callout type="note" title="Design around the lag">
+There is a short delay (seconds) between capture and when extracted memories are
+searchable. Pattern: look up context **before** the conversation; capture turns
+**during** it.
+</Callout>
+
+## Data model
+
+### Customers
+
+Customers are the root entity. All memories and conversations belong to one. ConvoMem
+creates a customer automatically on first contact — no explicit creation required.
 
 | Field | Description |
 | --- | --- |
-| `statement` | The fact in natural language |
-| `category` | e.g. `preference`, `account`, `intent` |
-| `confidence` | 0–1 score from the extractor |
-| `durability` | How long the fact is expected to stay true |
+| `id` | ConvoMem UUID — the most direct routing key |
+| `externalId` | Your CRM or system identifier |
+| `email` | Email address |
+| `phone` | Phone number (E.164 preferred) |
+| `name` | Display name |
+| `metadata` | Custom key-value store (plan tier, region, tags, etc.) |
 
-### Durability scoring
+### Memories
 
-Not all facts age the same way. "Prefers email over phone" is durable; "is asking about
-order #4471" is ephemeral. ConvoMem scores each fact so retrieval can weight long-lived
-context higher.
+Memories are atomic facts extracted from conversation turns.
 
-<Callout type="note" title="Redaction happens first">
-PII is detected and masked **before** facts are stored. See
-[Authentication & security](/docs/authentication) for the full data-handling model.
+| Field | Description |
+| --- | --- |
+| `content` | The memory in natural language |
+| `category` | e.g. `preference`, `account`, `intent`, `issue` |
+| `confidence` | 0–1 extraction confidence |
+| `durability` | How long this memory is expected to stay valid |
+| `relevance` | Per-query relevance score (set at lookup time) |
+
+**Durability scoring** — "Prefers email over phone" is durable. "Asking about order
+#4471" is ephemeral. Durability lets retrieval weight long-lived context higher and age
+out transient facts automatically.
+
+**Lookup ranking** — Memories are ranked by `relevance × 0.5 + importance × 0.3 +
+recency × 0.2`, capped at 10 memories / 800 tokens per lookup.
+
+### Conversations
+
+A conversation tracks a customer session across multiple captures. ConvoMem automatically
+reuses the active session for subsequent captures from the same customer and channel until
+the session is explicitly ended or times out.
+
+## Identity routing
+
+Every SDK method that operates on a customer accepts a `CustomerIdentity`:
+
+```typescript
+interface CustomerIdentity {
+  customerId?: string   // ConvoMem UUID — most direct
+  externalId?: string   // Your CRM / system ID
+  email?: string
+  phone?: string        // E.164 preferred (+14155550101)
+}
+```
+
+**Provide at least one field.** The SDK picks the right HTTP form automatically:
+
+- **With `customerId`** → path route (`GET /customers/:id/memories`)
+- **Without `customerId`** → flat route (`GET /customers/memories?email=…`) — server resolves
+
+```typescript
+// All of these work — use whatever you have:
+await client.lookup('billing', { customerId: 'uuid-123' })
+await client.lookup('billing', { email: 'alice@example.com' })
+await client.lookup('billing', { externalId: 'crm-789' })
+await client.lookup('billing', { phone: '+14155550101' })
+```
+
+<Callout type="warning" title="Use one identity type per customer">
+Mixing identity fields across calls for the same person (email one time, externalId
+another) can create duplicate profiles. Pick one and be consistent, or link them by
+updating the customer record with all fields.
 </Callout>
 
-## Subjects
+## PII redaction
 
-A subject groups all conversations and facts for one entity. Retrieval is always scoped
-to a subject, which is how ConvoMem assembles a coherent memory for each customer.
+Before any memory is persisted, ConvoMem detects and replaces emails, phone numbers, card
+numbers, SSNs, and other sensitive patterns with typed placeholders. The original values
+are never written to storage.
+
+Examples: `alice@example.com` → `[EMAIL]`, `4111 1111 1111 1111` → `[CARD_NUMBER]`.
+
+## Manual memories
+
+You can also write memories directly — bypassing extraction entirely. Manual memories are
+written synchronously and available for recall immediately (no extraction lag):
+
+```typescript
+await client.addMemory(
+  'Prefers to be contacted by email, not phone',
+  { email: 'alice@example.com' },
+  { category: 'preference' },
+)
+```
+
+Use this to seed memory from your CRM, port data from another system, or correct an
+extracted memory.
+
+## Explore
+
+- [Quick start](/docs/getting-started) — end-to-end integration example
+- [Capture](/docs/capture) — send conversations to the pipeline
+- [Memories](/docs/memories) — browse, add, and manage stored memories
+
+**SDK:** [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)

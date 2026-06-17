@@ -1,0 +1,136 @@
+---
+title: "Handoff"
+description: "Generate a cross-channel briefing for a human agent taking over a conversation."
+status: "published"
+---
+
+A handoff briefing is a structured snapshot of everything ConvoMem knows about a customer:
+their full conversation journey, key memories, sentiment trend, open-issue detection, and
+an AI-written narrative. Designed to be injected directly into a human agent's context the
+moment they take over.
+
+## Get a briefing
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
+    "https://api.convomem.com/api/v1/customers/handoff?email=alice%40example.com"
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="handoff.ts">
+  ```typescript
+  const handoff = await client.getHandoff({ email: 'alice@example.com' })
+
+  if (handoff.found) {
+    console.log('Narrative:', handoff.narrative)
+    console.log('Key memories:', handoff.keyMemories)
+    console.log('Sentiment:', handoff.sentimentTrend.direction)
+    console.log('Open issue:', handoff.openIssue.isOpen)
+  }
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="handoff.py">
+  ```python
+  from convomem import HandoffParams
+
+  handoff = client.customers.handoff(HandoffParams(email="alice@example.com"))
+
+  if handoff.found:
+      print(f"Narrative: {handoff.narrative}")
+      print(f"Key memories: {handoff.key_memories}")
+      print(f"Sentiment: {handoff.sentiment_trend.direction}")
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  use convomem::HandoffParams;
+
+  let handoff = client.handoff(&HandoffParams {
+      email: Some("alice@example.com".into()),
+      ..Default::default()
+  }).await?;
+
+  if handoff.found {
+      println!("Narrative: {:?}", handoff.narrative);
+  }
+  ```
+  </CodeTab>
+</CodeTabs>
+
+## Options
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fresh` | boolean | `false` | Bypass the 10-minute cache to get the latest state |
+| `narrative` | boolean | `true` | Set to `false` to skip the LLM-written summary — faster, structured-data only |
+
+```typescript
+const handoff = await client.getHandoff(
+  { customerId: 'cust_uuid_123' },
+  { fresh: true, narrative: true },
+)
+```
+
+## Response fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `found` | boolean | `false` if the customer doesn't exist or has no history |
+| `customer` | Customer | Full customer profile |
+| `journey` | ConversationSummary[] | Recent conversation sessions, newest first |
+| `keyMemories` | Memory[] | Top memories ranked by importance and recency |
+| `sentimentTrend` | object | `{ direction: "positive" \| "neutral" \| "negative" \| "stable", current: number }` |
+| `openIssue` | object | `{ isOpen: boolean, summary?: string }` — unresolved issue detection |
+| `narrative` | string \| null | AI-written paragraph summarizing the customer's history |
+| `narrativeSource` | string | `"generated"`, `"cached"`, or `"skipped"` |
+
+## Injecting into a human agent
+
+```typescript title="agent-context.ts"
+const handoff = await client.getHandoff(
+  { customerId: escalatedCustomerId },
+  { fresh: true },
+)
+
+const briefing = `
+## Customer briefing
+
+${handoff.narrative ?? 'No prior history.'}
+
+### Key facts
+${handoff.keyMemories.map((m) => `- ${m.content}`).join('\n')}
+
+### Sentiment
+${handoff.sentimentTrend.direction} (score: ${handoff.sentimentTrend.current})
+
+### Open issue
+${handoff.openIssue.isOpen ? handoff.openIssue.summary : 'None'}
+`.trim()
+```
+
+<Callout type="tip" title="Warm the cache for call queues">
+When a call enters the queue, call `getHandoff()` with `fresh: false` (cheap, cached).
+Call it again with `fresh: true` when the agent picks up to include anything that happened
+while the customer waited.
+</Callout>
+
+## By customer ID (path-based route)
+
+For direct ID access, the SDK routes to the path-based endpoint:
+
+```typescript
+// With customerId → GET /api/v1/customers/:id/handoff
+const handoff = await client.getHandoff({ customerId: 'cust_uuid_123' })
+
+// Without customerId → GET /api/v1/customers/handoff?email=…
+const handoff = await client.getHandoff({ email: 'alice@example.com' })
+```
+
+## What's next
+
+- [Customers](/docs/customers) — manage the profiles behind briefings
+- [Conversations](/docs/conversations) — manage and escalate sessions
+- [Embed](/docs/embed) — browser widget for customer-facing agent panels
+
+**SDK:** [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)

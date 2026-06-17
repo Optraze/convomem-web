@@ -38,11 +38,11 @@ specify.
   </CodeTab>
   <CodeTab language="typescript" filename="capture.ts">
   ```typescript
-  const result = await client.capture({
-    message: 'I need help with my order',
-    email: 'user@example.com',
-    channel: 'CHAT',
-  })
+  const result = await client.capture(
+    [{ role: 'user', content: 'I need help with my order' }],
+    { email: 'user@example.com' },
+    { channel: 'CHAT' },
+  )
   ```
   </CodeTab>
   <CodeTab language="python" filename="capture.py">
@@ -92,13 +92,14 @@ the user's message and the assistant's response in a single call.
   </CodeTab>
   <CodeTab language="typescript" filename="capture.ts">
   ```typescript
-  const result = await client.capture({
-    messages: [
+  const result = await client.capture(
+    [
       { role: 'user', content: 'What is my current plan?' },
       { role: 'assistant', content: 'You are on the Pro plan at $49/mo.' },
     ],
-    channel: 'VOICE',
-  })
+    { email: 'user@example.com' },
+    { channel: 'VOICE' },
+  )
   ```
   </CodeTab>
   <CodeTab language="python" filename="capture.py">
@@ -196,3 +197,11 @@ Use the same identity field across all captures for a given customer. Mixing `em
 
 The channel is used for analytics and to group conversations. It does not affect how
 messages are processed.
+
+## What's next
+
+- [Memories](/docs/memories) — browse, add, and manage extracted memories
+- [Conversations](/docs/conversations) — explicitly manage session lifecycle
+- [Webhooks](/docs/webhooks) — react to `memory.captured` after extraction completes
+
+**SDK:** [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)

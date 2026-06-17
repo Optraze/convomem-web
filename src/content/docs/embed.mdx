@@ -19,16 +19,16 @@ Always mint them server-side.
   ```bash
   curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "$BASE_URL/embed/tokens" \
+    "https://api.convomem.com/api/v1/embed/tokens" \
     -d '{"customerId": "cust_123", "ttlSeconds": 3600}'
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="token.ts">
   ```typescript
-  const { token, expiresIn } = await client.embed.createToken({
-    customerId: 'cust_123',
-    ttlSeconds: 3600,
-  })
+  const { token, expiresIn } = await client.createEmbedToken(
+    { customerId: 'cust_123' },
+    { ttlSeconds: 3600 },
+  )
 
   console.log('Token:', token)
   console.log('Expires in:', expiresIn, 'seconds')
@@ -104,3 +104,10 @@ const widget = new ConvoMemWidget({
 Set a short TTL (5–60 minutes) for production use. Longer TTLs increase the window
 of exposure if the token is compromised.
 </Callout>
+
+## What's next
+
+- [Handoff](/docs/handoff) — server-side briefing that doesn't need a browser token
+- [Authentication](/docs/authentication) — API key vs embed token security model
+
+**SDK:** [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)

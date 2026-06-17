@@ -1,6 +1,6 @@
 ---
 title: "Authentication & security"
-description: "API keys, scopes, PII redaction, and how ConvoMem handles sensitive data."
+description: "API keys, X-API-Key header authentication, scopes, and how ConvoMem handles sensitive data."
 status: "published"
 ---
 
@@ -9,26 +9,44 @@ authenticate and how your data is protected.
 
 ## API keys
 
-Every request is authenticated with a bearer token:
+Every request is authenticated with an `X-API-Key` header:
 
 ```typescript title="request.ts"
-const res = await fetch('https://api.convomem.com/v1/retrieve', {
-  method: 'POST',
+const res = await fetch('https://api.convomem.com/api/v1/customers?limit=1', {
   headers: {
-    Authorization: `Bearer ${process.env.CONVOMEM_API_KEY}`,
-    'Content-Type': 'application/json',
+    'X-API-Key': process.env.CONVOMEM_API_KEY!,
   },
-  body: JSON.stringify({ subjectId: 'cust_123' }),
 })
 ```
 
-### Scopes
+The SDK handles auth automatically — pass your key at initialization:
 
-Keys can be restricted to specific scopes:
+```typescript title="init.ts"
+import { ConvoMem } from '@optraze/convomem-sdk'
 
-- `capture` — submit conversations
-- `retrieve` — read memory
-- `admin` — manage subjects and keys
+const client = new ConvoMem({
+  apiKey: process.env.CONVOMEM_API_KEY!,
+})
+```
+
+<Callout type="note" title="No Bearer prefix">
+ConvoMem uses `X-API-Key` header authentication, not `Authorization: Bearer`.
+</Callout>
+
+## Scopes
+
+Organization API keys (`sk-org-*`) have **integration scope** and can access:
+
+- Capture (`POST /capture`)
+- Customer management (`/customers/*`)
+- Memory management (`/customers/*/memories`)
+- Conversations (`/customers/*/conversations`)
+- Handoff briefings (`/customers/*/handoff`, `/customers/handoff`)
+- Embed tokens (`/embed/tokens`)
+
+Administrative endpoints — webhooks management, org settings, audit logs, and analytics
+dashboards — require session-based authentication through the dashboard. They **cannot**
+be accessed with an org API key.
 
 <Callout type="danger" title="Rotate compromised keys immediately">
 If a key leaks, revoke it from the dashboard. Revocation takes effect within seconds and
@@ -37,7 +55,7 @@ cannot be undone.
 
 ## PII redaction
 
-Before any fact is persisted, ConvoMem runs detection for emails, phone numbers, card
+Before any memory is persisted, ConvoMem runs detection for emails, phone numbers, card
 numbers, and other sensitive patterns, replacing them with typed placeholders. The
 original values are never written to long-term storage.
 
@@ -46,3 +64,10 @@ original values are never written to long-term storage.
 Choose where your data lives at the project level. On-prem and single-tenant deployments
 are available for regulated workloads — see the [changelog](/changelog) for the latest
 availability.
+
+## What's next
+
+- [Quick start](/docs/getting-started) — initialize the client and send your first capture
+- [Embed](/docs/embed) — browser tokens for client-side widgets
+
+**SDK:** [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)

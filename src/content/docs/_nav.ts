@@ -16,31 +16,36 @@ export interface DocNavGroup {
 
 export const docsNav: DocNavGroup[] = [
   {
-    group: 'Getting started',
+    group: 'Get started',
     items: [
       { slug: 'introduction' },
-      { slug: 'installation' },
       { slug: 'getting-started', label: 'Quick start' },
+      { slug: 'authentication' },
     ],
   },
   {
-    group: 'Core concepts',
-    items: [{ slug: 'memory-model' }, { slug: 'retrieval' }],
+    group: 'Concepts',
+    items: [{ slug: 'memory-model', label: 'How it works' }],
   },
   {
-    group: 'SDK & API',
+    group: 'API reference',
     items: [
-      { slug: 'sdk-reference', label: 'SDK reference' },
       { slug: 'capture' },
-      { slug: 'customers' },
       { slug: 'memories' },
+      { slug: 'customers' },
       { slug: 'conversations' },
+      { slug: 'handoff' },
       { slug: 'embed' },
+      { slug: 'webhooks' },
     ],
   },
   {
-    group: 'Guides',
-    items: [{ slug: 'authentication' }, { slug: 'webhooks' }],
+    group: 'SDK',
+    items: [
+      { slug: 'sdk-typescript', label: 'TypeScript' },
+      { slug: 'sdk-python', label: 'Python' },
+      { slug: 'sdk-rust', label: 'Rust' },
+    ],
   },
 ]
 
