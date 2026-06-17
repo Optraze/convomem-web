@@ -28,6 +28,10 @@ export const docsNav: DocNavGroup[] = [
     items: [{ slug: 'memory-model', label: 'How it works' }],
   },
   {
+    group: 'Guides',
+    items: [{ slug: 'agents', label: 'AI agents' }],
+  },
+  {
     group: 'API reference',
     items: [
       { slug: 'capture' },
@@ -37,6 +41,7 @@ export const docsNav: DocNavGroup[] = [
       { slug: 'handoff' },
       { slug: 'embed' },
       { slug: 'webhooks' },
+      { slug: 'errors', label: 'Errors & limits' },
     ],
   },
   {

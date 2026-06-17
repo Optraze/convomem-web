@@ -1,0 +1,366 @@
+---
+title: "AI agent integration"
+description: "Wire ConvoMem into any LLM agent as callable tools — with ready-to-paste tool definitions and channel blueprints."
+status: "published"
+---
+
+ConvoMem is designed to work as a set of **tools an LLM agent can call**. Register the
+definitions below with your platform (OpenAI, Anthropic, VAPI, Retell, Bland.ai, etc.)
+and ConvoMem handles identity resolution, session management, and memory extraction.
+
+## The agent loop
+
+Every integration follows the same pattern:
+
+```
+1. recall_customer_context   → inject context into system prompt
+2. LLM generates reply       → send to user
+3. capture_message           → queue memory extraction (fire-and-forget)
+   repeat for each turn
+4. end_conversation          → on goodbye / issue resolved
+   escalate_conversation     → on transfer to human
+```
+
+<Callout type="warning" title="Send turns verbatim — never filter">
+Don't let the model decide which turns are "important" before capturing. Send every
+exchange verbatim and let ConvoMem's pipeline extract and de-duplicate. Descriptions
+like "call after each meaningful exchange" cause models to drop turns — you lose
+memories. The tool descriptions below are worded to prevent this.
+</Callout>
+
+<Callout type="tip" title="Capture is fire-and-forget">
+`capture_message` returns immediately. Extraction runs in the background. Don't
+block the user's reply waiting for it — call it without `await` after the response
+is sent.
+</Callout>
+
+## Tool definitions
+
+The JSON below is OpenAI function-calling format. Map `name`, `description`, and
+`parameters` into your platform's tool schema — the fields are the same everywhere.
+
+The `description` is the only instruction the model gets per tool, so wording matters.
+Tighten the descriptions to your domain, but keep the guarantees — especially the
+verbatim capture rule.
+
+### `recall_customer_context`
+
+Call at conversation start and again on any turn that references the past, an account,
+or a preference.
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "recall_customer_context",
+    "description": "Retrieve what is already known about the customer before you reply. CALL IT: (1) once at the start of the conversation, as soon as you have any identifier (phone, email, externalId, or customerId); and (2) again on any turn where the user references the past, a prior issue, an account/order, or a preference. ALWAYS set `topic` to the user's current message or question so the most relevant memories are returned. USE the returned `context` string as ground truth when forming your reply, and the returned `customerId` for later capture/end/escalate calls. Pass `autoCreate: true` so a first-time caller is still registered. This is a read — it never stores anything.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "phone":      { "type": "string", "description": "Caller phone number, ideally E.164 (+14155550101)." },
+        "email":      { "type": "string", "description": "Customer email address." },
+        "externalId": { "type": "string", "description": "Your CRM / system customer ID." },
+        "customerId": { "type": "string", "description": "ConvoMem customer UUID, if already known." },
+        "topic":      { "type": "string", "description": "What to recall — e.g. the user's current question. Enables semantic ranking and returns a prompt-ready context string." },
+        "autoCreate": { "type": "boolean", "description": "Create the customer if not found.", "default": true },
+        "userName":   { "type": "string", "description": "Customer's display name, to set or backfill the profile when they introduce themselves." }
+      }
+    }
+  }
+}
+```
+
+**Maps to:** `GET /api/v1/customers/lookup`
+
+---
+
+### `capture_message`
+
+Call after every exchange — the user turn **and** your reply, in order.
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "capture_message",
+    "description": "Record the conversation into ConvoMem's long-term memory. CALL IT after EVERY exchange — i.e. after you send each reply — passing the new turns since your last capture (the user's message AND your assistant reply, in order). Do NOT judge whether a turn is 'important' or 'memorable' and do NOT skip, summarize, paraphrase, or filter turns: send them verbatim and let ConvoMem decide what to extract and de-duplicate. Skipping turns loses memories. Each call appends to the customer's active session automatically, so send only the new turns, not the whole transcript again. This is fire-and-forget — extraction happens in the background, so it returns before facts are searchable.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "customerId":     { "type": "string", "description": "Customer UUID from recall_customer_context. Preferred identifier." },
+        "phoneNumber":    { "type": "string", "description": "Phone identity (use if customerId is unknown)." },
+        "email":          { "type": "string", "description": "Email identity (use if customerId is unknown)." },
+        "externalId":     { "type": "string", "description": "External / CRM identity (use if customerId is unknown)." },
+        "messages":       { "type": "string", "description": "JSON-encoded array of the NEW turns since your last capture, in chronological order, verbatim: [{\"role\":\"user\",\"content\":\"…\"},{\"role\":\"assistant\",\"content\":\"…\"}]. Include both the user turn and your reply. Never omit a turn." },
+        "channel":        { "type": "string", "enum": ["VOICE", "CHAT", "SMS", "EMAIL"], "description": "The channel this conversation is on. Use the same value for the whole conversation.", "default": "CHAT" },
+        "userName":       { "type": "string", "description": "The customer's name if they state it during the conversation." },
+        "idempotencyKey": { "type": "string", "description": "Optional unique key (≤128 chars) per exchange to make retries safe without double-recording." }
+      },
+      "required": ["messages"]
+    }
+  }
+}
+```
+
+**Maps to:** `POST /api/v1/capture`
+
+> Send only new turns each call — not the full transcript. Across the conversation,
+> every turn is captured exactly once.
+
+---
+
+### `search_memories`
+
+Targeted mid-conversation recall when you already know who the customer is.
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "search_memories",
+    "description": "Search a customer's long-term memories for a specific topic and get a prompt-ready `context` string. Use this — instead of recall_customer_context — when you already know who the customer is and need to answer a specific past-fact question (e.g. 'what plan are they on?', 'did they report this before?'), and you only have a phone, email, or externalId. Set `topic` to the exact thing you're trying to recall. Read-only — stores nothing.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "topic":      { "type": "string", "description": "Topic or question to find relevant memories for." },
+        "phone":      { "type": "string", "description": "Customer phone number." },
+        "email":      { "type": "string", "description": "Customer email." },
+        "externalId": { "type": "string", "description": "External / CRM identifier." }
+      },
+      "required": ["topic"]
+    }
+  }
+}
+```
+
+**Maps to:** `GET /api/v1/customers/memories/lookup`
+
+---
+
+### `get_handoff_brief`
+
+Call immediately before transferring to a human agent.
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "get_handoff_brief",
+    "description": "Build a cross-channel briefing (full journey across chat/email/voice/SMS, key memories, sentiment trend, open-issue detection, and an AI-written narrative) for the human who is about to take over. CALL IT immediately before you transfer or escalate, so the agent has full context. Relay the `narrative` and `openIssue` to the human agent; do not read raw memory IDs to the customer. Read-only.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "phone":      { "type": "string" },
+        "email":      { "type": "string" },
+        "externalId": { "type": "string" },
+        "customerId": { "type": "string" },
+        "narrative":  { "type": "string", "enum": ["true", "false"], "description": "Set 'false' to skip the AI narrative for a faster, structured-only brief.", "default": "true" }
+      }
+    }
+  }
+}
+```
+
+**Maps to:** `GET /api/v1/customers/handoff`
+
+---
+
+### `end_conversation`
+
+Call once, when the conversation is genuinely finished.
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "end_conversation",
+    "description": "Close the active conversation and record how it ended. CALL IT once, when the conversation is genuinely finished — the user says goodbye, confirms their issue is resolved, or the call ends. Do NOT call it mid-conversation or because there is a pause. Capture the final turns with capture_message FIRST, then call this. Set `outcome` to a one-line factual result (what was done or decided), not a transcript. After this, the next message from the customer starts a fresh conversation.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "customerId":     { "type": "string", "description": "Customer UUID." },
+        "conversationId": { "type": "string", "description": "Conversation ID from recall_customer_context or capture_message response." },
+        "outcome":        { "type": "string", "description": "Short resolution summary, e.g. 'Booked return flight; customer satisfied.'" }
+      },
+      "required": ["customerId", "conversationId"]
+    }
+  }
+}
+```
+
+**Maps to:** `POST /api/v1/customers/conversations/end`
+
+---
+
+### `escalate_conversation`
+
+Call when handing off to a human. Pair with `get_handoff_brief`.
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "escalate_conversation",
+    "description": "Hand the active conversation to a human agent and mark it ESCALATED. CALL IT when the user explicitly asks for a person, is clearly frustrated or upset, or the request is outside what you can resolve. Use this rather than end_conversation when a human still needs to act. Set `reason` to a short factual explanation of why (≤500 chars). Pair this with get_handoff_brief so the human has full context. Capture the final turns first.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "customerId":     { "type": "string", "description": "Customer UUID." },
+        "conversationId": { "type": "string", "description": "Conversation ID from recall_customer_context or capture_message response." },
+        "reason":         { "type": "string", "description": "Why it is being escalated (≤500 chars)." }
+      },
+      "required": ["customerId", "conversationId"]
+    }
+  }
+}
+```
+
+**Maps to:** `POST /api/v1/customers/conversations/escalate`
+
+---
+
+## Channel blueprints
+
+### Chatbot
+
+Web widget, WhatsApp, Slack — tight **recall → reply → capture** per message.
+
+```typescript title="chatbot.ts"
+import OpenAI from 'openai'
+import { ConvoMem } from '@optraze/convomem-sdk'
+
+const client = new ConvoMem({ apiKey: process.env.CONVOMEM_API_KEY! })
+const openai = new OpenAI()
+
+async function handleMessage(userMessage: string, session: { email: string }) {
+  // 1. Recall — before every reply
+  const { context, customer } = await client.lookup(userMessage, {
+    email: session.email,
+  })
+
+  // 2. Reply with context injected
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: `You are a helpful support agent.\n\nWhat you know about this customer:\n${context}`,
+      },
+      { role: 'user', content: userMessage },
+    ],
+  })
+  const reply = completion.choices[0].message.content!
+
+  // 3. Capture — fire-and-forget
+  client.capture(
+    [
+      { role: 'user', content: userMessage },
+      { role: 'assistant', content: reply },
+    ],
+    { customerId: customer?.id, email: session.email },
+    { channel: 'CHAT' },
+  ).catch(console.error)
+
+  return reply
+}
+```
+
+### Voicebot / IVR
+
+Sub-second latency budgets — look up at call start, register tools for inline calls during.
+
+**Call start:**
+
+```typescript title="call-start.ts"
+// Look up as soon as the call connects — before the first reply
+const { context, customer } = await client.lookup(
+  'caller history and preferences',
+  { phone: callerPhoneNumber },
+)
+
+const systemPrompt = `You are a voice support agent.
+
+What you know about this caller:
+${context || 'No prior history.'}`
+```
+
+**Call end:**
+
+```typescript title="call-end.ts"
+// Capture the full transcript, then close the session
+await client.capture(transcript, { customerId: customer.id }, { channel: 'VOICE' })
+await client.endConversation(
+  conversationId,
+  { customerId: customer.id },
+  { outcome: 'Resolved billing question' },
+)
+```
+
+**VAPI** — add an API Tool: method `GET`, URL
+`https://api.convomem.com/api/v1/customers/lookup`, header `X-API-Key: sk-org-…`, map
+caller number to the `phone` query param.
+
+**Bland.ai** — register a custom tool:
+
+```json
+{
+  "name": "lookup_customer",
+  "description": "Fetch caller history and memory context.",
+  "url": "https://api.convomem.com/api/v1/customers/lookup?phone={{phone}}&autoCreate=true",
+  "method": "GET",
+  "headers": { "X-API-Key": "sk-org-…" }
+}
+```
+
+### Email bot
+
+Turn-based with long windows — use the sender address as identity.
+
+```typescript title="email-handler.ts"
+async function handleInboundEmail(from: string, subject: string, body: string) {
+  // 1. Recall context for this sender
+  const { context } = await client.lookup(`${subject} ${body}`, { email: from })
+
+  // 2. Draft and send reply
+  const reply = await generateReply(context, subject, body)
+
+  // 3. Capture the exchange
+  await client.capture(
+    [
+      { role: 'user', content: `Subject: ${subject}\n\n${body}` },
+      { role: 'assistant', content: reply },
+    ],
+    { email: from },
+    { channel: 'EMAIL' },
+  )
+
+  // 4. End session if resolved
+  if (isResolved(reply)) {
+    await client.endConversation(null, { email: from }, {
+      outcome: 'Email thread resolved',
+    })
+  }
+
+  return reply
+}
+```
+
+## Conversation sessions
+
+Conversations idle-close after **15 minutes of inactivity** (configurable server-side).
+You don't need to call `endConversation` unless you want to:
+
+- Record an `outcome` for handoff briefings
+- Trigger the `conversation.completed` webhook immediately
+- Force a new session to start on the next message
+
+The next capture after a closed session automatically starts a fresh conversation.
+
+## What's next
+
+- [Capture](/docs/capture) — full capture API reference and idempotency
+- [Handoff](/docs/handoff) — briefing response fields and injection patterns
+- [Webhooks](/docs/webhooks) — react to `memory.captured` and `conversation.*` events
+- [Errors & limits](/docs/errors) — rate limits, error codes, retry guidance
+
+**SDK:** [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)

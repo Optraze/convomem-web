@@ -162,9 +162,14 @@ Each message in the `messages` array has:
 | `isNewConversation` | boolean | `true` when this call started a new conversation session |
 | `isNewCustomer` | boolean | `true` when the customer was created by this call |
 
-<Callout type="tip" title="Use idempotencyKey">
-Pass an `idempotencyKey` to safely retry requests without creating duplicate captures.
-ConvoMem deduplicates within a short window using this key.
+<Callout type="tip" title="Use idempotencyKey for safe retries">
+Pass an `idempotencyKey` to safely retry captures without double-recording turns. If the
+same key is replayed within **24 hours**, the original result is returned from cache
+instead of re-processing. Use a stable key per turn — e.g.
+`turn-${conversationId}-${turnIndex}`.
+
+If a request with that key is still in flight, you get `409 IDEMPOTENCY_IN_PROGRESS`.
+Wait 1–2 seconds and retry with the same key.
 </Callout>
 
 ## Identity resolution
@@ -198,10 +203,18 @@ Use the same identity field across all captures for a given customer. Mixing `em
 The channel is used for analytics and to group conversations. It does not affect how
 messages are processed.
 
+## Rate limit
+
+Capture has a tighter limit than other endpoints — **20 calls/min** — because each call
+enqueues background AI work. Send a few turns per call rather than one call per message.
+
+See [Errors & limits](/docs/errors) for the full rate limit table and retry guidance.
+
 ## What's next
 
 - [Memories](/docs/memories) — browse, add, and manage extracted memories
 - [Conversations](/docs/conversations) — explicitly manage session lifecycle
 - [Webhooks](/docs/webhooks) — react to `memory.captured` after extraction completes
+- [AI agents](/docs/agents) — fire-and-forget patterns and tool definitions
 
 **SDK:** [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)

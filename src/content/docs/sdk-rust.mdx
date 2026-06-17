@@ -23,25 +23,25 @@ tokio = { version = "1", features = ["full"] }
 ## Initialize
 
 ```rust
-use convomem::ConvoMemClient;
+use convomem::ConvoMem;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = ConvoMemClient::new(std::env::var("CONVOMEM_API_KEY")?);
+    let client = ConvoMem::new(std::env::var("CONVOMEM_API_KEY")?);
     Ok(())
 }
 ```
 
-With options:
+With a custom timeout:
 
 ```rust
-use convomem::{ConvoMemClient, ConvoMemConfig};
+use convomem::ConvoMem;
+use std::time::Duration;
 
-let client = ConvoMemClient::with_config(ConvoMemConfig {
-    api_key: std::env::var("CONVOMEM_API_KEY")?,
-    timeout_secs: Some(10),
-    max_retries: Some(3),
-});
+let client = ConvoMem::builder()
+    .api_key(std::env::var("CONVOMEM_API_KEY")?)
+    .timeout(Duration::from_secs(15))
+    .build()?;
 ```
 
 <Callout type="warning" title="Keep keys server-side">
@@ -49,73 +49,138 @@ Never embed an API key in client-side code. All ConvoMem calls should originate 
 your backend. For browser widgets, use [embed tokens](/docs/embed).
 </Callout>
 
-## Capture
+## Identity
+
+`CustomerIdentity` routes every call to the right customer. When `customer_id`
+is set the SDK uses the direct `/customers/:id/…` path. Otherwise the server
+resolves the customer from `email`, `phone`, or `external_id`.
 
 ```rust
-use convomem::{CaptureRequest, Message};
+use convomem::CustomerIdentity;
 
-let result = client.capture(&CaptureRequest {
-    messages: Some(vec![
-        Message { role: "user".into(), content: "I need help with my order".into() },
+// By known ID — most direct
+let identity = CustomerIdentity::from_id("cust_uuid_123");
+
+// By email — server resolves the customer
+let identity = CustomerIdentity::from_email("alice@example.com");
+
+// By phone (E.164 format recommended)
+let identity = CustomerIdentity::from_phone("+14155550100");
+
+// By external system ID
+let identity = CustomerIdentity::from_external_id("crm-456");
+```
+
+## Capture
+
+Send conversation turns for background memory extraction. Fire-and-forget —
+memories become searchable within seconds.
+
+```rust
+use convomem::{ConvoMem, CustomerIdentity, Message};
+
+client.capture(
+    vec![
+        Message { role: "user".into(),      content: "I need help with my order".into() },
         Message { role: "assistant".into(), content: "Of course, let me look that up.".into() },
-    ]),
-    email: Some("alice@example.com".into()),
-    channel: Some("CHAT".into()),
-    ..Default::default()
-}).await?;
-
-println!("Conversation: {}", result.conversation_id);
-println!("Customer: {}", result.customer_id);
+    ],
+    &CustomerIdentity::from_email("alice@example.com"),
+    Some("CHAT"),   // channel
+    None,           // user_name
+    None,           // idempotency_key
+).await?;
 ```
 
 ## Look up context
 
-```rust
-let result = client.lookup_memories("alice@example.com", "order and shipping preferences").await?;
+Recall semantically relevant memories before generating a reply.
 
-println!("Context: {}", result.context);
-for mem in &result.memories {
-    println!("  - {} ({:?})", mem.content, mem.category);
+```rust
+let ctx = client.lookup(
+    "order and shipping preferences",
+    &CustomerIdentity::from_email("alice@example.com"),
+    None,   // auto_create
+    None,   // user_name
+).await?;
+
+println!("Context: {}", ctx.context);
+for mem in &ctx.memories {
+    println!("  - {:?}", mem.content);
+}
+```
+
+## Agent loop pattern
+
+```rust
+use convomem::{ConvoMem, CustomerIdentity, Message};
+
+let client = ConvoMem::new(std::env::var("CONVOMEM_API_KEY")?);
+
+async fn handle_message(
+    client: &ConvoMem,
+    user_msg: &str,
+    email: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let identity = CustomerIdentity::from_email(email);
+
+    // 1. Recall context
+    let ctx = client.lookup("customer support", &identity, None, None).await?;
+
+    // 2. Call your LLM (pseudo-code)
+    let reply = call_llm(&ctx.context, user_msg).await;
+
+    // 3. Capture the turns
+    client.capture(
+        vec![
+            Message { role: "user".into(),      content: user_msg.into() },
+            Message { role: "assistant".into(), content: reply.clone() },
+        ],
+        &identity,
+        Some("CHAT"),
+        None,
+        None,
+    ).await?;
+
+    Ok(reply)
 }
 ```
 
 ## Memories
 
 ```rust
-use convomem::MemoryAddRequest;
+use convomem::{CustomerIdentity, MemoryAddRequest};
+
+let identity = CustomerIdentity::from_id("cust_uuid_123");
 
 // List all memories
-let result = client.list_memories("alice@example.com", Some(1), Some(20)).await?;
+let result = client.list_memories(&identity, None, None, None).await?;
 for mem in &result.memories {
-    println!("- {}", mem.content);
+    println!("- {:?}", mem.content);
 }
 
 // Add manually
 let memory = client.add_memory(
-    "cust_uuid_123",
-    &MemoryAddRequest {
-        content: "Prefers email contact".into(),
-        category: Some("preference".into()),
-        ..Default::default()
-    },
+    "Prefers email contact",
+    &identity,
+    Some("preference"),
 ).await?;
 
-// Update
-client.update_memory(
-    "cust_uuid_123",
+// Update (requires customer_id)
+let updated = client.update_memory(
     "mem_uuid_456",
+    &identity,
     Some("Prefers email and text contact"),
     None,
 ).await?;
 
-// Delete
-client.delete_memory("cust_uuid_123", "mem_uuid_456").await?;
+// Delete (requires customer_id)
+client.delete_memory("mem_uuid_456", &identity).await?;
 ```
 
 ## Customers
 
 ```rust
-use convomem::{CustomerCreateRequest, CustomerLookupParams, CustomerUpdateRequest};
+use convomem::{CustomerCreateRequest, CustomerIdentity, CustomerUpdateRequest};
 
 // Create
 let customer = client.create_customer(&CustomerCreateRequest {
@@ -124,21 +189,15 @@ let customer = client.create_customer(&CustomerCreateRequest {
     ..Default::default()
 }).await?;
 
-// Lookup by any identity field
-let result = client.lookup_customer(&CustomerLookupParams {
-    email: Some("alice@example.com".into()),
-    ..Default::default()
-}).await?;
-if result.found {
-    println!("Customer: {}", result.customer.unwrap().id);
-}
-
-// Get by ID
-let customer = client.get_customer("cust_uuid_123").await?;
+// Get — by ID (direct) or by identity (server resolves)
+let customer = client.get_customer(
+    &CustomerIdentity::from_email("alice@example.com")
+).await?;
+println!("Customer ID: {}", customer.id);
 
 // Update
 let updated = client.update_customer(
-    "cust_uuid_123",
+    &CustomerIdentity::from_id("cust_uuid_123"),
     &CustomerUpdateRequest {
         name: Some("Alice Smith".into()),
         ..Default::default()
@@ -146,51 +205,66 @@ let updated = client.update_customer(
 ).await?;
 
 // List
-let result = client.list_customers(Some(1), Some(20)).await?;
+let result = client.list_customers(Some(1), Some(20), None).await?;
 println!("{} of {}", result.customers.len(), result.total);
 
 // Stats
-let stats = client.get_customer_stats(None, None).await?;
+let stats = client.get_stats().await?;
 println!("Total customers: {}", stats.total_customers);
+println!("Total memories:  {}", stats.total_memories);
 
 // Delete
-client.delete_customer("cust_uuid_123").await?;
+client.delete_customer(&CustomerIdentity::from_id("cust_uuid_123")).await?;
 ```
 
 ## Conversations
 
 ```rust
+use convomem::CustomerIdentity;
+
+let identity = CustomerIdentity::from_id("cust_uuid_123");
+
 // Start
-let conversation = client.start_conversation("cust_uuid_123", "CHAT").await?;
+let conversation = client.start_conversation(&identity, "CHAT").await?;
 println!("Conversation: {}", conversation.id);
 
 // List
-let result = client.list_conversations("cust_uuid_123", Some(1), Some(20)).await?;
+let result = client.list_conversations(&identity, None, None, None).await?;
 
-// End
-let updated = client.end_conversation(
-    "cust_uuid_123",
-    "conv_uuid_456",
+// End — path-based when both IDs are known
+client.end_conversation(
+    Some("conv_uuid_456"),
+    &identity,
     Some("Resolved billing issue"),
 ).await?;
 
+// End — flat route when only identity is known
+client.end_conversation(
+    None,
+    &CustomerIdentity::from_email("alice@example.com"),
+    Some("Resolved"),
+).await?;
+
 // Escalate
-let updated = client.escalate_conversation(
-    "cust_uuid_123",
-    "conv_uuid_456",
+client.escalate_conversation(
+    Some("conv_uuid_456"),
+    &identity,
     Some("Complex billing dispute"),
 ).await?;
 ```
 
 ## Handoff
 
-```rust
-use convomem::HandoffParams;
+Generate a briefing for the human agent taking over the conversation.
 
-let handoff = client.handoff(&HandoffParams {
-    email: Some("alice@example.com".into()),
-    ..Default::default()
-}).await?;
+```rust
+use convomem::CustomerIdentity;
+
+let handoff = client.get_handoff(
+    &CustomerIdentity::from_email("alice@example.com"),
+    None,   // fresh
+    None,   // narrative
+).await?;
 
 if handoff.found {
     if let Some(narrative) = &handoff.narrative {
@@ -205,13 +279,12 @@ if handoff.found {
 ## Embed tokens
 
 ```rust
-use convomem::EmbedTokenRequest;
+use convomem::CustomerIdentity;
 
-let result = client.create_embed_token(&EmbedTokenRequest {
-    customer_id: Some("cust_uuid_123".into()),
-    ttl_seconds: Some(3600),
-    ..Default::default()
-}).await?;
+let result = client.create_embed_token(
+    &CustomerIdentity::from_id("cust_uuid_123"),
+    Some(3600),  // ttl_seconds
+).await?;
 
 println!("Token: {}", result.token);
 println!("Expires in: {}s", result.expires_in);
@@ -222,13 +295,31 @@ println!("Expires in: {}s", result.expires_in);
 ```rust
 use convomem::ConvoMemError;
 
-match client.get_customer("cust_uuid_123").await {
+match client.get_customer(&CustomerIdentity::from_id("cust_uuid_123")).await {
     Ok(customer) => println!("Found: {}", customer.id),
-    Err(ConvoMemError::Api { status, body, .. }) => {
-        println!("API error {}: {:?}", status, body);
+    Err(ConvoMemError::Api { status, message }) => {
+        println!("API error {}: {}", status, message);
     }
     Err(e) => println!("Other error: {}", e),
 }
+```
+
+## Low-level resource client
+
+For advanced use cases you can use `ConvoMemClient` directly:
+
+```rust
+use convomem::{ConvoMemClient, CaptureRequest, Message};
+
+let client = ConvoMemClient::new(std::env::var("CONVOMEM_API_KEY")?);
+
+let result = client.capture(&CaptureRequest {
+    messages: Some(vec![
+        Message { role: "user".into(), content: "Hello".into() },
+    ]),
+    email: Some("alice@example.com".into()),
+    ..Default::default()
+}).await?;
 ```
 
 ## Other SDKs

@@ -45,11 +45,11 @@ function Heading({
 }
 
 const calloutConfig = {
-  note:    { icon: InfoIcon,          label: 'Note'    },
-  tip:     { icon: LightbulbIcon,     label: 'Tip'     },
+  note: { icon: InfoIcon, label: 'Note' },
+  tip: { icon: LightbulbIcon, label: 'Tip' },
   warning: { icon: AlertTriangleIcon, label: 'Warning' },
-  danger:  { icon: OctagonAlertIcon,  label: 'Danger'  },
-  success: { icon: CheckCircle2Icon,  label: 'Success' },
+  danger: { icon: OctagonAlertIcon, label: 'Danger' },
+  success: { icon: CheckCircle2Icon, label: 'Success' },
 } as const
 
 type CalloutType = keyof typeof calloutConfig

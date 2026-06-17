@@ -19,15 +19,15 @@ uv add convomem
 
 ```python
 import os
-from convomem import ConvoMemClient
+from convomem import ConvoMem
 
-client = ConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
+client = ConvoMem(api_key=os.environ["CONVOMEM_API_KEY"])
 ```
 
 Optional configuration:
 
 ```python
-client = ConvoMemClient(
+client = ConvoMem(
     api_key=os.environ["CONVOMEM_API_KEY"],
     timeout=10.0,    # seconds (default 10)
     max_retries=3,   # retries on 429 / 5xx
@@ -39,144 +39,207 @@ Never expose an API key in client-side code. All ConvoMem calls should originate
 your backend. For browser widgets, use [embed tokens](/docs/embed).
 </Callout>
 
-## Capture
+## Identity
+
+Every method accepts a `CustomerIdentity` that tells ConvoMem which customer to
+read or write. If `customer_id` is set, the SDK routes to the direct
+`/customers/:id/…` endpoint. Otherwise the server resolves the customer from
+`email`, `phone`, or `external_id`.
 
 ```python
-from convomem import CaptureRequest, Message
+from convomem import CustomerIdentity
 
-result = client.capture(CaptureRequest(
+# By known ID — most direct
+identity = CustomerIdentity(customer_id="cust_uuid_123")
+
+# By email — server resolves the customer
+identity = CustomerIdentity(email="alice@example.com")
+
+# By phone (E.164 format recommended)
+identity = CustomerIdentity(phone="+14155550100")
+
+# By external system ID
+identity = CustomerIdentity(external_id="crm-456")
+```
+
+## Capture
+
+Send conversation turns for background memory extraction. Fire-and-forget —
+memories become searchable within seconds.
+
+```python
+client.capture(
     messages=[
-        Message(role="user", content="I need help with my order"),
-        Message(role="assistant", content="Of course, let me look that up."),
+        {"role": "user",      "content": "I need help with my order"},
+        {"role": "assistant", "content": "Of course, let me look that up."},
     ],
-    email="alice@example.com",
+    CustomerIdentity(email="alice@example.com"),
     channel="CHAT",
-))
-
-print(f"Conversation: {result.conversation_id}")
-print(f"Customer: {result.customer_id}")
+)
 ```
 
 ## Look up context
 
-```python
-result = client.memories.lookup("alice@example.com", "order and shipping preferences")
+Recall semantically relevant memories before generating a reply.
 
-print(f"Context: {result.context}")
-for mem in result.memories:
-    print(f"  - {mem.content} ({mem.category})")
+```python
+ctx = client.lookup(
+    "order and shipping preferences",
+    CustomerIdentity(email="alice@example.com"),
+)
+
+print(ctx.context)          # prompt-ready context string
+for mem in ctx.memories:
+    print(f"  - {mem.content}")
+```
+
+## Agent loop pattern
+
+```python
+from convomem import ConvoMem, CustomerIdentity
+
+client = ConvoMem(api_key="sk-org-…")
+
+def handle_message(user_msg: str, email: str, conv_id: str | None = None):
+    identity = CustomerIdentity(email=email)
+
+    # 1. Recall context
+    ctx = client.lookup("customer support", identity)
+
+    # 2. Build prompt + call your LLM
+    reply = call_llm(ctx.context, user_msg)
+
+    # 3. Capture the turns
+    result = client.capture(
+        messages=[
+            {"role": "user",      "content": user_msg},
+            {"role": "assistant", "content": reply},
+        ],
+        identity,
+        channel="CHAT",
+    )
+
+    return reply, result.conversation_id
 ```
 
 ## Memories
 
 ```python
+from convomem import CustomerIdentity
+
+identity = CustomerIdentity(customer_id="cust_uuid_123")
+
 # List all memories
-result = client.memories.list("alice@example.com", page=1, limit=20)
+result = client.list_memories(identity, page=1, limit=20)
 for mem in result.memories:
     print(f"- {mem.content}")
 
 # Add manually
-from convomem import MemoryAddRequest
-
-memory = client.memories.add(
-    "cust_uuid_123",
-    MemoryAddRequest(content="Prefers email contact", category="preference"),
+memory = client.add_memory(
+    "Prefers email contact",
+    identity,
+    category="preference",
 )
 
-# Update
-client.memories.update(
-    "cust_uuid_123",
+# Update (requires customer_id)
+client.update_memory(
     "mem_uuid_456",
+    identity,
     content="Prefers email and text contact",
 )
 
-# Delete
-client.memories.delete("cust_uuid_123", "mem_uuid_456")
+# Delete (requires customer_id)
+client.delete_memory("mem_uuid_456", identity)
 ```
 
 ## Customers
 
 ```python
-from convomem import CustomerCreateRequest, CustomerLookupParams
+from convomem import CustomerIdentity
 
 # Create
-customer = client.customers.create(
-    CustomerCreateRequest(name="Alice", email="alice@example.com")
+customer = client.create_customer(
+    name="Alice",
+    email="alice@example.com",
 )
 
-# Lookup by any identity field
-result = client.customers.lookup(CustomerLookupParams(email="alice@example.com"))
-if result.found:
-    print(f"Customer ID: {result.customer.id}")
+# Get by any identity
+customer = client.get_customer(CustomerIdentity(email="alice@example.com"))
+print(f"Customer ID: {customer.id}")
 
-# Get by ID
-customer = client.customers.get("cust_uuid_123")
-
-# Update
-from convomem import CustomerUpdateRequest
-updated = client.customers.update(
-    "cust_uuid_123",
-    CustomerUpdateRequest(name="Alice Smith"),
+# Update — by ID (direct) or by identity (server resolves)
+updated = client.update_customer(
+    CustomerIdentity(customer_id="cust_uuid_123"),
+    name="Alice Smith",
 )
 
 # List
-result = client.customers.list(page=1, limit=20)
+result = client.list_customers(page=1, limit=20)
 print(f"{len(result.customers)} of {result.total}")
 
 # Stats
-stats = client.customers.get_stats()
+stats = client.get_stats()
 print(f"Total customers: {stats.total_customers}")
-print(f"Total memories: {stats.total_memories}")
+print(f"Total memories:  {stats.total_memories}")
 
 # Delete
-client.customers.delete("cust_uuid_123")
+client.delete_customer(CustomerIdentity(customer_id="cust_uuid_123"))
 ```
 
 ## Conversations
 
 ```python
+from convomem import CustomerIdentity
+
+identity = CustomerIdentity(customer_id="cust_uuid_123")
+
 # Start
-conversation = client.conversations.start("cust_uuid_123", "CHAT")
+conversation = client.start_conversation(identity, "CHAT")
 print(f"Conversation: {conversation.id}")
 
 # List
-result = client.conversations.list("cust_uuid_123", page=1, limit=20)
+result = client.list_conversations(identity, page=1, limit=20)
 
-# End
-updated = client.conversations.end(
-    "cust_uuid_123",
+# End — path-based when both IDs are known
+client.end_conversation(
     "conv_uuid_456",
+    identity,
     outcome="Resolved billing issue",
 )
 
+# End — flat route when only identity is known
+client.end_conversation(
+    None,
+    CustomerIdentity(email="alice@example.com"),
+    outcome="Resolved",
+)
+
 # Escalate
-updated = client.conversations.escalate(
-    "cust_uuid_123",
+client.escalate_conversation(
     "conv_uuid_456",
+    identity,
     reason="Complex billing dispute",
 )
 ```
 
 ## Handoff
 
+Generate a briefing for the human agent taking over the conversation.
+
 ```python
-from convomem import HandoffParams
+handoff = client.get_handoff(CustomerIdentity(email="alice@example.com"))
 
-handoff = client.customers.handoff(HandoffParams(email="alice@example.com"))
-
-if handoff.found:
-    print(f"Narrative: {handoff.narrative}")
-    for mem in handoff.key_memories:
-        print(f"  - {mem.content}")
+print(f"Narrative: {handoff.narrative}")
+for mem in handoff.key_memories:
+    print(f"  - {mem.content}")
 ```
 
 ## Embed tokens
 
 ```python
-from convomem import EmbedTokenRequest
-
-result = client.embed.create_token(
-    EmbedTokenRequest(customer_id="cust_uuid_123", ttl_seconds=3600)
+result = client.create_embed_token(
+    CustomerIdentity(customer_id="cust_uuid_123"),
+    ttl_seconds=3600,
 )
 
 print(f"Token: {result.token}")
@@ -189,9 +252,9 @@ print(f"Expires in: {result.expires_in}s")
 from convomem import ConvoMemApiError
 
 try:
-    customer = client.customers.get("cust_uuid_123")
+    customer = client.get_customer(CustomerIdentity(customer_id="cust_uuid_123"))
 except ConvoMemApiError as e:
-    print(f"Status: {e.status_code}")
+    print(f"Status: {e.status}")
     print(f"Body: {e.body}")
 ```
 
@@ -200,18 +263,39 @@ except ConvoMemApiError as e:
 ```python
 import asyncio
 import os
-from convomem import AsyncConvoMemClient, CaptureRequest, Message
+from convomem import AsyncConvoMem, CustomerIdentity
 
 async def main():
-    client = AsyncConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
+    async with AsyncConvoMem(api_key=os.environ["CONVOMEM_API_KEY"]) as client:
+        ctx = await client.lookup(
+            "billing question",
+            CustomerIdentity(email="alice@example.com"),
+        )
+        print(ctx.context)
 
-    result = await client.capture(CaptureRequest(
-        messages=[Message(role="user", content="Hello")],
-        email="alice@example.com",
-    ))
-    print(result.conversation_id)
+        await client.capture(
+            messages=[{"role": "user", "content": "What's my invoice?"}],
+            identity=CustomerIdentity(email="alice@example.com"),
+            channel="CHAT",
+        )
 
 asyncio.run(main())
+```
+
+## Low-level resource client
+
+For advanced use cases (webhook integrations, raw resource access) you can use
+`ConvoMemClient` directly:
+
+```python
+from convomem import ConvoMemClient, CaptureRequest, Message
+
+client = ConvoMemClient(api_key="sk-org-…")
+
+result = client.capture(CaptureRequest(
+    messages=[Message(role="user", content="Hello")],
+    email="alice@example.com",
+))
 ```
 
 ## Other SDKs

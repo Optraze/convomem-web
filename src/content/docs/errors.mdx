@@ -1,0 +1,100 @@
+---
+title: "Errors & limits"
+description: "Error codes, rate limits, idempotency, and retry guidance."
+status: "published"
+---
+
+## Error format
+
+All errors return JSON with a stable, machine-readable `code`:
+
+```json
+{
+  "error": "Customer not found",
+  "code": "NOT_FOUND",
+  "details": {}
+}
+```
+
+Validation failures (`422`) include a `details` object describing the offending fields.
+
+## Error codes
+
+| HTTP | `code` | Meaning |
+| :-- | :-- | :-- |
+| `401` | `UNAUTHORIZED` | Missing or invalid `X-API-Key` |
+| `403` | `FORBIDDEN` | Outside the key's scope, or a cross-org reference |
+| `403` | `PLAN_LIMIT_REACHED` | A plan limit (customer count, API calls) was hit |
+| `404` | `NOT_FOUND` | Customer, conversation, or memory does not exist |
+| `409` | `CONFLICT` | Unique constraint clash (e.g. duplicate identifier) |
+| `409` | `IDEMPOTENCY_IN_PROGRESS` | A capture with the same `idempotencyKey` is still running |
+| `422` | `VALIDATION_ERROR` | Body or query failed schema validation; see `details` |
+| `429` | — | Rate limit exceeded; back off and retry |
+| `503` | `DATABASE_UNAVAILABLE` | Datastore offline; retry with backoff |
+| `500` | `INTERNAL_ERROR` | Unexpected server error |
+
+## Rate limits
+
+Limits are per-minute, counted per org API key. Every response carries an
+`X-RateLimit-Remaining` header. Exceeding a limit returns `429`.
+
+| Endpoint group | Limit |
+| :-- | :-- |
+| `POST /capture`, memory ingest (`/memories/ingest`) | **20 / min** |
+| Recall — `/customers/lookup`, `/customers/handoff`, `/customers/**/memories/lookup` | **600 / min** |
+| Everything else (customers, conversations, CRUD) | **600 / min** |
+| Public embed — `GET /embed/handoff` | 60 / min per IP |
+
+<Callout type="tip" title="Batch turns per capture">
+Capture is tighter (20/min) because each call enqueues background AI work. Send a
+few turns per capture rather than one call per message — your rate limit goes much
+further.
+</Callout>
+
+Recall endpoints are deliberately generous (600/min) because agents call them on every
+turn.
+
+## Idempotency
+
+`POST /capture` accepts an optional `idempotencyKey` (≤128 chars). Replaying the same
+key within **24 hours** returns the original cached result instead of re-processing.
+
+If a request with that key is still in flight, you get `409 IDEMPOTENCY_IN_PROGRESS` —
+wait briefly and retry.
+
+```typescript
+await client.capture(
+  [{ role: 'user', content: userMessage }],
+  { customerId },
+  { idempotencyKey: `turn-${conversationId}-${turnIndex}` },
+)
+```
+
+Use idempotency keys anywhere captures may be retried — webhook-driven flows,
+unreliable networks, or any fire-and-forget pattern that may replay.
+
+## Retry guidance
+
+The SDK retries `429` and `5xx` responses automatically with exponential backoff
+(configurable via `maxRetries`, default 3). For your own HTTP clients:
+
+- `429` — respect the `Retry-After` header if present, otherwise back off exponentially
+- `503` — transient datastore issue; retry with backoff
+- `409 IDEMPOTENCY_IN_PROGRESS` — wait 1–2 seconds and retry with the same key
+- `4xx` (other) — don't retry; fix the request
+
+## Phone number normalization
+
+Phone numbers sent to any endpoint are normalized best-effort to E.164:
+
+- 10 digits → `+1…` (US/CA assumed)
+- 11 digits starting with `1` → `+…`
+- Otherwise `+` is prepended
+
+Send E.164 directly (`+14155550101`) to avoid ambiguity.
+
+## What's next
+
+- [Authentication](/docs/authentication) — API key scopes and security model
+- [Capture](/docs/capture) — idempotency in the capture flow
+- [AI agents](/docs/agents) — retry patterns in agentic tool calls
