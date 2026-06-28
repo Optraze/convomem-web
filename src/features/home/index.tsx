@@ -308,8 +308,10 @@ export function Home() {
             Transparent. No surprises.
           </SectionHeading>
 
-          <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
-            {enterprisePlans.map((plan) => {
+          <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+            {enterprisePlans
+              .filter((plan) => plan.price !== null)
+              .map((plan) => {
               const hi = plan.highlighted
               return (
                 <div
@@ -400,6 +402,42 @@ export function Home() {
               )
             })}
           </div>
+
+          {enterprisePlans
+            .filter((plan) => plan.price === null)
+            .map((plan) => (
+              <div
+                key={plan.name}
+                className="mt-3 flex flex-col gap-6 rounded-xl border border-border bg-background p-6 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-baseline gap-x-3">
+                    <h3 className="font-semibold text-sm text-foreground">
+                      {plan.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {plan.description}
+                    </p>
+                  </div>
+                  <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2">
+                        <Check size={12} className="shrink-0 text-foreground" />
+                        <span className="text-xs leading-normal text-subtle">
+                          {f}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Link
+                  to="/contact"
+                  className="inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-foreground px-6 font-medium text-[13px] text-background transition-opacity hover:opacity-90 active:scale-[0.98]"
+                >
+                  {plan.cta}
+                </Link>
+              </div>
+            ))}
         </section>
 
         <section
