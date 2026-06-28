@@ -70,6 +70,8 @@ export const enterprisePlans = [
       '100 team members',
       '100 webhooks',
       '50 active lead playbooks',
+      'Entity knowledge graph',
+      'Custom PII filters',
       '10-year retention',
       '7-day free trial',
     ],
