@@ -5,13 +5,13 @@ export const EASE = [0.16, 1, 0.3, 1] as const
 export const enterprisePlans = [
   {
     name: 'Starter',
-    price: 99,
+    price: 149,
     period: 'month',
     description: 'For small teams',
     features: [
       '10,000 customers',
       '500K API calls/mo',
-      '50 AI chat queries/mo',
+      '250 AI chat queries/mo',
       '5 team members',
       '5 webhooks',
       '365-day retention',
@@ -22,15 +22,16 @@ export const enterprisePlans = [
   },
   {
     name: 'Growth',
-    price: 299,
+    price: 399,
     period: 'month',
     description: 'For growing platforms',
     features: [
       '75,000 customers',
       '2M API calls/mo',
-      '300 AI chat queries/mo',
+      '1,000 AI chat queries/mo',
       '20 team members',
       '20 webhooks',
+      '5 active lead playbooks',
       '3-year retention',
       '7-day free trial',
     ],
@@ -38,16 +39,37 @@ export const enterprisePlans = [
     highlighted: true,
   },
   {
+    name: 'Pro',
+    price: 599,
+    period: 'month',
+    description: 'For scaling AI products',
+    features: [
+      '150,000 customers',
+      '5M API calls/mo',
+      '3,000 AI chat queries/mo',
+      '40 team members',
+      '40 webhooks',
+      '15 active lead playbooks',
+      'Entity knowledge graph',
+      'Custom PII filters',
+      '5-year retention',
+      '7-day free trial',
+    ],
+    cta: 'Start Pro',
+    highlighted: false,
+  },
+  {
     name: 'Scale',
-    price: 999,
+    price: 1500,
     period: 'month',
     description: 'For enterprise AI products',
     features: [
-      '300,000 customers',
-      '10M API calls/mo',
-      '1,500 AI chat queries/mo',
-      'Unlimited team',
-      'Unlimited webhooks',
+      '500,000 customers',
+      '15M API calls/mo',
+      '10,000 AI chat queries/mo',
+      '100 team members',
+      '100 webhooks',
+      '50 active lead playbooks',
       '10-year retention',
       '7-day free trial',
     ],
@@ -63,7 +85,7 @@ export const enterprisePlans = [
       'Unlimited everything',
       'On-prem deployment',
       'Custom SLA',
-      'Dedicated Slack channel',
+      'Dedicated Discord channel',
     ],
     cta: 'Contact sales',
     highlighted: false,
@@ -102,6 +124,11 @@ export const capabilities = [
     desc: 'Ask questions in plain language. Get dashboards, charts, and answers grounded in your own data.',
     tag: 'natural language',
   },
+  {
+    term: 'Lead Playbooks',
+    desc: 'Turn conversations into qualified leads automatically — define a playbook and matching opportunities are detected, scored, and surfaced across every channel.',
+    tag: 'ai-driven',
+  },
 ] as const
 
 /* ── Pipeline ── */
@@ -139,7 +166,7 @@ export const faqs = [
   },
   {
     q: 'How long is data retained?',
-    a: 'Retention depends on your plan: Starter (1 year), Growth (3 years), Scale (10 years), and Custom (configurable). You can export or delete data at any time.',
+    a: 'Retention depends on your plan: Starter (1 year), Growth (3 years), Pro (5 years), Scale (10 years), and Custom (configurable). You can export or delete data at any time.',
   },
   {
     q: 'What channels do you support?',

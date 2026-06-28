@@ -308,7 +308,7 @@ export function Home() {
             Transparent. No surprises.
           </SectionHeading>
 
-          <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
             {enterprisePlans.map((plan) => {
               const hi = plan.highlighted
               return (

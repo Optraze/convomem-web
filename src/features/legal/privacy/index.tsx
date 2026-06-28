@@ -67,6 +67,7 @@ const rights = [
 const retentionPeriods = [
   ['Starter', 'Up to 1 year'],
   ['Growth', 'Up to 3 years'],
+  ['Pro', 'Up to 5 years'],
   ['Scale', 'Up to 10 years'],
   ['Custom', 'As agreed in your contract'],
 ] as const
