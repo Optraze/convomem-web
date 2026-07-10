@@ -53,7 +53,15 @@ export function ContentFooter() {
 
         <div className="mt-8 flex items-center justify-between border-t border-border pt-6">
           <p className="font-mono text-[11px] text-hint/80">
-            © {new Date().getFullYear()} ConvoMem
+            © {new Date().getFullYear()} ConvoMem · A product by{' '}
+            <a
+              href="https://optraze.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-hint/80 underline-offset-2 transition-colors hover:text-foreground hover:underline"
+            >
+              Optraze
+            </a>
           </p>
           <ThemeSwitcher />
         </div>

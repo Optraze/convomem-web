@@ -88,7 +88,15 @@ export function MarketingFooter() {
 
         <div className="flex flex-col items-center justify-between gap-3 border-t border-border pt-8 sm:flex-row">
           <p className="font-mono text-[11px] text-hint/80">
-            © {new Date().getFullYear()} ConvoMem
+            © {new Date().getFullYear()} ConvoMem · A product by{' '}
+            <a
+              href="https://optraze.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-hint/80 underline-offset-2 transition-colors hover:text-foreground hover:underline"
+            >
+              Optraze
+            </a>
           </p>
           <p className="font-mono text-[11px] tracking-[0.12em] text-hint/80">
             API-first · On-prem on Custom · Zero lock-in

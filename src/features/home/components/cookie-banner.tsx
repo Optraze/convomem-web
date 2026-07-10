@@ -6,6 +6,13 @@ export function CookieBanner() {
   useEffect(() => {
     if (!localStorage.getItem('cm-cookie-consent')) setVisible(true)
   }, [])
+  useEffect(() => {
+    if (!visible) return
+    document.body.style.paddingBottom = 'var(--cm-cookie-banner-height, 88px)'
+    return () => {
+      document.body.style.paddingBottom = ''
+    }
+  }, [visible])
   if (!visible) return null
   const set = (v: string) => {
     localStorage.setItem('cm-cookie-consent', v)
