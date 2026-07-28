@@ -35,10 +35,31 @@ searchable. Pattern: look up context **before** the conversation; capture turns
 
 ## Data model
 
+### Agents
+
+An **agent** is a workspace inside your organization — typically one per bot or use
+case, like a support line and a sales line. Each agent has its own capture prompt,
+API keys, webhooks, and data.
+
+Agents are an isolation boundary: conversations, memories, and insights captured by
+one agent are invisible to the others. Your support agent never sees what the sales
+agent learned, unless you explicitly ask for a cross-agent view in the dashboard.
+
+<Callout type="note" title="Two meanings of “agent”">
+On this page, *agent* means a ConvoMem workspace. Elsewhere in these docs — notably
+[AI agent integration](/docs/agents) — it means *your* LLM or voice bot. Your bot
+authenticates as a ConvoMem agent by using that agent's API key.
+</Callout>
+
 ### Customers
 
-Customers are the root entity. All memories and conversations belong to one. ConvoMem
-creates a customer automatically on first contact — no explicit creation required.
+Customers are shared across your whole organization — one person is one customer
+record, no matter how many agents they talk to. ConvoMem creates a customer
+automatically on first contact — no explicit creation required.
+
+Everything hanging off that customer, though, belongs to the agent that captured it.
+If someone contacts support and later talks to sales, you get **one** customer with
+two separate conversation and memory sets.
 
 | Field | Description |
 | --- | --- |

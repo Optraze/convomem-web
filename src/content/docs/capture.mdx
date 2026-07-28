@@ -205,10 +205,14 @@ messages are processed.
 
 ## Rate limit
 
-Capture has a tighter limit than other endpoints — **20 calls/min** — because each call
-enqueues background AI work. Send a few turns per call rather than one call per message.
+Capture scales with your plan — from **100/min** on Trial up to **2,000/min** on Scale,
+and unlimited on Custom. Each agent gets that budget independently, so a busy support
+agent never eats into what your sales agent has left.
 
-See [Errors & limits](/docs/errors) for the full rate limit table and retry guidance.
+Each call enqueues background AI work, so send a few turns per call rather than one call
+per message — it costs less and produces better memories.
+
+See [Errors & limits](/docs/errors) for the per-plan table and retry guidance.
 
 ## What's next
 

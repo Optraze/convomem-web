@@ -35,20 +35,34 @@ Validation failures (`422`) include a `details` object describing the offending 
 
 ## Rate limits
 
-Limits are per-minute, counted per org API key. Every response carries an
-`X-RateLimit-Remaining` header. Exceeding a limit returns `429`.
+Limits are per-minute. Every response carries `X-RateLimit-Limit` and
+`X-RateLimit-Remaining`. Exceeding a limit returns `429` with a `Retry-After`
+header.
+
+Capture scales with your plan, and **each agent gets its own budget** — a busy
+support agent can't eat into what your sales agent has left. Both run at the
+full rate for your plan:
+
+| Plan | Capture limit, per agent |
+| :-- | :-- |
+| Trial | 100 / min |
+| Starter | 600 / min |
+| Growth | 1,000 / min |
+| Pro | 1,200 / min |
+| Scale | 2,000 / min |
+| Custom | Unlimited |
 
 | Endpoint group | Limit |
 | :-- | :-- |
-| `POST /capture`, memory ingest (`/memories/ingest`) | **20 / min** |
+| `POST /capture`, memory ingest (`/memories/ingest`) | **Your plan rate, per agent** |
 | Recall — `/customers/lookup`, `/customers/handoff`, `/customers/**/memories/lookup` | **600 / min** |
 | Everything else (customers, conversations, CRUD) | **600 / min** |
 | Public embed — `GET /embed/handoff` | 60 / min per IP |
 
 <Callout type="tip" title="Batch turns per capture">
-Capture is tighter (20/min) because each call enqueues background AI work. Send a
-few turns per capture rather than one call per message — your rate limit goes much
-further.
+Each capture call enqueues background AI work, so send a few conversation turns
+per call rather than one call per message. It costs less, goes further against
+your limit, and produces better memories than one-line captures.
 </Callout>
 
 Recall endpoints are deliberately generous (600/min) because agents call them on every

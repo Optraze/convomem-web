@@ -113,7 +113,8 @@ Create a new customer profile. You can provide any combination of identity field
 
 ## List
 
-List all customers with pagination.
+List customers with pagination. Returns the people who have talked to **your key's
+agent** — someone who only ever contacted a different agent won't appear here.
 
 <CodeTabs>
   <CodeTab language="curl" filename="Terminal">
@@ -259,7 +260,10 @@ This action cannot be undone.
 
 ## Stats
 
-Get aggregate memory and conversation statistics for your organization.
+Get aggregate memory and conversation statistics for the **agent your API key belongs
+to** — not the whole organization. Two keys bound to different agents return different
+numbers, and neither is the org-wide total. To see every agent at once, switch to the
+all-agents view in the dashboard.
 
 <CodeTabs>
   <CodeTab language="curl" filename="Terminal">
@@ -301,10 +305,10 @@ Get aggregate memory and conversation statistics for your organization.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `totalCustomers` | number | All customer profiles |
-| `totalMemories` | number | All memories across all customers |
+| `totalCustomers` | number | Customers who have talked to this agent |
+| `totalMemories` | number | This agent's memories, across those customers |
 | `avgMemories` | number | Average memories per customer |
-| `totalConversations` | number | All conversation sessions |
+| `totalConversations` | number | This agent's conversation sessions |
 | `active7d` | number | Customers with activity in the last 7 days |
 | `positive` | number | Customers with positive sentiment |
 | `neutral` | number | Customers with neutral sentiment |

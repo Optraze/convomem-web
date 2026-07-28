@@ -33,6 +33,48 @@ const client = new ConvoMem({
 ConvoMem uses `X-API-Key` header authentication, not `Authorization: Bearer`.
 </Callout>
 
+## Keys are bound to one agent
+
+Every API key belongs to exactly one **agent** — the workspace that owns a given bot
+or use case (see [the memory model](/docs/memory-model)). You choose the agent when
+you create the key, and it cannot be changed afterwards.
+
+That binding decides where your data goes and what comes back:
+
+- Captures land under that agent, and are extracted using **that agent's** capture prompt
+- Recall and lookups return only that agent's memories and conversations
+- Webhooks fire only for that agent's events
+
+So two keys behave like two separate datasets, even for the same customer:
+
+```typescript title="two-agents.ts"
+const support = new ConvoMem({ apiKey: process.env.SUPPORT_KEY! }) // support agent
+const sales   = new ConvoMem({ apiKey: process.env.SALES_KEY! })   // sales agent
+
+// Same person — one customer record shared across the organization…
+await support.capture(
+  [{ role: 'user', content: 'My bag never arrived in Lisbon.' }],
+  { email: 'jane@example.com' },
+)
+await sales.capture(
+  [{ role: 'user', content: 'What would a business class upgrade cost?' }],
+  { email: 'jane@example.com' },
+)
+
+// …but each key only ever sees its own agent's memories.
+const ctx = await support.lookup('recent issues', { email: 'jane@example.com' })
+// → the missing bag, never the upgrade enquiry
+```
+
+<Callout type="warning" title="Use the right key per bot">
+Pointing your sales bot at the support agent's key silently files its conversations
+under support and extracts them with the wrong prompt. Nothing errors — the data just
+ends up in the wrong place. Give each bot its own key.
+</Callout>
+
+If a key's agent is paused or archived in the dashboard, its captures start returning
+`403 FORBIDDEN` until the agent is active again.
+
 ## Scopes
 
 Organization API keys (`sk-org-*`) have **integration scope** and can access:

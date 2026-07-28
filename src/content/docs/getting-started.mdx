@@ -34,7 +34,14 @@ extraction, then recall context at the start of the next interaction.
 
 ## 2. Initialize
 
-Get your API key from the [dashboard](https://app.convomem.com/settings/keys).
+Create an API key from the [dashboard](https://app.convomem.com/settings/keys). Keys
+are created inside an **agent** — the workspace for one bot or use case — so pick the
+agent this integration belongs to first. New organizations start with one agent
+already created, so you can just use that.
+
+The key stays bound to that agent: everything you capture with it lands there, and
+recall only returns that agent's data. Running a support bot and a sales bot? Give
+each its own agent and its own key. See [Authentication](/docs/authentication#keys-are-bound-to-one-agent).
 
 <CodeTabs>
   <CodeTab language="typescript" filename="client.ts">
