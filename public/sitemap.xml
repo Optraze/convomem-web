@@ -34,15 +34,7 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://convomem.com/docs/getting-started</loc>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://convomem.com/docs/introduction</loc>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://convomem.com/docs/installation</loc>
+    <loc>https://convomem.com/docs/agents</loc>
     <priority>0.7</priority>
   </url>
   <url>
@@ -54,12 +46,73 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://convomem.com/docs/conversations</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://convomem.com/docs/authentication</loc>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://convomem.com/docs/webhooks</loc>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/sdk-reference</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/errors</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/introduction</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/sdk-rust</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/memories</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/getting-started</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/sdk-python</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/customers</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/capture</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/sdk-typescript</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/embed</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/handoff</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/docs/installation</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://convomem.com/changelog/v1.1.0</loc>
+    <lastmod>2026-07-28</lastmod>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://convomem.com/changelog/v1.0.0</loc>
