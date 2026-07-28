@@ -1,21 +1,32 @@
 ---
 title: "v1.1.0"
-description: "Multi-agent workspaces — run multiple use cases under one account."
+description: "Agents — run multiple bots and use cases under one account, each with its own data."
 date: "2026-07-28"
 status: "published"
 ---
 
 ## Features
 
-- **Multi-agent workspaces** — Split your account into separate workspaces per use case (support, sales, onboarding, etc.), each with its own capture prompt, PII filters, and retention window
-- **Unified customer identity** — Customers stay recognized across every workspace in your account, even as conversations and insights are scoped per workspace
-- **Per-workspace API keys** — Bind API keys to a single workspace so integrations only ever touch the data they should
-- **Cross-workspace views** — Opt into an "all agents" view on Dashboard, Customers, and Insights when you need the combined picture
+- **Agents** — Split your account into separate agents per use case (support, sales, onboarding, etc.), each with its own capture prompt, PII filters, and retention window
+- **Unified customer identity** — Customers stay recognized across every agent in your account, even as conversations, memories, and insights are scoped per agent
+- **Per-agent API keys** — Bind an API key to a single agent so an integration only ever reads and writes that agent's data
+- **Cross-agent views** — Opt into an "all agents" view on Dashboard, Customers, and Insights when you need the combined picture
+
+## Rate limits
+
+Capture now scales with your plan instead of a flat 20/min, and each agent gets its own budget — a busy support bot can't consume what your sales bot has left.
+
+- Trial: 100/min per agent
+- Starter: 600/min per agent
+- Growth: 1,000/min per agent
+- Pro: 1,200/min per agent
+- Scale: 2,000/min per agent
+- Custom: unlimited
 
 ## Plan limits
 
-- Starter: 2 workspaces
-- Growth: 5 workspaces
-- Pro: 15 workspaces
-- Scale: 50 workspaces
+- Starter: 2 agents
+- Growth: 5 agents
+- Pro: 15 agents
+- Scale: 50 agents
 - Custom: unlimited

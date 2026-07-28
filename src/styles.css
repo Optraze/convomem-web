@@ -314,6 +314,36 @@
     background: var(--muted);
     font-weight: 600;
   }
+
+  /*
+   * Compact prose for content nested under its own heading — the changelog
+   * timeline, where each entry already has a version title above it. Without
+   * this the MDX h2 ("Features") outranks the version it belongs to.
+   * Declared after .prose so it wins on source order at equal specificity.
+   */
+  .prose-compact h2 {
+    margin-top: 1.75rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .prose-compact h3 {
+    margin-top: 1.25rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.9375rem;
+  }
+  .prose-compact p,
+  .prose-compact li {
+    font-size: 0.9375rem;
+  }
+  .prose-compact ul,
+  .prose-compact ol {
+    margin-top: 0.6rem;
+    margin-bottom: 0.6rem;
+  }
 }
 
 /* ── Shiki / rehype-pretty-code code blocks ────────────────────────────── */
