@@ -1,0 +1,46 @@
+---
+title: "Next major release"
+description: "A working draft for the stability and memory-parity release."
+date: "2026-09-08"
+status: "draft"
+---
+
+This entry stays private until the full parity program and release gates are
+complete. It is updated alongside implementation so the final release notes do
+not have to be reconstructed from commits.
+
+## Memory quality and integrity
+
+- Context-aware, source-grounded extraction produces standalone memories and
+  fails closed when evidence, speaker, or references cannot be verified.
+- Customer and agent memories remain explicitly separated through extraction,
+  retrieval, and the operator UI.
+- Immutable memory versions preserve creates, edits, supersession, merge,
+  archival, and deletion history.
+- Conversation-turn provenance and lifecycle history are available directly on
+  Customer Profile.
+- Caller-owned expiry, multilingual provenance, commitments, and organization
+  category controls now have complete API and UI lifecycles.
+
+## Reviewed patterns
+
+- ConvoMem can propose repeated customer patterns only after enough evidence
+  exists across separate conversations.
+- Every proposal is linked to the exact source-memory versions used to infer it.
+- Proposed patterns remain drafts and are excluded from retrieval until a human
+  approves them. Rejected patterns remain auditable.
+- Automatic synthesis is rate- and plan-gated, uses one bounded general-model
+  request per eligible weekly run, and makes no model call when evidence is
+  insufficient.
+
+## Integration reliability
+
+- Asynchronous capture returns a pollable job ID and exposes queued, processing,
+  completed, and terminal failure states.
+- Capture and memory lifecycle webhooks use stable event IDs for consumer-side
+  deduplication.
+- Queue failures return a retryable error instead of claiming a capture was
+  accepted.
+
+More operator observability, health tooling, SDK updates, and final benchmark
+results will be added before this draft is published.
