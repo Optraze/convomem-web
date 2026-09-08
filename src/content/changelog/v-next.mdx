@@ -42,5 +42,15 @@ not have to be reconstructed from commits.
 - Queue failures return a retryable error instead of claiming a capture was
   accepted.
 
-More operator observability, health tooling, SDK updates, and final benchmark
-results will be added before this draft is published.
+## Operator observability
+
+- A privacy-safe request log records capture, lookup, memory, and pattern API
+  outcomes without storing transcripts or returned memory content.
+- Operators can isolate failed and zero-result calls, inspect effective
+  retrieval controls and latency, and review a complete lookup result set as
+  helpful, missed, or noisy.
+- Log writes are asynchronous and non-blocking, with tier-based retention capped
+  at 90 days.
+
+More health tooling, SDK updates, and final benchmark results will be added
+before this draft is published.
