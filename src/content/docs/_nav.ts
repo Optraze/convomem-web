@@ -25,7 +25,10 @@ export const docsNav: DocNavGroup[] = [
   },
   {
     group: 'Concepts',
-    items: [{ slug: 'memory-model', label: 'How it works' }],
+    items: [
+      { slug: 'memory-model', label: 'How it works' },
+      { slug: 'retrieval', label: 'Retrieving context' },
+    ],
   },
   {
     group: 'Guides',

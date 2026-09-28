@@ -42,10 +42,40 @@ const system = `You are a support agent. Known context about this customer:\n${c
 ```
 
 <Callout type="tip" title="Keep it tight">
-The lookup is capped at 10 memories / 800 tokens. Ranking weights:
-`relevance × 0.5 + importance × 0.3 + recency × 0.2`. You get high-signal context,
-not an exhaustive dump.
+The default context budget is 800 tokens and at most 20 memories. You can tighten the
+budget per request; ConvoMem returns the effective controls and actual `tokenCount` so
+your integration can observe what was applied.
 </Callout>
+
+## Retrieval controls
+
+```typescript title="controlled-recall.ts"
+const result = await client.lookup(
+  userMessage,
+  { customerId: 'cust_uuid_123' },
+  {
+    maxTokens: 500,      // clamped to 50–4,000
+    limit: 12,           // clamped to 1–20
+    threshold: 0.3,      // clamped to the supported score range
+    latestOnly: true,
+    includeAgentFacts: false,
+    explain: true,
+  },
+)
+```
+
+- `rerank` enables the optional second-stage reranker. It is off by default.
+- `latestOnly` excludes retained historical versions.
+- `referenceDate` makes temporal ranking deterministic for replay and evaluation.
+- `includeAgentFacts` opts into agent-authored commitments, actions, disclosures, and
+  guidance. Customer-authored memory remains the default scope.
+- `verify` adds a paid answerability check that may abstain when candidates do not answer
+  the topic. It is off by default and adds latency.
+- `explain` returns diagnostic score components. A component is `null` when that retrieval
+  path did not compute it; `null` does not mean a score of zero.
+
+The returned `context` is deliberately framed as untrusted customer statements, never as
+instructions. Inject it as returned and keep tool authorization in your application.
 
 ## Listing all memories
 

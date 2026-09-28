@@ -136,7 +136,7 @@ the user's message and the assistant's response in a single call.
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `message` | string | One of `message` or `messages` required | Single user message (max 10,000 chars) |
-| `messages` | array | One of `message` or `messages` required | Full conversation turns with `role` and `content` |
+| `messages` | array | One of `message` or `messages` required | Up to 200 conversation turns with `role` and `content` |
 | `customerId` | uuid | At least one identity field required | Customer UUID |
 | `externalId` | string | At least one identity field required | External system identifier |
 | `email` | string | At least one identity field required | Customer email address |
@@ -144,13 +144,23 @@ the user's message and the assistant's response in a single call.
 | `userName` | string | No | Customer display name (backfills placeholder names) |
 | `channel` | enum | No (default: `CHAT`) | `VOICE`, `CHAT`, `SMS`, or `EMAIL` |
 | `idempotencyKey` | string | No | Idempotency key (max 128 chars) |
+| `language` | string | No | BCP-47 fallback for turns without a language hint |
+| `occurredAt` | ISO 8601 | No | Source time for a historical conversation; omit for live capture |
+| `infer` | boolean | No (default: `true`) | Set `false` for raw, non-system turn capture without LLM extraction |
+| `endConversation` | boolean | No | Persist these turns, then complete the conversation and enqueue analysis |
+| `outcome` | string | No | Outcome stored when `endConversation` is `true` |
+| `escalate` | boolean | No | Persist these turns, then escalate; mutually exclusive with `endConversation` |
+| `reason` | string | No | Escalation reason when `escalate` is `true` |
+| `speakerId` | string | No | External human-agent ID when attribution is enabled |
+| `speakerName` | string | No | Human-agent display name used with `speakerId` |
 
 Each message in the `messages` array has:
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `role` | enum | Yes | `user`, `assistant`, or `system` |
-| `content` | string | Yes | The message text |
+| `role` | enum | Yes | `user`, `assistant`, `agent`, or `system` |
+| `content` | string | Yes | The message text (max 10,000 chars) |
+| `language` | string | No | BCP-47 source-language hint for this turn |
 
 ## Response
 
@@ -158,6 +168,8 @@ Each message in the `messages` array has:
 |---|---|---|
 | `conversationId` | uuid | The conversation session ID (reused across calls while session is active) |
 | `customerId` | uuid | The resolved or newly created customer ID |
+| `captureId` | uuid | Pollable extraction job ID |
+| `captureStatus` | string | Initial status: `queued` |
 | `status` | enum | `new` if a new conversation was started, `active` if appended to an existing session |
 | `isNewConversation` | boolean | `true` when this call started a new conversation session |
 | `isNewCustomer` | boolean | `true` when the customer was created by this call |
@@ -171,6 +183,25 @@ instead of re-processing. Use a stable key per turn — e.g.
 If a request with that key is still in flight, you get `409 IDEMPOTENCY_IN_PROGRESS`.
 Wait 1–2 seconds and retry with the same key.
 </Callout>
+
+## Poll capture status
+
+Use the returned `captureId` when your workflow must wait for memories before the next
+step. A capture moves through `queued`, `processing`, and `completed`; a terminal error is
+reported as `failed` with a stable public error message.
+
+```bash
+curl -H "X-API-Key: $CONVOMEM_API_KEY" \
+  "https://api.convomem.com/api/v1/capture/$CAPTURE_ID"
+```
+
+```typescript
+const status = await client.getCaptureStatus(result.captureId)
+```
+
+Do not close a conversation in a second request immediately after capture. When the last
+turn is already known, send `endConversation: true` or `escalate: true` on the capture so
+ConvoMem preserves the ordering: transcript, memories, conversation state, then analysis.
 
 ## Identity resolution
 
@@ -209,8 +240,10 @@ Capture scales with your plan — from **100/min** on Trial up to **2,000/min** 
 and unlimited on Custom. Each agent gets that budget independently, so a busy support
 agent never eats into what your sales agent has left.
 
-Each call enqueues background AI work, so send a few turns per call rather than one call
-per message — it costs less and produces better memories.
+Each call enqueues background AI work. Send the new turns since the prior capture in
+chronological order. ConvoMem preserves legitimate repeated utterances; use a stable
+`idempotencyKey` to identify network retries instead of deduplicating message text in your
+integration.
 
 See [Errors & limits](/docs/errors) for the per-plan table and retry guidance.
 

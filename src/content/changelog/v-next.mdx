@@ -11,8 +11,20 @@ not have to be reconstructed from commits.
 
 ## Memory quality and integrity
 
-- Context-aware, source-grounded extraction produces standalone memories and
-  fails closed when evidence, speaker, or references cannot be verified.
+- Context-aware extraction now separates earlier resolution context from new
+  source turns. New memories must cite an exact source quote, carry grounded
+  anchors when context is required, agree with the transcript speaker, and be
+  independently usable; ambiguous candidates are repaired in one bounded batch
+  or dropped.
+- Capture transcript writes no longer deduplicate turns by text. A later
+  legitimate `Yes`, `No`, or repeated statement remains a new turn, while
+  request-level idempotency identifies real retries.
+- Per-customer capture locking now renews ownership during long model calls and
+  fails for queue retry if ownership cannot be acquired or is lost. It never
+  continues unlocked, and it does not hold a PostgreSQL connection across the
+  model call.
+- Public conversation responses strip private capture provenance markers used
+  to recover exact absolute source indices.
 - Customer and agent memories remain explicitly separated through extraction,
   retrieval, and the operator UI.
 - Immutable memory versions preserve creates, edits, supersession, merge,
@@ -37,10 +49,29 @@ not have to be reconstructed from commits.
 
 - Asynchronous capture returns a pollable job ID and exposes queued, processing,
   completed, and terminal failure states.
+- A capture accepts at most 200 turns and 10,000 characters per turn. These
+  bounds are enforced on both public capture entry points.
 - Capture and memory lifecycle webhooks use stable event IDs for consumer-side
   deduplication.
 - Queue failures return a retryable error instead of claiming a capture was
   accepted.
+- The official TypeScript, Python, and Rust SDKs now share the same exact public
+  Integration API contract. Dashboard-only analytics, exports, request logs,
+  health, and administration APIs remain intentionally excluded.
+- A hosted Streamable HTTP MCP endpoint exposes six authenticated,
+  customer-scoped capture, status, lookup, search, list, and handoff tools. It
+  reuses the REST authorization boundary and does not enumerate a tenant.
+
+## Retrieval and lifecycle controls
+
+- Per-request recall controls cover result limit, context-token budget,
+  threshold, optional reranking, latest-only reads, deterministic reference
+  time, agent-fact opt-in, answerability verification, and score diagnostics.
+- Multilingual source provenance and temporal event metadata survive capture,
+  storage, retrieval, the SDKs, and operator views.
+- Caller-owned expiry, immutable memory versions, supersession history, and
+  evidence-linked pattern review keep active recall separate from retained
+  audit history.
 
 ## Operator observability
 
@@ -74,5 +105,6 @@ not have to be reconstructed from commits.
   findings remain review-only and are never presented as proof that content is
   missing.
 
-More health tooling, SDK updates, and final benchmark results will be added
-before this draft is published.
+This remains an unpublished draft. The final entry will include only results
+from the frozen release-candidate protocol; current quality diagnostics and
+competitor comparisons are intentionally excluded until that gate passes.

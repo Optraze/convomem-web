@@ -17,9 +17,9 @@ capture()  →  extract  →  store  →  lookup()
 creates the customer, associates turns with the active conversation session, and enqueues
 them for extraction. The response is immediate.
 
-**2. Extract** — An AI pipeline reads the turns and emits structured memories: facts in
-natural language, each scored for confidence, durability, and category. PII is detected
-and masked before anything is written to storage.
+**2. Extract** — An AI pipeline reads a bounded history window plus the new source turns.
+Each candidate must cite a new source turn, preserve its speaker, and be independently
+usable. Unsupported, unresolved, or unsafe candidates fail closed before persistence.
 
 **3. Store** — Memories are indexed for semantic search, linked to the customer, and
 available within a few seconds of capture.
@@ -81,13 +81,18 @@ Memories are atomic facts extracted from conversation turns.
 | `confidence` | 0–1 extraction confidence |
 | `durability` | How long this memory is expected to stay valid |
 | `relevance` | Per-query relevance score (set at lookup time) |
+| `speaker` | `customer` or `agent`; agent facts require explicit lookup opt-in |
+| `messageIndex` | Absolute source-turn index used for provenance |
+| `sourceContext` | Deterministic source and resolution context for audit |
+| `memoryType` | `fact`, `preference`, `intent`, `decision`, `context`, `episodic`, `procedural`, `relationship`, `commitment`, or `pattern` |
 
 **Durability scoring** — "Prefers email over phone" is durable. "Asking about order
 #4471" is ephemeral. Durability lets retrieval weight long-lived context higher and age
 out transient facts automatically.
 
-**Lookup ranking** — Memories are ranked by `relevance × 0.5 + importance × 0.3 +
-recency × 0.2`, capped at 10 memories / 800 tokens per lookup.
+**Lookup ranking** — Semantic, keyword, temporal, importance, and lifecycle signals rank
+the candidate set. The default response is capped at 20 memories / 800 tokens; bounded
+per-request controls let an integration use a smaller context window.
 
 ### Conversations
 
@@ -129,9 +134,11 @@ updating the customer record with all fields.
 
 ## PII redaction
 
-Before any memory is persisted, ConvoMem detects and replaces emails, phone numbers, card
-numbers, SSNs, and other sensitive patterns with typed placeholders. The original values
-are never written to storage.
+Before any extracted memory is persisted, ConvoMem applies mandatory secret filtering and
+the organization's configured sensitive-data policy. Depending on policy, recognized
+values are masked with typed placeholders or the candidate is dropped. Conversation
+transcripts have their own retention and access controls; memory filtering is not a
+substitute for avoiding unnecessary sensitive input.
 
 Examples: `alice@example.com` → `[EMAIL]`, `4111 1111 1111 1111` → `[CARD_NUMBER]`.
 

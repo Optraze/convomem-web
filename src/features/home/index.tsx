@@ -38,10 +38,10 @@ import { useActiveSection } from './hooks/use-active-section'
 const trustItems = ['7-day trial', 'No card', 'On-prem on Custom'] as const
 
 const heroStats = [
-  { value: '∞', label: 'memory / customer' },
   { value: '4', label: 'channels unified' },
-  { value: '<20ms', label: 'to recall · p95' },
-  { value: '0', label: 'vendor lock-in' },
+  { value: '20', label: 'memories / recall' },
+  { value: '3', label: 'official SDKs' },
+  { value: '1', label: 'customer timeline' },
 ] as const
 
 const pipelineSignal = [
@@ -312,95 +312,95 @@ export function Home() {
             {enterprisePlans
               .filter((plan) => plan.price !== null)
               .map((plan) => {
-              const hi = plan.highlighted
-              return (
-                <div
-                  key={plan.name}
-                  className={`relative flex flex-col p-6 ${
-                    hi ? 'bg-foreground text-background' : 'bg-background'
-                  }`}
-                >
-                  {hi && (
-                    <span className="absolute top-6 right-6 font-mono text-[9px] tracking-[0.18em] text-background/70 uppercase">
-                      popular
-                    </span>
-                  )}
-                  <h3
-                    className={`font-semibold text-sm ${
-                      hi ? 'text-background' : 'text-foreground'
+                const hi = plan.highlighted
+                return (
+                  <div
+                    key={plan.name}
+                    className={`relative flex flex-col p-6 ${
+                      hi ? 'bg-foreground text-background' : 'bg-background'
                     }`}
                   >
-                    {plan.name}
-                  </h3>
-                  <p
-                    className={`mt-1 text-xs ${
-                      hi ? 'text-background/70' : 'text-muted-foreground'
-                    }`}
-                  >
-                    {plan.description}
-                  </p>
-                  <div className="mt-5 mb-5">
-                    {plan.price !== null ? (
-                      <>
+                    {hi && (
+                      <span className="absolute top-6 right-6 font-mono text-[9px] tracking-[0.18em] text-background/70 uppercase">
+                        popular
+                      </span>
+                    )}
+                    <h3
+                      className={`font-semibold text-sm ${
+                        hi ? 'text-background' : 'text-foreground'
+                      }`}
+                    >
+                      {plan.name}
+                    </h3>
+                    <p
+                      className={`mt-1 text-xs ${
+                        hi ? 'text-background/70' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {plan.description}
+                    </p>
+                    <div className="mt-5 mb-5">
+                      {plan.price !== null ? (
+                        <>
+                          <span
+                            className={`tnum font-mono ${
+                              hi ? 'text-background' : 'text-foreground'
+                            }`}
+                          >
+                            <span className="font-semibold text-[34px] tracking-[-0.04em]">
+                              ${plan.price}
+                            </span>
+                          </span>
+                          <span
+                            className={`ml-1 text-[13px] ${
+                              hi ? 'text-background/65' : 'text-hint/90'
+                            }`}
+                          >
+                            /{plan.period}
+                          </span>
+                        </>
+                      ) : (
                         <span
-                          className={`tnum font-mono ${
+                          className={`font-mono font-semibold text-[26px] tracking-[-0.03em] ${
                             hi ? 'text-background' : 'text-foreground'
                           }`}
                         >
-                          <span className="font-semibold text-[34px] tracking-[-0.04em]">
-                            ${plan.price}
+                          Custom
+                        </span>
+                      )}
+                    </div>
+                    <ul className="mb-6 flex-1 space-y-2">
+                      {plan.features.map((f) => (
+                        <li key={f} className="flex items-start gap-2">
+                          <Check
+                            size={12}
+                            className={`mt-0.5 shrink-0 ${
+                              hi ? 'text-background/70' : 'text-foreground'
+                            }`}
+                          />
+                          <span
+                            className={`text-xs leading-normal ${
+                              hi ? 'text-background/75' : 'text-subtle'
+                            }`}
+                          >
+                            {f}
                           </span>
-                        </span>
-                        <span
-                          className={`ml-1 text-[13px] ${
-                            hi ? 'text-background/65' : 'text-hint/90'
-                          }`}
-                        >
-                          /{plan.period}
-                        </span>
-                      </>
-                    ) : (
-                      <span
-                        className={`font-mono font-semibold text-[26px] tracking-[-0.03em] ${
-                          hi ? 'text-background' : 'text-foreground'
-                        }`}
-                      >
-                        Custom
-                      </span>
-                    )}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      to="/contact"
+                      className={`mt-auto inline-flex h-10 w-full items-center justify-center rounded-md px-4 font-medium text-[13px] transition-opacity hover:opacity-90 active:scale-[0.98] ${
+                        hi
+                          ? 'bg-background text-foreground'
+                          : 'bg-foreground text-background'
+                      }`}
+                    >
+                      {plan.cta}
+                    </Link>
                   </div>
-                  <ul className="mb-6 flex-1 space-y-2">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2">
-                        <Check
-                          size={12}
-                          className={`mt-0.5 shrink-0 ${
-                            hi ? 'text-background/70' : 'text-foreground'
-                          }`}
-                        />
-                        <span
-                          className={`text-xs leading-normal ${
-                            hi ? 'text-background/75' : 'text-subtle'
-                          }`}
-                        >
-                          {f}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    to="/contact"
-                    className={`mt-auto inline-flex h-10 w-full items-center justify-center rounded-md px-4 font-medium text-[13px] transition-opacity hover:opacity-90 active:scale-[0.98] ${
-                      hi
-                        ? 'bg-background text-foreground'
-                        : 'bg-foreground text-background'
-                    }`}
-                  >
-                    {plan.cta}
-                  </Link>
-                </div>
-              )
-            })}
+                )
+              })}
           </div>
 
           {enterprisePlans

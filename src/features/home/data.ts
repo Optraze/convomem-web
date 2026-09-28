@@ -102,7 +102,7 @@ export const enterprisePlans = [
 export const capabilities = [
   {
     term: 'Memory capture',
-    desc: 'Facts are extracted from every conversation as it happens — no manual tagging, no schemas to maintain.',
+    desc: 'Context-aware facts are grounded to source turns, attributed to the right speaker, and processed through a pollable async capture job.',
     tag: 'voice · chat · sms · email',
   },
   {
@@ -111,19 +111,19 @@ export const capabilities = [
     tag: 'cross-channel',
   },
   {
-    term: 'Sentiment & signals',
-    desc: 'Buying intent, complaints, and churn risk surface the moment they appear in a conversation.',
-    tag: 'real-time',
+    term: 'Controlled recall',
+    desc: 'Semantic, keyword, temporal, and lifecycle signals rank a bounded context block with caller-set limits and optional diagnostics.',
+    tag: '20 memories · 800 tokens',
   },
   {
-    term: 'Knowledge graph',
-    desc: 'A living map of every relationship — who said what, when, and how it connects to everything else.',
-    tag: 'queryable',
+    term: 'Memory lifecycle',
+    desc: 'Versions, provenance, expiry, supersession, reviewable patterns, and commitment state stay visible without leaking stale rows into recall.',
+    tag: 'auditable',
   },
   {
     term: 'PII redaction',
-    desc: 'Sensitive data is detected and masked before anything is written to storage. On by default.',
-    tag: 'automatic',
+    desc: 'Mandatory secrets are dropped, while organization policy can mask or reject recognized sensitive memory candidates before persistence.',
+    tag: 'policy controlled',
   },
   {
     term: 'Analytics & insights',
@@ -131,9 +131,9 @@ export const capabilities = [
     tag: 'natural language',
   },
   {
-    term: 'Multi-agent workspaces',
-    desc: 'Run support, sales, and any other use case as separate workspaces under one account — each with its own capture prompt, PII rules, and retention window, while customer identity stays unified across all of them.',
-    tag: 'per-workspace config',
+    term: 'Integration surfaces',
+    desc: 'Use the REST API, hosted MCP tools, webhooks, embeds, or the official TypeScript, Python, and Rust SDKs without exposing operator-only APIs.',
+    tag: 'rest · mcp · sdk',
   },
   {
     term: 'Lead Playbooks',

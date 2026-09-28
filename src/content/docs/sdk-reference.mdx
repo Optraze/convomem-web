@@ -50,6 +50,7 @@ Use this for all new integrations.
 | Method | Description |
 | --- | --- |
 | `capture(messages, identity, options?)` | Send conversation turns for background extraction |
+| `getCaptureStatus(captureId)` | Poll queued, processing, completed, or failed capture state |
 | `lookup(topic, identity, options?)` | Recall relevant memories as a ready-to-use context string |
 | `listMemories(identity, options?)` | Page through all memories for a customer |
 | `addMemory(content, identity, options?)` | Write a memory directly (synchronous, no extraction lag) |
@@ -65,9 +66,6 @@ Use this for all new integrations.
 | `listCustomers(options?)` | List all customers with pagination and filters |
 | `updateCustomer(identity, data)` | Update customer fields (metadata is merged) |
 | `deleteCustomer(identity)` | Delete a customer and all their data |
-| `getStats(options?)` | Aggregate memory and conversation stats for the org |
-| `listMergeCandidates()` | List profiles flagged as potential duplicates |
-| `dismissMergeCandidate(customerId, candidateId)` | Mark a duplicate pair as a false positive |
 
 ### Conversation methods
 
@@ -84,6 +82,10 @@ Use this for all new integrations.
 | --- | --- |
 | `getHandoff(identity, options?)` | Full cross-channel briefing for a human takeover |
 | `createEmbedToken(identity, options?)` | Mint a short-lived browser token |
+
+The SDK also exposes public handoff-destination and routing operations from the Integration
+API. Dashboard-only analytics, exports, request logs, memory health, organization settings,
+entities, insights, and webhook administration are intentionally not shipped in the SDK.
 
 ## ConvoMemClient (advanced)
 
