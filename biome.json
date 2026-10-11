@@ -13,6 +13,7 @@
       "!**/dist",
       "!**/.output",
       "!**/.tanstack",
+      "!**/.zed",
       "!**/routeTree.gen.ts"
     ]
   },

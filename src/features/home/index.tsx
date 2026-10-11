@@ -235,6 +235,11 @@ export function Home() {
             <br className="hidden sm:block" /> assembled automatically.
           </SectionHeading>
 
+          <p className="mb-8 max-w-2xl text-muted-foreground text-sm leading-relaxed">
+            Next-release scope, currently under final validation. The new SDK
+            contract and hosted MCP support are not yet a published release.
+          </p>
+
           <ul className="border-t border-border">
             {capabilities.map((c, i) => (
               <motion.li

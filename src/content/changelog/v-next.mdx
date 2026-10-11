@@ -27,6 +27,9 @@ not have to be reconstructed from commits.
   to recover exact absolute source indices.
 - Customer and agent memories remain explicitly separated through extraction,
   retrieval, and the operator UI.
+- Human-agent memory capture is a separate, default-off workspace-agent setting.
+  Enabling named-representative attribution does not silently opt into storing
+  human-authored memories; transcripts and customer/bot behavior are preserved.
 - Immutable memory versions preserve creates, edits, supersession, merge,
   archival, and deletion history.
 - Conversation-turn provenance and lifecycle history are available directly on
@@ -58,6 +61,8 @@ not have to be reconstructed from commits.
 - The official TypeScript, Python, and Rust SDKs now share the same exact public
   Integration API contract. Dashboard-only analytics, exports, request logs,
   health, and administration APIs remain intentionally excluded.
+- SDK integration tests require an explicitly selected isolated API target and
+  credentials; skipped live tests are not reported as runtime verification.
 - A hosted Streamable HTTP MCP endpoint exposes six authenticated,
   customer-scoped capture, status, lookup, search, list, and handoff tools. It
   reuses the REST authorization boundary and does not enumerate a tenant.
@@ -75,6 +80,15 @@ not have to be reconstructed from commits.
 
 ## Operator observability
 
+- Deleting an import record preserves imported customers, conversations, and
+  memories. Ambiguous destructive rollback is rejected rather than deleting
+  unrelated customer data.
+- Retained analytics writes are fenced against customer erasure. Safely linked
+  derived records are withdrawn; unknown legacy/shared ownership returns a
+  reviewable conflict instead of silently wiping shared data.
+- Complaint summary prose and linked audit content are withdrawn when their
+  exact source evidence is changed or erased; surviving complaints remain
+  available for evidence-checked regrouping.
 - A privacy-safe request log records capture, lookup, memory, and pattern API
   outcomes without storing transcripts or returned memory content.
 - Operators can isolate failed and zero-result calls, inspect effective

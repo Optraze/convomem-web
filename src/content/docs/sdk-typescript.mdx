@@ -7,6 +7,11 @@ status: "published"
 The ConvoMem TypeScript SDK works in Node.js, Deno, Bun, and edge runtimes. Published to
 JSR as `@optraze/convomem-sdk`.
 
+<Callout type="info" title="Release-candidate documentation">
+These examples target the upcoming SDK 0.3.0 contract. Publication is a separate
+release gate; installing from a registry does not guarantee this unreleased version.
+</Callout>
+
 ## Install
 
 ```bash
@@ -50,6 +55,7 @@ Use this for all new integrations.
 | Method | Description |
 | --- | --- |
 | `capture(messages, identity, options?)` | Send conversation turns for background extraction |
+| `getCaptureStatus(captureId)` | Poll queued, processing, completed, or failed capture state |
 | `lookup(topic, identity, options?)` | Recall relevant memories as a ready-to-use context string |
 | `listMemories(identity, options?)` | Page through all memories for a customer |
 | `addMemory(content, identity, options?)` | Write a memory directly (synchronous, no extraction lag) |
@@ -64,10 +70,7 @@ Use this for all new integrations.
 | `getCustomer(identity)` | Get a customer by any identity field |
 | `listCustomers(options?)` | List all customers with pagination and filters |
 | `updateCustomer(identity, data)` | Update customer fields (metadata is merged) |
-| `deleteCustomer(identity)` | Delete a customer and all their data |
-| `getStats(options?)` | Aggregate memory and conversation stats for the org |
-| `listMergeCandidates()` | List profiles flagged as potential duplicates |
-| `dismissMergeCandidate(customerId, candidateId)` | Mark a duplicate pair as a false positive |
+| `deleteCustomer(identity)` | Request permanent customer erasure; unresolved retained sources can return a conflict |
 
 ### Conversation methods
 
@@ -84,6 +87,24 @@ Use this for all new integrations.
 | --- | --- |
 | `getHandoff(identity, options?)` | Full cross-channel briefing for a human takeover |
 | `createEmbedToken(identity, options?)` | Mint a short-lived browser token |
+
+The SDK also exposes public handoff-destination and routing operations from the Integration
+API. Dashboard-only analytics, exports, request logs, memory health, organization settings,
+entities, insights, and webhook administration are intentionally not shipped in the SDK.
+
+## Capture completion
+
+```typescript
+const accepted = await client.capture(
+  [{ role: 'user', content: 'I prefer email contact' }],
+  { email: 'alice@example.com' },
+)
+const status = await client.getCaptureStatus(accepted.captureId)
+console.log(status.status) // queued, processing, completed, or failed
+```
+
+Acceptance is not extraction completion. Poll with a bounded delay and timeout;
+do not interpret a failed or still-processing capture as an empty memory result.
 
 ## ConvoMemClient (advanced)
 
@@ -170,9 +191,7 @@ import type {
   Conversation,
   HandoffResponse,
   EmbedTokenResponse,
-  CustomerStats,
-  MergeCandidate,
-} from '@optraze/convomem-sdk'
+} from '@optraze/convomem-sdk/types'
 ```
 
 ## Other SDKs

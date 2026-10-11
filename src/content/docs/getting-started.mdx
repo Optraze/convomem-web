@@ -108,8 +108,8 @@ identity field you provide — no explicit customer creation needed.
 
   client.capture(&CaptureRequest {
       messages: Some(vec![
-          Message { role: "user".into(), content: "Hi, I need help with my subscription. I am on the Pro plan.".into() },
-          Message { role: "assistant".into(), content: "Of course! What do you need?".into() },
+          Message { role: "user".into(), content: "Hi, I need help with my subscription. I am on the Pro plan.".into(), ..Default::default() },
+          Message { role: "assistant".into(), content: "Of course! What do you need?".into(), ..Default::default() },
       ]),
       email: Some("alice@example.com".into()),
       channel: Some("CHAT".into()),
@@ -136,8 +136,9 @@ identity field you provide — no explicit customer creation needed.
 
 ## 4. Recall context
 
-Memory extraction happens in the background. A few seconds later — or at the start of the
-next conversation — look up the relevant context:
+Memory extraction happens in the background. Poll the returned capture ID until
+it is completed before testing extraction. In later conversations, look up the
+relevant context:
 
 <CodeTabs>
   <CodeTab language="typescript" filename="lookup.ts">
@@ -154,7 +155,12 @@ next conversation — look up the relevant context:
   </CodeTab>
   <CodeTab language="python" filename="lookup.py">
   ```python
-  result = client.memories.lookup("alice@example.com", "subscription and plan details")
+  from convomem import MemoryLookupParams
+
+  result = client.memories.lookup_by_identity(MemoryLookupParams(
+      email="alice@example.com",
+      topic="subscription and plan details",
+  ))
 
   print(f"Context: {result.context}")
   print(f"Memories: {len(result.memories)}")
@@ -162,7 +168,13 @@ next conversation — look up the relevant context:
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  let result = client.lookup_memories("alice@example.com", "subscription and plan details").await?;
+  use convomem::MemoryLookupParams;
+
+  let result = client.lookup_memories_by_identity(&MemoryLookupParams {
+      email: Some("alice@example.com".into()),
+      topic: "subscription and plan details".into(),
+      ..Default::default()
+  }).await?;
 
   println!("Context: {}", result.context);
   println!("Memories: {}", result.memories.len());
@@ -236,5 +248,5 @@ after capture.
 - [How it works](/docs/memory-model) — extraction pipeline, identity routing, durability scoring
 - [Capture](/docs/capture) — advanced options, idempotency, channel types
 - [Memories](/docs/memories) — browse, add, update, and delete memories
-- [Customers](/docs/customers) — manage profiles, stats, and duplicates
+- [Customers](/docs/customers) — resolve identities and manage customer profiles
 - [Handoff](/docs/handoff) — briefings for human agent takeover

@@ -175,7 +175,7 @@ Retrieve a single customer by ID.
   <CodeTab language="rust" filename="main.rs">
   ```rust
   let customer = client.get_customer("cust_123").await?;
-  println!("{} {:?}", customer.name, customer.email);
+  println!("{:?} {:?}", customer.name, customer.email);
   ```
   </CodeTab>
 </CodeTabs>
@@ -227,7 +227,8 @@ Update customer fields. Only provided fields are changed.
 
 ## Delete
 
-Delete a customer and all associated data. This cannot be undone.
+Request permanent erasure of a customer and their owned conversations and memories.
+Check the HTTP response before treating the request as complete.
 
 <CodeTabs>
   <CodeTab language="curl" filename="Terminal">
@@ -254,118 +255,16 @@ Delete a customer and all associated data. This cannot be undone.
 </CodeTabs>
 
 <Callout type="danger" title="Permanent deletion">
-Deleting a customer removes all their conversations, memories, and associated data.
-This action cannot be undone.
+Successful erasure cannot be undone. If retained analytics, shared evidence, or an
+unexpired export cannot be safely attributed, the API returns `409` and preserves
+the customer's data for operator review. Do not treat this conflict as success or
+retry it in a tight loop. Previously downloaded files and copies held by your own
+integrations are outside ConvoMem's deletion boundary.
 </Callout>
 
-## Stats
-
-Get aggregate memory and conversation statistics for the **agent your API key belongs
-to** — not the whole organization. Two keys bound to different agents return different
-numbers, and neither is the org-wide total. To see every agent at once, switch to the
-all-agents view in the dashboard.
-
-<CodeTabs>
-  <CodeTab language="curl" filename="Terminal">
-  ```bash
-  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "https://api.convomem.com/api/v1/customers/stats"
-  ```
-  </CodeTab>
-  <CodeTab language="typescript" filename="stats.ts">
-  ```typescript
-  const stats = await client.getStats({ from: '2026-01-01' })
-
-  console.log('Total customers:', stats.totalCustomers)
-  console.log('Total memories:', stats.totalMemories)
-  console.log('Active last 7d:', stats.active7d)
-  console.log('Sentiment split:', stats.positive, stats.neutral, stats.negative)
-  ```
-  </CodeTab>
-  <CodeTab language="python" filename="stats.py">
-  ```python
-  stats = client.customers.get_stats(from_date="2026-01-01")
-
-  print(f"Total customers: {stats.total_customers}")
-  print(f"Total memories: {stats.total_memories}")
-  print(f"Active last 7d: {stats.active_7d}")
-  ```
-  </CodeTab>
-  <CodeTab language="rust" filename="main.rs">
-  ```rust
-  let stats = client.get_customer_stats(Some("2026-01-01"), None).await?;
-
-  println!("Total customers: {}", stats.total_customers);
-  println!("Total memories: {}", stats.total_memories);
-  ```
-  </CodeTab>
-</CodeTabs>
-
-**Stats fields:**
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `totalCustomers` | number | Customers who have talked to this agent |
-| `totalMemories` | number | This agent's memories, across those customers |
-| `avgMemories` | number | Average memories per customer |
-| `totalConversations` | number | This agent's conversation sessions |
-| `active7d` | number | Customers with activity in the last 7 days |
-| `positive` | number | Customers with positive sentiment |
-| `neutral` | number | Customers with neutral sentiment |
-| `negative` | number | Customers with negative sentiment |
-
-## Merge candidates
-
-ConvoMem detects customer profiles that may be duplicates and flags them for review.
-
-<CodeTabs>
-  <CodeTab language="curl" filename="Terminal">
-  ```bash
-  # List candidates
-  curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "https://api.convomem.com/api/v1/customers/merge-candidates"
-
-  # Dismiss a false positive
-  curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "https://api.convomem.com/api/v1/customers/cust_123/merge-candidates/cust_456/dismiss"
-  ```
-  </CodeTab>
-  <CodeTab language="typescript" filename="merge.ts">
-  ```typescript
-  const candidates = await client.listMergeCandidates()
-
-  for (const { customer, candidate, similarity } of candidates) {
-    console.log(`${customer.email} ↔ ${candidate.email} (${similarity?.toFixed(2)})`)
-  }
-
-  // Dismiss a false positive
-  await client.dismissMergeCandidate('cust_123', 'cust_456')
-  ```
-  </CodeTab>
-  <CodeTab language="python" filename="merge.py">
-  ```python
-  candidates = client.customers.list_merge_candidates()
-
-  for c in candidates:
-      print(f"{c.customer.email} ↔ {c.candidate.email} ({c.similarity:.2f})")
-
-  # Dismiss
-  client.customers.dismiss_merge_candidate("cust_123", "cust_456")
-  ```
-  </CodeTab>
-  <CodeTab language="rust" filename="main.rs">
-  ```rust
-  let candidates = client.list_merge_candidates().await?;
-
-  for c in &candidates {
-      println!("{:?} ↔ {:?}", c.customer.email, c.candidate.email);
-  }
-
-  // Dismiss
-  client.dismiss_merge_candidate("cust_123", "cust_456").await?;
-  ```
-  </CodeTab>
-</CodeTabs>
+Customer statistics and duplicate-profile review are dashboard workflows, not
+public SDK operations. The integration contract focuses on identity resolution,
+customer CRUD, conversation capture, recall, and handoff.
 
 ## Handoff
 

@@ -4,7 +4,12 @@ description: "Install, initialize, and use the ConvoMem Python SDK."
 status: "published"
 ---
 
-The ConvoMem Python SDK supports Python 3.9+ with both sync and async clients.
+The ConvoMem Python SDK supports Python 3.11+ with both sync and async clients.
+
+<Callout type="info" title="Release-candidate documentation">
+These examples target the upcoming SDK 0.3.0 contract. Publication is a separate
+release gate; installing from a registry does not guarantee this unreleased version.
+</Callout>
 
 ## Install
 
@@ -64,12 +69,12 @@ identity = CustomerIdentity(external_id="crm-456")
 
 ## Capture
 
-Send conversation turns for background memory extraction. Fire-and-forget —
-memories become searchable within seconds.
+Send conversation turns for background memory extraction. Acceptance is not
+completion: poll the returned capture ID before checking extracted memories.
 
 ```python
 client.capture(
-    messages=[
+    [
         {"role": "user",      "content": "I need help with my order"},
         {"role": "assistant", "content": "Of course, let me look that up."},
     ],
@@ -77,6 +82,18 @@ client.capture(
     channel="CHAT",
 )
 ```
+
+```python
+result = client.capture(
+    [{"role": "user", "content": "I prefer email contact"}],
+    CustomerIdentity(email="alice@example.com"),
+)
+status = client.get_capture_status(result.capture_id)
+print(status.status)  # queued, processing, completed, or failed
+```
+
+Use bounded polling with a delay and timeout. A failed capture needs investigation;
+it is not evidence that the customer has no memories.
 
 ## Look up context
 
@@ -98,9 +115,9 @@ for mem in ctx.memories:
 ```python
 from convomem import ConvoMem, CustomerIdentity
 
-client = ConvoMem(api_key="sk-org-…")
+client = ConvoMem(api_key=os.environ["CONVOMEM_API_KEY"])
 
-def handle_message(user_msg: str, email: str, conv_id: str | None = None):
+def handle_message(user_msg: str, email: str):
     identity = CustomerIdentity(email=email)
 
     # 1. Recall context
@@ -111,7 +128,7 @@ def handle_message(user_msg: str, email: str, conv_id: str | None = None):
 
     # 3. Capture the turns
     result = client.capture(
-        messages=[
+        [
             {"role": "user",      "content": user_msg},
             {"role": "assistant", "content": reply},
         ],
@@ -176,11 +193,6 @@ updated = client.update_customer(
 # List
 result = client.list_customers(page=1, limit=20)
 print(f"{len(result.customers)} of {result.total}")
-
-# Stats
-stats = client.get_stats()
-print(f"Total customers: {stats.total_customers}")
-print(f"Total memories:  {stats.total_memories}")
 
 # Delete
 client.delete_customer(CustomerIdentity(customer_id="cust_uuid_123"))
@@ -290,7 +302,7 @@ For advanced use cases (webhook integrations, raw resource access) you can use
 ```python
 from convomem import ConvoMemClient, CaptureRequest, Message
 
-client = ConvoMemClient(api_key="sk-org-…")
+client = ConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
 
 result = client.capture(CaptureRequest(
     messages=[Message(role="user", content="Hello")],

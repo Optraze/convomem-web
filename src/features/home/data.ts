@@ -122,7 +122,7 @@ export const capabilities = [
   },
   {
     term: 'PII redaction',
-    desc: 'Mandatory secrets are dropped, while organization policy can mask or reject recognized sensitive memory candidates before persistence.',
+    desc: 'Mandatory secrets are dropped, while the configured agent policy can mask or reject recognized sensitive memory candidates before persistence.',
     tag: 'policy controlled',
   },
   {

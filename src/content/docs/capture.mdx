@@ -86,6 +86,7 @@ the user's message and the assistant's response in a single call.
         { "role": "user", "content": "What is my current plan?" },
         { "role": "assistant", "content": "You are on the Pro plan at $49/mo." }
       ],
+      "email": "user@example.com",
       "channel": "VOICE"
     }'
   ```
@@ -111,6 +112,7 @@ the user's message and the assistant's response in a single call.
           Message(role="user", content="What is my current plan?"),
           Message(role="assistant", content="You are on the Pro plan at $49/mo."),
       ],
+      email="user@example.com",
       channel="VOICE",
   ))
   ```
@@ -121,9 +123,10 @@ the user's message and the assistant's response in a single call.
 
   let result = client.capture(&CaptureRequest {
       messages: Some(vec![
-          Message { role: "user".into(), content: "What is my current plan?".into() },
-          Message { role: "assistant".into(), content: "You are on the Pro plan at $49/mo.".into() },
+          Message { role: "user".into(), content: "What is my current plan?".into(), ..Default::default() },
+          Message { role: "assistant".into(), content: "You are on the Pro plan at $49/mo.".into(), ..Default::default() },
       ]),
+      email: Some("user@example.com".into()),
       channel: Some("VOICE".into()),
       ..Default::default()
   }).await?;

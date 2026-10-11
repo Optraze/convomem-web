@@ -7,6 +7,11 @@ status: "published"
 The ConvoMem TypeScript SDK works in Node.js, Deno, Bun, and edge runtimes. Published to
 JSR as `@optraze/convomem-sdk`.
 
+<Callout type="info" title="Release-candidate documentation">
+These examples target the upcoming SDK 0.3.0 contract. Publication is a separate
+release gate; installing from a registry does not guarantee this unreleased version.
+</Callout>
+
 ## Install
 
 ```bash
@@ -65,7 +70,7 @@ Use this for all new integrations.
 | `getCustomer(identity)` | Get a customer by any identity field |
 | `listCustomers(options?)` | List all customers with pagination and filters |
 | `updateCustomer(identity, data)` | Update customer fields (metadata is merged) |
-| `deleteCustomer(identity)` | Delete a customer and all their data |
+| `deleteCustomer(identity)` | Request permanent customer erasure; unresolved retained sources can return a conflict |
 
 ### Conversation methods
 
@@ -172,9 +177,7 @@ import type {
   Conversation,
   HandoffResponse,
   EmbedTokenResponse,
-  CustomerStats,
-  MergeCandidate,
-} from '@optraze/convomem-sdk'
+} from '@optraze/convomem-sdk/types'
 ```
 
 ## Other SDKs

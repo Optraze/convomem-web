@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 
-import { LanguageProvider } from '@/components/mdx/code-tabs'
 import { CopyMarkdownButton } from '@/components/copy-markdown-button'
+import { LanguageProvider } from '@/components/mdx/code-tabs'
 import { DocsLayout } from '@/features/docs/components/docs-layout'
 import { DocPager } from '@/features/docs/components/docs-pager'
 import {

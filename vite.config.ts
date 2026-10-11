@@ -15,6 +15,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
 
 import { contentFiles, readingTimes } from './scripts/content-files'
+import { draftContentPlugin } from './scripts/draft-content'
 
 const blogSlugs = contentFiles('blog').map((f) => f.slug)
 const docsSlugs = contentFiles('docs').map((f) => f.slug)
@@ -39,6 +40,7 @@ function readingTimesPlugin() {
 const config = defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
   plugins: [
+    draftContentPlugin(command),
     readingTimesPlugin(),
     command === 'serve' && devtools(),
     nitro({

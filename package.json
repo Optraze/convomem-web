@@ -9,7 +9,7 @@
     "generate-og": "bun scripts/generate-og.tsx",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "bun test scripts/",
     "format": "biome format --write .",
     "lint": "biome lint --write .",
     "check": "biome check --write .",

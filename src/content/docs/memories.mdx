@@ -72,10 +72,14 @@ messages and extract structured facts.
       "cust_123",
       &MemoryIngestRequest {
           messages: vec![
-              Message { role: "user".into(), content: "I prefer email over phone".into() },
-              Message { role: "assistant".into(), content: "Noted, I have updated your preference.".into() },
+              Message { role: "user".into(), content: "I prefer email over phone".into(), ..Default::default() },
+              Message { role: "assistant".into(), content: "Noted, I have updated your preference.".into(), ..Default::default() },
           ],
           channel: Some("CHAT".into()),
+          language: None,
+          infer: None,
+          speaker_id: None,
+          speaker_name: None,
       },
   ).await?;
 
@@ -116,7 +120,12 @@ relevance and returns them with a pre-built context string.
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  let result = client.lookup_memories("cust_123", "billing").await?;
+  use convomem::MemoryLookupParams;
+
+  let result = client.lookup_memories("cust_123", &MemoryLookupParams {
+      topic: "billing".into(),
+      ..Default::default()
+  }).await?;
 
   println!("Context: {}", result.context);
   println!("Memories: {}", result.memories.len());
@@ -212,6 +221,7 @@ Add a memory directly without going through the extraction pipeline.
           category: Some("preference".into()),
           importance: None,
           memory_type: None,
+          expires_at: None,
       },
   ).await?;
 
@@ -246,26 +256,35 @@ Update an existing memory's content or category. Requires the customer's `custom
   </CodeTab>
   <CodeTab language="python" filename="update.py">
   ```python
-  updated = client.memories.update(
+  from convomem import MemoryUpdateRequest
+
+  client.memories.update(
       "cust_123",
       "mem_456",
-      content="Prefers dark mode and large fonts",
-      category="preference",
+      MemoryUpdateRequest(
+          content="Prefers dark mode and large fonts",
+          category="preference",
+      ),
   )
 
-  print(f"Updated: {updated.content}")
+  print("Memory updated")
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  let updated = client.update_memory(
+  use convomem::MemoryUpdateRequest;
+
+  client.update_memory(
       "cust_123",
       "mem_456",
-      Some("Prefers dark mode and large fonts"),
-      Some("preference"),
+      &MemoryUpdateRequest {
+          content: Some("Prefers dark mode and large fonts".into()),
+          category: Some("preference".into()),
+          ..Default::default()
+      },
   ).await?;
 
-  println!("Updated: {}", updated.content);
+  println!("Memory updated");
   ```
   </CodeTab>
 </CodeTabs>

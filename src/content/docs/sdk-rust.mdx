@@ -6,6 +6,11 @@ status: "published"
 
 The ConvoMem Rust SDK is async-first, built on `tokio` and `reqwest`.
 
+<Callout type="info" title="Release-candidate documentation">
+These examples target the upcoming SDK 0.3.0 contract. Publication is a separate
+release gate; installing from a registry does not guarantee this unreleased version.
+</Callout>
+
 ## Install
 
 ```bash
@@ -16,7 +21,7 @@ Or add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-convomem = "0.1"
+convomem = "0.3" # available only after the SDK release is published
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -73,16 +78,16 @@ let identity = CustomerIdentity::from_external_id("crm-456");
 
 ## Capture
 
-Send conversation turns for background memory extraction. Fire-and-forget —
-memories become searchable within seconds.
+Send conversation turns for background memory extraction. Acceptance is not
+completion: poll the returned capture ID before checking extracted memories.
 
 ```rust
 use convomem::{ConvoMem, CustomerIdentity, Message};
 
-client.capture(
+let result = client.capture(
     vec![
-        Message { role: "user".into(),      content: "I need help with my order".into() },
-        Message { role: "assistant".into(), content: "Of course, let me look that up.".into() },
+        Message { role: "user".into(),      content: "I need help with my order".into(), ..Default::default() },
+        Message { role: "assistant".into(), content: "Of course, let me look that up.".into(), ..Default::default() },
     ],
     &CustomerIdentity::from_email("alice@example.com"),
     Some("CHAT"),   // channel
@@ -90,6 +95,10 @@ client.capture(
     None,           // idempotency_key
 ).await?;
 ```
+
+Use `client.get_capture_status(&result.capture_id).await?` on the returned capture
+response, with bounded polling, a delay, and a timeout. Do not treat a failed or
+still-processing capture as an empty memory result.
 
 ## Look up context
 
@@ -101,6 +110,7 @@ let ctx = client.lookup(
     &CustomerIdentity::from_email("alice@example.com"),
     None,   // auto_create
     None,   // user_name
+    None,   // max_tokens — use the configured context budget
 ).await?;
 
 println!("Context: {}", ctx.context);
@@ -124,7 +134,7 @@ async fn handle_message(
     let identity = CustomerIdentity::from_email(email);
 
     // 1. Recall context
-    let ctx = client.lookup("customer support", &identity, None, None).await?;
+    let ctx = client.lookup("customer support", &identity, None, None, None).await?;
 
     // 2. Call your LLM (pseudo-code)
     let reply = call_llm(&ctx.context, user_msg).await;
@@ -132,8 +142,8 @@ async fn handle_message(
     // 3. Capture the turns
     client.capture(
         vec![
-            Message { role: "user".into(),      content: user_msg.into() },
-            Message { role: "assistant".into(), content: reply.clone() },
+            Message { role: "user".into(),      content: user_msg.into(), ..Default::default() },
+            Message { role: "assistant".into(), content: reply.clone(), ..Default::default() },
         ],
         &identity,
         Some("CHAT"),
@@ -148,7 +158,7 @@ async fn handle_message(
 ## Memories
 
 ```rust
-use convomem::{CustomerIdentity, MemoryAddRequest};
+use convomem::CustomerIdentity;
 
 let identity = CustomerIdentity::from_id("cust_uuid_123");
 
@@ -207,11 +217,6 @@ let updated = client.update_customer(
 // List
 let result = client.list_customers(Some(1), Some(20), None).await?;
 println!("{} of {}", result.customers.len(), result.total);
-
-// Stats
-let stats = client.get_stats().await?;
-println!("Total customers: {}", stats.total_customers);
-println!("Total memories:  {}", stats.total_memories);
 
 // Delete
 client.delete_customer(&CustomerIdentity::from_id("cust_uuid_123")).await?;
@@ -315,7 +320,7 @@ let client = ConvoMemClient::new(std::env::var("CONVOMEM_API_KEY")?);
 
 let result = client.capture(&CaptureRequest {
     messages: Some(vec![
-        Message { role: "user".into(), content: "Hello".into() },
+        Message { role: "user".into(), content: "Hello".into(), ..Default::default() },
     ]),
     email: Some("alice@example.com".into()),
     ..Default::default()
