@@ -11,33 +11,43 @@ All errors return JSON with a stable, machine-readable `code`:
 ```json
 {
   "error": "Customer not found",
-  "code": "NOT_FOUND",
-  "details": {}
+  "code": "NOT_FOUND"
 }
 ```
 
-Validation failures (`422`) include a `details` object describing the offending fields.
+Validation failures (`422`) add a `details` object describing the offending fields.
+Plan-limit errors may add an `upgradeUrl`.
 
 ## Error codes
 
 | HTTP | `code` | Meaning |
 | :-- | :-- | :-- |
 | `401` | `UNAUTHORIZED` | Missing or invalid `X-API-Key` |
-| `403` | `FORBIDDEN` | Outside the key's scope, or a cross-org reference |
+| `403` | `FORBIDDEN` | Outside the key's scope, a cross-org reference, or the key's agent is paused or archived |
 | `403` | `PLAN_LIMIT_REACHED` | A plan limit (customer count, API calls) was hit |
 | `404` | `NOT_FOUND` | Customer, conversation, or memory does not exist |
-| `409` | `CONFLICT` | Unique constraint clash (e.g. duplicate identifier) |
+| `409` | `CONFLICT` | Unique constraint clash (e.g. duplicate email, phone, or external ID) |
 | `409` | `IDEMPOTENCY_IN_PROGRESS` | A capture with the same `idempotencyKey` is still running |
+| `409` | `IDEMPOTENCY_KEY_REUSED` | The `idempotencyKey` was already used for a capture with a different payload |
+| `409` | `ERASURE_EXPORT_SOURCES_UNKNOWN` | Customer deletion is blocked by an unexpired export with unknown sources |
+| `409` | `ERASURE_MERGE_LINEAGE_AMBIGUOUS` | Customer deletion is blocked by ambiguous merge history |
+| `409` | `ERASURE_GRAPH_SOURCES_UNKNOWN` | Customer deletion is blocked by shared graph records with incomplete ownership |
+| `409` | `ERASURE_ANALYTICS_SOURCES_UNKNOWN` | Customer deletion is blocked by analytics history with unknown sources |
 | `422` | `VALIDATION_ERROR` | Body or query failed schema validation; see `details` |
-| `429` | — | Rate limit exceeded; back off and retry |
+| `429` | `RATE_LIMITED` | Rate limit exceeded; back off and retry |
+| `503` | `SERVICE_UNAVAILABLE` | A backing service is temporarily unavailable; retry with backoff |
 | `503` | `DATABASE_UNAVAILABLE` | Datastore offline; retry with backoff |
 | `500` | `INTERNAL_ERROR` | Unexpected server error |
 
+The `ERASURE_*` conflicts leave the customer's data in place for operator review — they
+are not transient, so don't retry them automatically. See
+[Customers](/docs/customers#delete).
+
 ## Rate limits
 
-Limits are per-minute. Every response carries `X-RateLimit-Limit` and
-`X-RateLimit-Remaining`. Exceeding a limit returns `429` with a `Retry-After`
-header.
+Limits are per-minute. Responses carry `X-RateLimit-Limit` and
+`X-RateLimit-Remaining`. Exceeding a limit returns `429 RATE_LIMITED` with a
+`Retry-After` header.
 
 Capture scales with your plan, and **each agent gets its own budget** — a busy
 support agent can't eat into what your sales agent has left. Both run at the
@@ -56,8 +66,9 @@ full rate for your plan:
 | :-- | :-- |
 | `POST /capture`, memory ingest (`/memories/ingest`) | **Your plan rate, per agent** |
 | Recall — `/customers/lookup`, `/customers/handoff`, `/customers/**/memories/lookup` | **600 / min** |
+| Live transfer routing — `POST /handoff/route` | **600 / min** |
 | Everything else (customers, conversations, CRUD) | **600 / min** |
-| Public embed — `GET /embed/handoff` | 60 / min per IP |
+| Public embed — `/embed/handoff` endpoints | 60 / min per IP |
 
 <Callout type="tip" title="Batch turns per capture">
 Each capture call enqueues background AI work, so send a few conversation turns
@@ -71,7 +82,9 @@ turn.
 ## Idempotency
 
 `POST /capture` accepts an optional `idempotencyKey` (≤128 chars). Replaying the same
-key within **24 hours** returns the original cached result instead of re-processing.
+key with the same payload within **24 hours** returns the original cached result instead
+of re-processing. Reusing a key with a different payload returns
+`409 IDEMPOTENCY_KEY_REUSED`.
 
 If a request with that key is still in flight, you get `409 IDEMPOTENCY_IN_PROGRESS` —
 wait briefly and retry.
@@ -89,11 +102,12 @@ unreliable networks, or any fire-and-forget pattern that may replay.
 
 ## Retry guidance
 
-The SDK retries `429` and `5xx` responses automatically with exponential backoff
-(configurable via `maxRetries`, default 3). For your own HTTP clients:
+The TypeScript and Python SDKs retry `429`, `5xx`, and timed-out requests automatically
+with a jittered, increasing delay (`maxRetries` / `max_retries`, default 3). They do not
+read `Retry-After`. The Rust SDK does not retry automatically. For your own HTTP clients:
 
 - `429` — respect the `Retry-After` header if present, otherwise back off exponentially
-- `503` — transient datastore issue; retry with backoff
+- `503` — transient service issue; retry with backoff
 - `409 IDEMPOTENCY_IN_PROGRESS` — wait 1–2 seconds and retry with the same key
 - `4xx` (other) — don't retry; fix the request
 

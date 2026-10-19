@@ -56,16 +56,16 @@ each its own agent and its own key. See [Authentication](/docs/authentication#ke
   <CodeTab language="python" filename="client.py">
   ```python
   import os
-  from convomem import ConvoMemClient
+  from convomem import ConvoMem
 
-  client = ConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
+  client = ConvoMem(api_key=os.environ["CONVOMEM_API_KEY"])
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  use convomem::ConvoMemClient;
+  use convomem::ConvoMem;
 
-  let client = ConvoMemClient::new(std::env::var("CONVOMEM_API_KEY")?);
+  let client = ConvoMem::new(std::env::var("CONVOMEM_API_KEY")?);
   ```
   </CodeTab>
 </CodeTabs>
@@ -90,31 +90,32 @@ identity field you provide — no explicit customer creation needed.
   </CodeTab>
   <CodeTab language="python" filename="capture.py">
   ```python
-  from convomem import CaptureRequest, Message
+  from convomem import CustomerIdentity
 
-  client.capture(CaptureRequest(
-      messages=[
-          Message(role="user", content="Hi, I need help with my subscription. I am on the Pro plan."),
-          Message(role="assistant", content="Of course! What do you need?"),
+  client.capture(
+      [
+          {"role": "user", "content": "Hi, I need help with my subscription. I am on the Pro plan."},
+          {"role": "assistant", "content": "Of course! What do you need?"},
       ],
-      email="alice@example.com",
+      CustomerIdentity(email="alice@example.com"),
       channel="CHAT",
-  ))
+  )
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  use convomem::{CaptureRequest, Message};
+  use convomem::{CustomerIdentity, Message};
 
-  client.capture(&CaptureRequest {
-      messages: Some(vec![
+  client.capture(
+      vec![
           Message { role: "user".into(), content: "Hi, I need help with my subscription. I am on the Pro plan.".into(), ..Default::default() },
           Message { role: "assistant".into(), content: "Of course! What do you need?".into(), ..Default::default() },
-      ]),
-      email: Some("alice@example.com".into()),
-      channel: Some("CHAT".into()),
-      ..Default::default()
-  }).await?;
+      ],
+      &CustomerIdentity::from_email("alice@example.com"),
+      Some("CHAT"), // channel
+      None,         // user_name
+      None,         // idempotency_key
+  ).await?;
   ```
   </CodeTab>
   <CodeTab language="curl" filename="Terminal">
@@ -155,12 +156,10 @@ relevant context:
   </CodeTab>
   <CodeTab language="python" filename="lookup.py">
   ```python
-  from convomem import MemoryLookupParams
-
-  result = client.memories.lookup_by_identity(MemoryLookupParams(
-      email="alice@example.com",
-      topic="subscription and plan details",
-  ))
+  result = client.lookup(
+      "subscription and plan details",
+      CustomerIdentity(email="alice@example.com"),
+  )
 
   print(f"Context: {result.context}")
   print(f"Memories: {len(result.memories)}")
@@ -168,13 +167,13 @@ relevant context:
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  use convomem::MemoryLookupParams;
-
-  let result = client.lookup_memories_by_identity(&MemoryLookupParams {
-      email: Some("alice@example.com".into()),
-      topic: "subscription and plan details".into(),
-      ..Default::default()
-  }).await?;
+  let result = client.lookup(
+      "subscription and plan details",
+      &CustomerIdentity::from_email("alice@example.com"),
+      None, // auto_create
+      None, // user_name
+      None, // max_tokens
+  ).await?;
 
   println!("Context: {}", result.context);
   println!("Memories: {}", result.memories.len());
@@ -234,7 +233,7 @@ async function chat(userEmail: string, userMessage: string) {
 start of session:  lookup(topic, identity)    → inject context into system prompt
 user sends turn:   capture([turns], identity) → queue memory extraction
 repeat each turn
-end of session:    endConversation(id, identity, { outcome })
+end of session:    capture([final turns], identity, { endConversation: true, outcome })
 ```
 
 <Callout type="tip" title="Always recall before capture">

@@ -7,6 +7,13 @@ status: "published"
 Conversations track customer sessions across channels. An active conversation is reused
 for subsequent captures until it ends or times out.
 
+<Callout type="tip" title="Closing on the last capture">
+When you are sending the final turns anyway, close the conversation on that capture with
+`endConversation: true` or `escalate: true` (see [Capture](/docs/capture)). That keeps the
+order transcript → memories → close → analysis. Use the endpoints on this page when
+there are no turns left to send.
+</Callout>
+
 ## Start
 
 Begin a new conversation for a customer.
@@ -16,14 +23,14 @@ Begin a new conversation for a customer.
   ```bash
   curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "https://api.convomem.com/api/v1/customers/cust_123/conversations" \
+    "https://api.convomem.com/api/v1/customers/f3b39d1b-2522-4a00-98df-8cdde783ba12/conversations" \
     -d '{"channel": "CHAT"}'
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="start.ts">
   ```typescript
   const conversation = await client.startConversation(
-    { customerId: 'cust_123' },
+    { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' },
     { channel: 'CHAT' },
   )
 
@@ -33,7 +40,10 @@ Begin a new conversation for a customer.
   </CodeTab>
   <CodeTab language="python" filename="start.py">
   ```python
-  conversation = client.conversations.start("cust_123", "CHAT")
+  from convomem import CustomerIdentity
+
+  identity = CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12")
+  conversation = client.start_conversation(identity, "CHAT")
 
   print(f"Conversation: {conversation.id}")
   print(f"Status: {conversation.status}")
@@ -41,7 +51,10 @@ Begin a new conversation for a customer.
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  let conversation = client.start_conversation("cust_123", "CHAT").await?;
+  use convomem::CustomerIdentity;
+
+  let identity = CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12");
+  let conversation = client.start_conversation(&identity, "CHAT").await?;
 
   println!("Conversation: {}", conversation.id);
   println!("Status: {}", conversation.status);
@@ -57,13 +70,13 @@ List all conversations for a customer with pagination.
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "https://api.convomem.com/api/v1/customers/cust_123/conversations?page=1&limit=20"
+    "https://api.convomem.com/api/v1/customers/f3b39d1b-2522-4a00-98df-8cdde783ba12/conversations?page=1&limit=20"
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="list.ts">
   ```typescript
   const { conversations, total } = await client.listConversations(
-    { customerId: 'cust_123' },
+    { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' },
     { page: 1, limit: 20 },
   )
 
@@ -74,7 +87,7 @@ List all conversations for a customer with pagination.
   </CodeTab>
   <CodeTab language="python" filename="list.py">
   ```python
-  result = client.conversations.list("cust_123", page=1, limit=20)
+  result = client.list_conversations(identity, page=1, limit=20)
 
   for conv in result.conversations:
       print(f"{conv.id}: {conv.status} ({conv.channel})")
@@ -82,7 +95,7 @@ List all conversations for a customer with pagination.
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  let result = client.list_conversations("cust_123", Some(1), Some(20)).await?;
+  let result = client.list_conversations(&identity, Some(1), Some(20), None).await?;
 
   for conv in &result.conversations {
       println!("{}: {} ({})", conv.id, conv.status, conv.channel);
@@ -93,99 +106,110 @@ List all conversations for a customer with pagination.
 
 ## End
 
-End a conversation with an optional outcome.
+End a conversation with an optional outcome. The REST endpoint returns the updated
+conversation; the SDK methods return nothing on success.
 
 <CodeTabs>
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -X PATCH -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "https://api.convomem.com/api/v1/customers/cust_123/conversations/conv_456" \
+    "https://api.convomem.com/api/v1/customers/f3b39d1b-2522-4a00-98df-8cdde783ba12/conversations/87c53d10-85f8-4447-920f-b1e847c23a1a" \
     -d '{"outcome": "resolved"}'
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="end.ts">
   ```typescript
-  const updated = await client.endConversation(
-    'conv_456',
-    { customerId: 'cust_123' },
+  await client.endConversation(
+    '87c53d10-85f8-4447-920f-b1e847c23a1a',
+    { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' },
     { outcome: 'resolved' },
   )
-
-  console.log('Status:', updated.status)
   ```
   </CodeTab>
   <CodeTab language="python" filename="end.py">
   ```python
-  updated = client.conversations.end(
-      "cust_123",
-      "conv_456",
+  client.end_conversation(
+      "87c53d10-85f8-4447-920f-b1e847c23a1a",
+      identity,
       outcome="resolved",
   )
-
-  print(f"Status: {updated.status}")
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  let updated = client.end_conversation(
-      "cust_123",
-      "conv_456",
+  client.end_conversation(
+      Some("87c53d10-85f8-4447-920f-b1e847c23a1a"),
+      &identity,
       Some("resolved"),
   ).await?;
-
-  println!("Status: {}", updated.status);
   ```
   </CodeTab>
 </CodeTabs>
 
 ## Escalate
 
-Escalate a conversation to a human agent with a reason.
+Escalate a conversation to a human agent with a reason (≤500 chars).
 
 <CodeTabs>
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -X PATCH -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "https://api.convomem.com/api/v1/customers/cust_123/conversations/conv_456/escalate" \
+    "https://api.convomem.com/api/v1/customers/f3b39d1b-2522-4a00-98df-8cdde783ba12/conversations/87c53d10-85f8-4447-920f-b1e847c23a1a/escalate" \
     -d '{"reason": "Complex billing dispute"}'
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="escalate.ts">
   ```typescript
-  const updated = await client.escalateConversation(
-    'conv_456',
-    { customerId: 'cust_123' },
+  await client.escalateConversation(
+    '87c53d10-85f8-4447-920f-b1e847c23a1a',
+    { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' },
     { reason: 'Complex billing dispute' },
   )
-
-  console.log('Status:', updated.status)
   ```
   </CodeTab>
   <CodeTab language="python" filename="escalate.py">
   ```python
-  updated = client.conversations.escalate(
-      "cust_123",
-      "conv_456",
+  client.escalate_conversation(
+      "87c53d10-85f8-4447-920f-b1e847c23a1a",
+      identity,
       reason="Complex billing dispute",
   )
-
-  print(f"Status: {updated.status}")
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  let updated = client.escalate_conversation(
-      "cust_123",
-      "conv_456",
+  client.escalate_conversation(
+      Some("87c53d10-85f8-4447-920f-b1e847c23a1a"),
+      &identity,
       Some("Complex billing dispute"),
   ).await?;
-
-  println!("Status: {}", updated.status);
   ```
   </CodeTab>
 </CodeTabs>
+
+## By identity (flat routes)
+
+When you only have an email, phone, or external ID, use
+`POST /customers/conversations/end` and `POST /customers/conversations/escalate` with the
+identity in the body. These routes resolve the customer and act on that customer's
+**active** conversation. They do not take a `conversationId`, and return `404` when the
+customer has no active conversation.
+
+```bash title="Terminal"
+curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
+  -H "Content-Type: application/json" \
+  "https://api.convomem.com/api/v1/customers/conversations/end" \
+  -d '{"email": "alice@example.com", "outcome": "resolved"}'
+```
+
+The SDKs use these routes automatically when you pass no `conversationId` or no
+`customerId`:
+
+```typescript
+await client.endConversation(null, { email: 'alice@example.com' }, { outcome: 'resolved' })
+```
 
 ## Response fields
 

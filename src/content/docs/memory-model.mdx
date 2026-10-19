@@ -120,7 +120,7 @@ interface CustomerIdentity {
 
 ```typescript
 // All of these work — use whatever you have:
-await client.lookup('billing', { customerId: 'uuid-123' })
+await client.lookup('billing', { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' })
 await client.lookup('billing', { email: 'alice@example.com' })
 await client.lookup('billing', { externalId: 'crm-789' })
 await client.lookup('billing', { phone: '+14155550101' })
@@ -140,7 +140,11 @@ values are masked with typed placeholders or the candidate is dropped. Conversat
 transcripts have their own retention and access controls; memory filtering is not a
 substitute for avoiding unnecessary sensitive input.
 
-Examples: `alice@example.com` → `[EMAIL]`, `4111 1111 1111 1111` → `[CARD_NUMBER]`.
+By default, card numbers, bank accounts, and national ID numbers are masked — for
+example `4111 1111 1111 1111` → `•••• 1111` and an IBAN → `[redacted:bank]`. Email
+addresses and phone numbers are **not** masked by default; when an admin enables those
+categories they are stored as `[redacted:email]` and `[redacted:phone]`. See
+[Authentication & security](/docs/authentication#pii-redaction) for the full list.
 
 ## Manual memories
 

@@ -47,20 +47,20 @@ specify.
   </CodeTab>
   <CodeTab language="python" filename="capture.py">
   ```python
-  from convomem import CaptureRequest
+  from convomem import CustomerIdentity
 
-  result = client.capture(CaptureRequest(
-      message="I need help with my order",
-      email="user@example.com",
+  result = client.capture(
+      [{"role": "user", "content": "I need help with my order"}],
+      CustomerIdentity(email="user@example.com"),
       channel="CHAT",
-  ))
+  )
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
   use convomem::CaptureRequest;
 
-  let result = client.capture(&CaptureRequest {
+  let result = client.capture_with(&CaptureRequest {
       message: Some("I need help with my order".into()),
       email: Some("user@example.com".into()),
       channel: Some("CHAT".into()),
@@ -105,31 +105,32 @@ the user's message and the assistant's response in a single call.
   </CodeTab>
   <CodeTab language="python" filename="capture.py">
   ```python
-  from convomem import CaptureRequest, Message
+  from convomem import CustomerIdentity
 
-  result = client.capture(CaptureRequest(
-      messages=[
-          Message(role="user", content="What is my current plan?"),
-          Message(role="assistant", content="You are on the Pro plan at $49/mo."),
+  result = client.capture(
+      [
+          {"role": "user", "content": "What is my current plan?"},
+          {"role": "assistant", "content": "You are on the Pro plan at $49/mo."},
       ],
-      email="user@example.com",
+      CustomerIdentity(email="user@example.com"),
       channel="VOICE",
-  ))
+  )
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  use convomem::{CaptureRequest, Message};
+  use convomem::{CustomerIdentity, Message};
 
-  let result = client.capture(&CaptureRequest {
-      messages: Some(vec![
+  let result = client.capture(
+      vec![
           Message { role: "user".into(), content: "What is my current plan?".into(), ..Default::default() },
           Message { role: "assistant".into(), content: "You are on the Pro plan at $49/mo.".into(), ..Default::default() },
-      ]),
-      email: Some("user@example.com".into()),
-      channel: Some("VOICE".into()),
-      ..Default::default()
-  }).await?;
+      ],
+      &CustomerIdentity::from_email("user@example.com"),
+      Some("VOICE"), // channel
+      None,          // user_name
+      None,          // idempotency_key
+  ).await?;
   ```
   </CodeTab>
 </CodeTabs>
@@ -144,6 +145,7 @@ the user's message and the assistant's response in a single call.
 | `externalId` | string | At least one identity field required | External system identifier |
 | `email` | string | At least one identity field required | Customer email address |
 | `phoneNumber` | string | At least one identity field required | Customer phone number |
+| `socialHandles` | array | At least one identity field required | Social handles as strings (`"@jane"`) or `{ "value": "@jane", "platform": "twitter" }` objects |
 | `userName` | string | No | Customer display name (backfills placeholder names) |
 | `channel` | enum | No (default: `CHAT`) | `VOICE`, `CHAT`, `SMS`, or `EMAIL` |
 | `idempotencyKey` | string | No | Idempotency key (max 128 chars) |
@@ -184,7 +186,8 @@ instead of re-processing. Use a stable key per turn — e.g.
 `turn-${conversationId}-${turnIndex}`.
 
 If a request with that key is still in flight, you get `409 IDEMPOTENCY_IN_PROGRESS`.
-Wait 1–2 seconds and retry with the same key.
+Wait 1–2 seconds and retry with the same key. Reusing a key with a different payload
+returns `409 IDEMPOTENCY_KEY_REUSED`.
 </Callout>
 
 ## Poll capture status
@@ -216,6 +219,8 @@ supply one:
   internal customer record.
 - **email** — Matches by email address. Creates a new customer if no match is found.
 - **phoneNumber** — Matches by phone number. Creates a new customer if no match is found.
+- **socialHandles** — Matches by social handle. A leading `@` and letter case are
+  ignored, and a `platform` keeps the same handle on different networks apart.
 
 When multiple fields are provided, ConvoMem resolves in the order listed above. If the
 customer does not exist, a new profile is created automatically.

@@ -20,6 +20,7 @@ export const docsNav: DocNavGroup[] = [
     items: [
       { slug: 'introduction' },
       { slug: 'getting-started', label: 'Quick start' },
+      { slug: 'installation' },
       { slug: 'authentication' },
     ],
   },
@@ -32,7 +33,10 @@ export const docsNav: DocNavGroup[] = [
   },
   {
     group: 'Guides',
-    items: [{ slug: 'agents', label: 'AI agents' }],
+    items: [
+      { slug: 'agents', label: 'AI agents' },
+      { slug: 'mcp', label: 'MCP server' },
+    ],
   },
   {
     group: 'API reference',

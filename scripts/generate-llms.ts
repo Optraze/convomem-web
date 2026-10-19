@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
 import type { ContentFile } from './content-files'
@@ -31,6 +31,17 @@ function writeMarkdown(file: ContentFile) {
   const outPath = resolve(`public/${file.type}/${file.slug}.md`)
   mkdirSync(dirname(outPath), { recursive: true })
   writeFileSync(outPath, calloutsToBlockquotes(raw))
+}
+
+// public/{docs,blog,changelog}/*.md are fully generated and git-ignored.
+// Clear them first so a removed, renamed or draft page cannot linger in a
+// local build and ship as a stale public file.
+for (const type of ['docs', 'blog', 'changelog']) {
+  const dir = resolve(`public/${type}`)
+  if (!existsSync(dir)) continue
+  for (const name of readdirSync(dir)) {
+    if (name.endsWith('.md')) rmSync(resolve(dir, name))
+  }
 }
 
 const files = allContentFiles()

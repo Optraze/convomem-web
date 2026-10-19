@@ -35,7 +35,7 @@ Most teams drop the `context` string directly into a system prompt:
 ```typescript title="prompt.ts"
 const { context } = await client.lookup(
   userMessage,
-  { customerId: 'cust_uuid_123' },
+  { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' },
 )
 
 const system = `You are a support agent. Known context about this customer:\n${context}`
@@ -52,7 +52,7 @@ your integration can observe what was applied.
 ```typescript title="controlled-recall.ts"
 const result = await client.lookup(
   userMessage,
-  { customerId: 'cust_uuid_123' },
+  { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' },
   {
     maxTokens: 500,      // clamped to 50–4,000
     limit: 12,           // clamped to 1–20
@@ -83,7 +83,7 @@ To browse all stored memories for a customer with pagination, use `listMemories`
 
 ```typescript title="list.ts"
 const { memories, total } = await client.listMemories(
-  { customerId: 'cust_uuid_123' },
+  { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' },
   { page: 1, limit: 20, category: 'preference' },
 )
 

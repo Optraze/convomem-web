@@ -49,6 +49,21 @@ let client = ConvoMem::builder()
     .build()?;
 ```
 
+The default timeout is 30 seconds. The Rust SDK does **not** retry automatically —
+handle `429` and `5xx` responses yourself (see [Errors & limits](/docs/errors#retry-guidance)).
+
+`ConvoMem` is not `Clone`. To use one client from several tasks, wrap it in an `Arc`:
+
+```rust
+use std::sync::Arc;
+
+let client = Arc::new(ConvoMem::new(std::env::var("CONVOMEM_API_KEY")?));
+let worker = Arc::clone(&client);
+tokio::spawn(async move {
+    // worker.capture(…).await
+});
+```
+
 <Callout type="warning" title="Keep keys server-side">
 Never embed an API key in client-side code. All ConvoMem calls should originate from
 your backend. For browser widgets, use [embed tokens](/docs/embed).
@@ -64,7 +79,7 @@ resolves the customer from `email`, `phone`, or `external_id`.
 use convomem::CustomerIdentity;
 
 // By known ID — most direct
-let identity = CustomerIdentity::from_id("cust_uuid_123");
+let identity = CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12");
 
 // By email — server resolves the customer
 let identity = CustomerIdentity::from_email("alice@example.com");
@@ -100,9 +115,45 @@ Use `client.get_capture_status(&result.capture_id).await?` on the returned captu
 response, with bounded polling, a delay, and a timeout. Do not treat a failed or
 still-processing capture as an empty memory result.
 
+For options beyond channel, user name, and idempotency key — such as closing the
+conversation on the final turns — build a `CaptureRequest` and call `capture_with`:
+
+```rust
+use convomem::{CaptureRequest, Message};
+
+client.capture_with(&CaptureRequest {
+    messages: Some(vec![
+        Message { role: "assistant".into(), content: "All sorted — anything else?".into(), ..Default::default() },
+    ]),
+    phone_number: Some("+14155550101".into()),
+    channel: Some("VOICE".into()),
+    end_conversation: Some(true),
+    outcome: Some("Refund issued".into()),
+    ..Default::default()
+}).await?;
+```
+
+## Cold open
+
+At the start of a conversation, before the customer has said why they are calling, get
+the profile and a call-opening brief that leads with any unresolved issue:
+
+```rust
+let brief = client.cold_open(
+    &CustomerIdentity::from_phone("+14155550100"),
+    Some(true), // auto_create
+    None,       // user_name
+    None,       // max_tokens
+).await?;
+
+if let Some(context) = &brief.context {
+    println!("{}", context);
+}
+```
+
 ## Look up context
 
-Recall semantically relevant memories before generating a reply.
+Recall semantically relevant memories for a topic before generating a reply.
 
 ```rust
 let ctx = client.lookup(
@@ -160,7 +211,7 @@ async fn handle_message(
 ```rust
 use convomem::CustomerIdentity;
 
-let identity = CustomerIdentity::from_id("cust_uuid_123");
+let identity = CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12");
 
 // List all memories
 let result = client.list_memories(&identity, None, None, None).await?;
@@ -177,14 +228,14 @@ let memory = client.add_memory(
 
 // Update (requires customer_id)
 let updated = client.update_memory(
-    "mem_uuid_456",
+    "c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c",
     &identity,
     Some("Prefers email and text contact"),
     None,
 ).await?;
 
 // Delete (requires customer_id)
-client.delete_memory("mem_uuid_456", &identity).await?;
+client.delete_memory("c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c", &identity).await?;
 ```
 
 ## Customers
@@ -207,7 +258,7 @@ println!("Customer ID: {}", customer.id);
 
 // Update
 let updated = client.update_customer(
-    &CustomerIdentity::from_id("cust_uuid_123"),
+    &CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12"),
     &CustomerUpdateRequest {
         name: Some("Alice Smith".into()),
         ..Default::default()
@@ -219,7 +270,7 @@ let result = client.list_customers(Some(1), Some(20), None).await?;
 println!("{} of {}", result.customers.len(), result.total);
 
 // Delete
-client.delete_customer(&CustomerIdentity::from_id("cust_uuid_123")).await?;
+client.delete_customer(&CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12")).await?;
 ```
 
 ## Conversations
@@ -227,7 +278,7 @@ client.delete_customer(&CustomerIdentity::from_id("cust_uuid_123")).await?;
 ```rust
 use convomem::CustomerIdentity;
 
-let identity = CustomerIdentity::from_id("cust_uuid_123");
+let identity = CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12");
 
 // Start
 let conversation = client.start_conversation(&identity, "CHAT").await?;
@@ -238,12 +289,12 @@ let result = client.list_conversations(&identity, None, None, None).await?;
 
 // End — path-based when both IDs are known
 client.end_conversation(
-    Some("conv_uuid_456"),
+    Some("87c53d10-85f8-4447-920f-b1e847c23a1a"),
     &identity,
     Some("Resolved billing issue"),
 ).await?;
 
-// End — flat route when only identity is known
+// End — flat route: closes the customer's active conversation
 client.end_conversation(
     None,
     &CustomerIdentity::from_email("alice@example.com"),
@@ -252,7 +303,7 @@ client.end_conversation(
 
 // Escalate
 client.escalate_conversation(
-    Some("conv_uuid_456"),
+    Some("87c53d10-85f8-4447-920f-b1e847c23a1a"),
     &identity,
     Some("Complex billing dispute"),
 ).await?;
@@ -281,13 +332,29 @@ if handoff.found {
 }
 ```
 
+## Route a live transfer
+
+Resolve which human destination a transfer should go to. Destinations are configured
+in the dashboard.
+
+```rust
+let route = client.route_handoff(
+    &CustomerIdentity::from_phone("+14155550100"),
+    None, // format
+).await?;
+
+if let Some(destination) = &route.destination {
+    println!("{} ({})", destination.value, route.source);
+}
+```
+
 ## Embed tokens
 
 ```rust
 use convomem::CustomerIdentity;
 
 let result = client.create_embed_token(
-    &CustomerIdentity::from_id("cust_uuid_123"),
+    &CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12"),
     Some(3600),  // ttl_seconds
 ).await?;
 
@@ -300,31 +367,13 @@ println!("Expires in: {}s", result.expires_in);
 ```rust
 use convomem::ConvoMemError;
 
-match client.get_customer(&CustomerIdentity::from_id("cust_uuid_123")).await {
+match client.get_customer(&CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12")).await {
     Ok(customer) => println!("Found: {}", customer.id),
     Err(ConvoMemError::Api { status, message }) => {
         println!("API error {}: {}", status, message);
     }
     Err(e) => println!("Other error: {}", e),
 }
-```
-
-## Low-level resource client
-
-For advanced use cases you can use `ConvoMemClient` directly:
-
-```rust
-use convomem::{ConvoMemClient, CaptureRequest, Message};
-
-let client = ConvoMemClient::new(std::env::var("CONVOMEM_API_KEY")?);
-
-let result = client.capture(&CaptureRequest {
-    messages: Some(vec![
-        Message { role: "user".into(), content: "Hello".into(), ..Default::default() },
-    ]),
-    email: Some("alice@example.com".into()),
-    ..Default::default()
-}).await?;
 ```
 
 ## Other SDKs

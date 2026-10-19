@@ -15,78 +15,27 @@ not capture-then-immediately-recall.
 
 ## Ingest
 
-Send a conversation for memory extraction. ConvoMem's AI pipeline will analyze the
-messages and extract structured facts.
+Send conversation turns for a known customer to the extraction pipeline. The endpoint
+returns `202` with a `captureId` you can poll at `GET /capture/:captureId`.
 
-<CodeTabs>
-  <CodeTab language="curl" filename="Terminal">
-  ```bash
-  curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
-    -H "Content-Type: application/json" \
-    "https://api.convomem.com/api/v1/customers/cust_123/memories/ingest" \
-    -d '{
-      "messages": [
-        {"role": "user", "content": "I prefer email over phone"},
-        {"role": "assistant", "content": "Noted, I have updated your preference."}
-      ],
-      "channel": "CHAT"
-    }'
-  ```
-  </CodeTab>
-  <CodeTab language="typescript" filename="ingest.ts">
-  ```typescript
-  const result = await client.memories.ingest('cust_123', {
-    messages: [
-      { role: 'user', content: 'I prefer email over phone' },
-      { role: 'assistant', content: 'Noted, I have updated your preference.' },
+```bash title="Terminal"
+curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
+  -H "Content-Type: application/json" \
+  "https://api.convomem.com/api/v1/customers/f3b39d1b-2522-4a00-98df-8cdde783ba12/memories/ingest" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "I prefer email over phone"},
+      {"role": "assistant", "content": "Noted, I have updated your preference."}
     ],
-    channel: 'CHAT',
-  })
+    "channel": "CHAT"
+  }'
+# → { "captureId": "0b6f4c1e-3d2a-4e8b-a7c9-5f1d2e3b4a6c", "status": "queued" }
+```
 
-  console.log('Capture ID:', result.captureId)
-  ```
-  </CodeTab>
-  <CodeTab language="python" filename="ingest.py">
-  ```python
-  from convomem import MemoryIngestRequest, Message
-
-  result = client.memories.ingest(
-      "cust_123",
-      MemoryIngestRequest(
-          messages=[
-              Message(role="user", content="I prefer email over phone"),
-              Message(role="assistant", content="Noted, I have updated your preference."),
-          ],
-          channel="CHAT",
-      ),
-  )
-
-  print(f"Capture ID: {result.capture_id}")
-  ```
-  </CodeTab>
-  <CodeTab language="rust" filename="main.rs">
-  ```rust
-  use convomem::{MemoryIngestRequest, Message};
-
-  let result = client.ingest_memories(
-      "cust_123",
-      &MemoryIngestRequest {
-          messages: vec![
-              Message { role: "user".into(), content: "I prefer email over phone".into(), ..Default::default() },
-              Message { role: "assistant".into(), content: "Noted, I have updated your preference.".into(), ..Default::default() },
-          ],
-          channel: Some("CHAT".into()),
-          language: None,
-          infer: None,
-          speaker_id: None,
-          speaker_name: None,
-      },
-  ).await?;
-
-  println!("Capture ID: {}", result.capture_id);
-  ```
-  </CodeTab>
-</CodeTabs>
+<Callout type="tip" title="Using an SDK?">
+The SDKs send turns through [`capture`](/docs/capture), which feeds the same extraction
+pipeline and also resolves the customer and manages the conversation session.
+</Callout>
 
 ## Lookup by topic
 
@@ -97,13 +46,13 @@ relevance and returns them with a pre-built context string.
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "https://api.convomem.com/api/v1/customers/cust_123/memories/lookup?topic=billing"
+    "https://api.convomem.com/api/v1/customers/f3b39d1b-2522-4a00-98df-8cdde783ba12/memories/lookup?topic=billing"
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="lookup.ts">
   ```typescript
-  const { context, memories } = await client.memories.lookup('cust_123', {
-    topic: 'billing',
+  const { context, memories } = await client.lookup('billing', {
+    customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12',
   })
 
   console.log('Context:', context)
@@ -112,7 +61,12 @@ relevance and returns them with a pre-built context string.
   </CodeTab>
   <CodeTab language="python" filename="lookup.py">
   ```python
-  result = client.memories.lookup("cust_123", "billing")
+  from convomem import CustomerIdentity
+
+  result = client.lookup(
+      "billing",
+      CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12"),
+  )
 
   print(f"Context: {result.context}")
   print(f"Memories: {len(result.memories)}")
@@ -120,12 +74,10 @@ relevance and returns them with a pre-built context string.
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  use convomem::MemoryLookupParams;
+  use convomem::CustomerIdentity;
 
-  let result = client.lookup_memories("cust_123", &MemoryLookupParams {
-      topic: "billing".into(),
-      ..Default::default()
-  }).await?;
+  let identity = CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12");
+  let result = client.lookup("billing", &identity, None, None, None).await?;
 
   println!("Context: {}", result.context);
   println!("Memories: {}", result.memories.len());
@@ -141,15 +93,15 @@ List all memories for a customer with pagination.
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "https://api.convomem.com/api/v1/customers/cust_123/memories?page=1&limit=20"
+    "https://api.convomem.com/api/v1/customers/f3b39d1b-2522-4a00-98df-8cdde783ba12/memories?page=1&limit=20"
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="list.ts">
   ```typescript
-  const { memories, total } = await client.memories.list('cust_123', {
-    page: 1,
-    limit: 20,
-  })
+  const { memories, total } = await client.listMemories(
+    { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' },
+    { page: 1, limit: 20 },
+  )
 
   for (const mem of memories) {
     console.log(`- ${mem.content} (${mem.category})`)
@@ -158,7 +110,11 @@ List all memories for a customer with pagination.
   </CodeTab>
   <CodeTab language="python" filename="list.py">
   ```python
-  result = client.memories.list("cust_123", page=1, limit=20)
+  result = client.list_memories(
+      CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12"),
+      page=1,
+      limit=20,
+  )
 
   for mem in result.memories:
       print(f"- {mem.content} ({mem.category})")
@@ -166,7 +122,8 @@ List all memories for a customer with pagination.
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  let result = client.list_memories("cust_123", Some(1), Some(20)).await?;
+  let identity = CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12");
+  let result = client.list_memories(&identity, Some(1), Some(20), None).await?;
 
   for mem in &result.memories {
       println!("- {:?} ({:?})", mem.content, mem.category);
@@ -177,34 +134,36 @@ List all memories for a customer with pagination.
 
 ## Add manually
 
-Add a memory directly without going through the extraction pipeline.
+Add a memory directly without going through the extraction pipeline. Manual memories
+are available for recall immediately. Any identity field works; when you omit
+`category`, it defaults to `context`.
 
 <CodeTabs>
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "https://api.convomem.com/api/v1/customers/cust_123/memories" \
-    -d '{"content": "Prefers dark mode", "category": "preference"}'
+    "https://api.convomem.com/api/v1/customers/memories" \
+    -d '{"content": "Prefers dark mode", "category": "preference", "email": "alice@example.com"}'
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="add.ts">
   ```typescript
-  const memory = await client.memories.add('cust_123', {
-    content: 'Prefers dark mode',
-    category: 'preference',
-  })
+  const memory = await client.addMemory(
+    'Prefers dark mode',
+    { email: 'alice@example.com' },
+    { category: 'preference' },
+  )
 
   console.log('Memory ID:', memory.id)
   ```
   </CodeTab>
   <CodeTab language="python" filename="add.py">
   ```python
-  from convomem import MemoryAddRequest
-
-  memory = client.memories.add(
-      "cust_123",
-      MemoryAddRequest(content="Prefers dark mode", category="preference"),
+  memory = client.add_memory(
+      "Prefers dark mode",
+      CustomerIdentity(email="alice@example.com"),
+      category="preference",
   )
 
   print(f"Memory ID: {memory.id}")
@@ -212,17 +171,10 @@ Add a memory directly without going through the extraction pipeline.
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  use convomem::MemoryAddRequest;
-
   let memory = client.add_memory(
-      "cust_123",
-      &MemoryAddRequest {
-          content: "Prefers dark mode".into(),
-          category: Some("preference".into()),
-          importance: None,
-          memory_type: None,
-          expires_at: None,
-      },
+      "Prefers dark mode",
+      &CustomerIdentity::from_email("alice@example.com"),
+      Some("preference"),
   ).await?;
 
   println!("Memory ID: {}", memory.id);
@@ -239,16 +191,16 @@ Update an existing memory's content or category. Requires the customer's `custom
   ```bash
   curl -s -X PATCH -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    "https://api.convomem.com/api/v1/customers/cust_123/memories/mem_456" \
+    "https://api.convomem.com/api/v1/customers/f3b39d1b-2522-4a00-98df-8cdde783ba12/memories/c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c" \
     -d '{"content": "Prefers dark mode and large fonts", "category": "preference"}'
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="update.ts">
   ```typescript
   const updated = await client.updateMemory(
-    'mem_456',
+    'c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c',
     { content: 'Prefers dark mode and large fonts', category: 'preference' },
-    { customerId: 'cust_123' },
+    { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' },
   )
 
   console.log('Updated:', updated.content)
@@ -256,35 +208,27 @@ Update an existing memory's content or category. Requires the customer's `custom
   </CodeTab>
   <CodeTab language="python" filename="update.py">
   ```python
-  from convomem import MemoryUpdateRequest
-
-  client.memories.update(
-      "cust_123",
-      "mem_456",
-      MemoryUpdateRequest(
-          content="Prefers dark mode and large fonts",
-          category="preference",
-      ),
+  updated = client.update_memory(
+      "c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c",
+      CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12"),
+      content="Prefers dark mode and large fonts",
+      category="preference",
   )
 
-  print("Memory updated")
+  print(f"Updated: {updated.content}")
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  use convomem::MemoryUpdateRequest;
-
-  client.update_memory(
-      "cust_123",
-      "mem_456",
-      &MemoryUpdateRequest {
-          content: Some("Prefers dark mode and large fonts".into()),
-          category: Some("preference".into()),
-          ..Default::default()
-      },
+  let identity = CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12");
+  let updated = client.update_memory(
+      "c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c",
+      &identity,
+      Some("Prefers dark mode and large fonts"),
+      Some("preference"),
   ).await?;
 
-  println!("Memory updated");
+  println!("Updated: {:?}", updated.content);
   ```
   </CodeTab>
 </CodeTabs>
@@ -297,22 +241,30 @@ Permanently delete a memory. Requires the customer's `customerId`.
   <CodeTab language="curl" filename="Terminal">
   ```bash
   curl -s -X DELETE -H "X-API-Key: $CONVOMEM_API_KEY" \
-    "https://api.convomem.com/api/v1/customers/cust_123/memories/mem_456"
+    "https://api.convomem.com/api/v1/customers/f3b39d1b-2522-4a00-98df-8cdde783ba12/memories/c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c"
   ```
   </CodeTab>
   <CodeTab language="typescript" filename="delete.ts">
   ```typescript
-  await client.deleteMemory('mem_456', { customerId: 'cust_123' })
+  await client.deleteMemory('c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c', {
+    customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12',
+  })
   ```
   </CodeTab>
   <CodeTab language="python" filename="delete.py">
   ```python
-  client.memories.delete("cust_123", "mem_456")
+  client.delete_memory(
+      "c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c",
+      CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12"),
+  )
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  client.delete_memory("cust_123", "mem_456").await?;
+  client.delete_memory(
+      "c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c",
+      &CustomerIdentity::from_id("f3b39d1b-2522-4a00-98df-8cdde783ba12"),
+  ).await?;
   ```
   </CodeTab>
 </CodeTabs>
@@ -326,8 +278,11 @@ Permanently delete a memory. Requires the customer's `customerId`.
 | `id` | string | Unique memory identifier |
 | `content` | string | The memory in natural language |
 | `category` | string | Category (e.g., `preference`, `account`, `intent`) |
-| `memoryType` | string | Type of memory |
-| `importance` | number | 0–1 importance score |
+| `memoryType` | string | Type of memory (e.g., `fact`, `preference`, `commitment`) |
+| `speaker` | string | `customer` or `agent` |
+| `confidence` | number | 0–1 extraction confidence (list responses) |
+| `relevance` | number | Per-query relevance score (lookup responses) |
+| `expiresAt` | string \| null | ISO-8601 expiry, if the fact is time-bound (list responses) |
 | `createdAt` | string | ISO-8601 creation timestamp |
 
 ### MemoryContext (lookup response)

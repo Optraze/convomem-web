@@ -36,6 +36,21 @@ not have to be reconstructed from commits.
   Customer Profile.
 - Caller-owned expiry, multilingual provenance, commitments, and organization
   category controls now have complete API and UI lifecycles.
+- A value or name is attached to a memory only when the conversation states it
+  for that same customer, account, or person. A budget, owner, or time stated
+  for a different account is rejected, even when it was mentioned earlier in the
+  same conversation, and the check does not depend on capitalization, so
+  lowercase voice transcripts are protected too.
+- Current states and completed updates, such as a new meeting time or owner, are
+  kept as durable memories. Only genuine short-lived wishes and plans keep the
+  48-hour intent lifetime, so a customer's latest state is not lost two days
+  after capture.
+- An update recovered by the repair step now replaces the value it supersedes,
+  and an update counts as captured only when the stored memory keeps both the
+  changed relationship and its new value.
+- Exact source quotes tolerate curly quotes, dashes, and non-breaking spaces,
+  and short English memories are no longer rejected when the local language
+  detector misreads them. Translated memories are still rejected.
 
 ## Reviewed patterns
 
@@ -63,6 +78,15 @@ not have to be reconstructed from commits.
   health, and administration APIs remain intentionally excluded.
 - SDK integration tests require an explicitly selected isolated API target and
   credentials; skipped live tests are not reported as runtime verification.
+- Adding a memory by `email`, `phone`, or `externalId` (the flat
+  `POST /customers/memories` route the SDKs use) no longer fails validation.
+- Handoff responses can report `narrativeSource: "pending"` while the AI
+  narrative is generated for the next read; the SDK types now accept it.
+- SDK handoff types now match the server's sentiment points (`at`, `channel`,
+  `sentiment`). The Python SDK previously failed to parse handoff briefs for
+  customers with sentiment history.
+- Handoff destination management and route preview are dashboard-only and have
+  been removed from the public API reference and SDKs; `routeHandoff` remains.
 - A hosted Streamable HTTP MCP endpoint exposes six authenticated,
   customer-scoped capture, status, lookup, search, list, and handoff tools. It
   reuses the REST authorization boundary and does not enumerate a tenant.

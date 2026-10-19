@@ -8,20 +8,61 @@ Webhooks let your systems react the moment ConvoMem fires an event — without p
 Webhook endpoints are configured in the **dashboard** (Settings → Webhooks). They cannot
 be managed via an org API key.
 
-## Live events
+Each endpoint belongs to one agent and receives only that agent's events. Choose the
+events to subscribe to when you create the endpoint.
+
+## Events
+
+Every event's `data` includes `customerId`.
+
+### Customers
 
 | Event | Fires when | Key `data` fields |
 | :-- | :-- | :-- |
-| `memory.captured` | Background extraction commits memories for a capture | `customerId`, `saved`, `skipped`, `captureId`, `conversationId` |
-| `conversation.completed` | A conversation is ended | `conversationId`, `customerId`, `outcome` |
+| `customer.created` | A customer is created, explicitly or automatically on first contact | `customerId`, `name`, `email`, `phone`, `externalId` |
+
+### Capture
+
+| Event | Fires when | Key `data` fields |
+| :-- | :-- | :-- |
+| `capture.started` | A capture job begins processing | `captureId`, `customerId`, `conversationId` |
+| `capture.completed` | A capture job finishes | `captureId`, `customerId`, `conversationId`, `saved`, `skipped` |
+| `capture.failed` | A capture job fails after its final retry | `captureId`, `customerId`, `conversationId`, `error` |
+| `memory.captured` | A capture saved at least one new memory | `captureId`, `customerId`, `conversationId`, `saved`, `skipped` |
+
+### Memory lifecycle
+
+These events never include memory text — fetch the memory if you need its content.
+
+| Event | Fires when | Key `data` fields |
+| :-- | :-- | :-- |
+| `memory.created` | A memory is created | `eventId`, `memoryId`, `customerId`, `version`, `operation`, `cause`, `status`, `occurredAt` |
+| `memory.updated` | A memory changes | same as above |
+| `memory.superseded` | A newer memory replaces this one | same as above, plus `supersededById` |
+| `memory.deleted` | A memory is deleted | same as above |
+| `commitment.overdue` | A commitment made to the customer passes its due date | `commitmentId`, `insightId`, `customerId`, `conversationId`, `dueAt`, `humanAgentId` |
+
+### Conversations
+
+| Event | Fires when | Key `data` fields |
+| :-- | :-- | :-- |
+| `conversation.completed` | A conversation is ended, including when it idle-closes | `conversationId`, `customerId`, `outcome` |
 | `conversation.escalated` | A conversation is escalated | `conversationId`, `customerId`, `reason` |
 
-> `customer.created` appears in the event catalog but is **not currently dispatched** at
-> runtime — don't build on it yet.
+### Leads
+
+Fired by lead playbooks configured in the dashboard.
+
+| Event | Fires when | Key `data` fields |
+| :-- | :-- | :-- |
+| `lead.created` | A playbook detects a new lead in a conversation | `id`, `templateId`, `templateName`, `customerId`, `conversationId`, `score`, `priority`, `status` |
+| `lead.updated` | A lead is re-evaluated or edited | same as above |
+| `lead.status_changed` | A lead's status changes | same as above |
+| `lead.disqualified` | A lead is marked `DISQUALIFIED` | same as above |
 
 ## Event payload
 
-Every delivery is a `POST` with an `X-ConvoMem-Signature` header:
+Every delivery is a `POST` with `X-ConvoMem-Signature` and `X-ConvoMem-Event` headers:
 
 ```json title="memory.captured"
 {
@@ -30,7 +71,7 @@ Every delivery is a `POST` with an `X-ConvoMem-Signature` header:
   "data": {
     "customerId": "f3b39d1b-2522-4a00-98df-8cdde783ba12",
     "conversationId": "87c53d10-85f8-4447-920f-b1e847c23a1a",
-    "captureId": "cap_xyz789",
+    "captureId": "0b6f4c1e-3d2a-4e8b-a7c9-5f1d2e3b4a6c",
     "saved": 3,
     "skipped": 0
   }
@@ -80,12 +121,15 @@ otherwise POST to it.
 ## Delivery semantics
 
 - **Retries** — non-`2xx` or timeout triggers up to **3 retries** with exponential backoff.
-- **Idempotency** — deliveries can repeat; de-duplicate on `(event, conversationId)` or `captureId`.
-- **SSRF protection** — destination URLs must be `https://`. Loopback and cloud metadata addresses are rejected.
+- **Idempotency** — deliveries are at-least-once and can repeat. De-duplicate on `eventId`
+  for `memory.*` events, `captureId` for capture events, and `(event, conversationId)`
+  for conversation events.
+- **SSRF protection** — destination URLs must be `https://`. Loopback, private, and cloud
+  metadata addresses are rejected.
 - **Timeout** — your endpoint must respond within 10 s.
 
 ## Related
 
-- [Capture](/docs/capture) — triggers `memory.captured` after background extraction
+- [Capture](/docs/capture) — triggers `capture.*` and `memory.captured`
 - [Conversations](/docs/conversations) — triggers `conversation.completed` and `conversation.escalated`
 - [Authentication](/docs/authentication) — API key scopes and security model

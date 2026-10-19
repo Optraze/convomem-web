@@ -13,12 +13,14 @@ and ConvoMem handles identity resolution, session management, and memory extract
 Every integration follows the same pattern:
 
 ```
-1. recall_customer_context   → inject context into system prompt
+1. recall_customer_context   → at conversation start: inject the brief into the system prompt
 2. LLM generates reply       → send to user
-3. capture_message           → queue memory extraction (fire-and-forget)
+3. capture_message           → after every exchange (fire-and-forget)
+   search_memories           → when a turn needs a specific past fact
    repeat for each turn
-4. end_conversation          → on goodbye / issue resolved
-   escalate_conversation     → on transfer to human
+4. end_conversation          → final turns + close, on goodbye / issue resolved
+   escalate_conversation     → final turns + escalate, on transfer to a human
+                               (call get_handoff_brief first)
 ```
 
 <Callout type="warning" title="Send turns verbatim — never filter">
@@ -45,15 +47,17 @@ verbatim capture rule.
 
 ### `recall_customer_context`
 
-Call at conversation start and again on any turn that references the past, an account,
-or a preference.
+Call once at conversation start, as soon as you have an identifier. This is the
+**cold open**: it returns the customer profile and a call-opening brief that leads with
+any unresolved issue, then the customer's most trusted memories. It does no vector
+search, so it is fast enough to run while a call is still connecting.
 
 ```json
 {
   "type": "function",
   "function": {
     "name": "recall_customer_context",
-    "description": "Retrieve what is already known about the customer before you reply. CALL IT: (1) once at the start of the conversation, as soon as you have any identifier (phone, email, externalId, or customerId); and (2) again on any turn where the user references the past, a prior issue, an account/order, or a preference. ALWAYS set `topic` to the user's current message or question so the most relevant memories are returned. USE the returned `context` string as ground truth when forming your reply, and the returned `customerId` for later capture/end/escalate calls. Pass `autoCreate: true` so a first-time caller is still registered. This is a read — it never stores anything.",
+    "description": "Retrieve what is already known about the customer before you reply. CALL IT once at the start of the conversation, as soon as you have any identifier (phone, email, externalId, or customerId). USE the returned `context` string as background when forming your reply, mention any `openIssue` proactively, and keep the returned `customer.id` for later tool calls. Pass `autoCreate: true` so a first-time caller is still registered. For a specific question later in the conversation, use search_memories instead. This is a read — it never stores conversation turns.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -61,7 +65,6 @@ or a preference.
         "email":      { "type": "string", "description": "Customer email address." },
         "externalId": { "type": "string", "description": "Your CRM / system customer ID." },
         "customerId": { "type": "string", "description": "ConvoMem customer UUID, if already known." },
-        "topic":      { "type": "string", "description": "What to recall — e.g. the user's current question. Enables semantic ranking and returns a prompt-ready context string." },
         "autoCreate": { "type": "boolean", "description": "Create the customer if not found.", "default": true },
         "userName":   { "type": "string", "description": "Customer's display name, to set or backfill the profile when they introduce themselves." }
       }
@@ -73,26 +76,35 @@ or a preference.
 <CodeTabs>
   <CodeTab language="curl">
   ```bash
-  curl "https://api.convomem.com/api/v1/customers/lookup?topic=billing+question&email=alice@example.com&autoCreate=true" \
+  curl "https://api.convomem.com/api/v1/customers/lookup?email=alice@example.com&autoCreate=true" \
     -H "X-API-Key: $CONVOMEM_API_KEY"
   ```
   </CodeTab>
   <CodeTab language="typescript">
   ```typescript
-  const { context, customer } = await client.lookup(topic, { email, phone, customerId }, { autoCreate: true })
+  const { customer, context, openIssue } = await client.coldOpen(
+    { email, phone, customerId },
+    { autoCreate: true },
+  )
   ```
   </CodeTab>
   <CodeTab language="python">
   ```python
-  ctx = client.lookup(topic, CustomerIdentity(email=email), auto_create=True)
+  brief = client.cold_open(CustomerIdentity(email=email), auto_create=True)
+  # brief.customer, brief.context, brief.open_issue
   ```
   </CodeTab>
   <CodeTab language="rust">
   ```rust
-  let ctx = client.lookup(topic, &identity, Some(true), None).await?;
+  let brief = client.cold_open(&identity, Some(true), None, None).await?;
+  // brief.customer, brief.context, brief.open_issue
   ```
   </CodeTab>
 </CodeTabs>
+
+The response contains `found`, `isNewCustomer`, `customer` (the profile, or `null` when
+the customer does not exist and `autoCreate` is off), `context`, `tokenCount`,
+`memories`, and `openIssue` when an issue is still open.
 
 ---
 
@@ -105,7 +117,7 @@ Call after every exchange — the user turn **and** your reply, in order.
   "type": "function",
   "function": {
     "name": "capture_message",
-    "description": "Record the conversation into ConvoMem's long-term memory. CALL IT after EVERY exchange — i.e. after you send each reply — passing the new turns since your last capture (the user's message AND your assistant reply, in order). Do NOT judge whether a turn is 'important' or 'memorable' and do NOT skip, summarize, paraphrase, or filter turns: send them verbatim and let ConvoMem decide what to extract and de-duplicate. Skipping turns loses memories. Each call appends to the customer's active session automatically, so send only the new turns, not the whole transcript again. This is fire-and-forget — extraction happens in the background, so it returns before facts are searchable.",
+    "description": "Record the conversation into ConvoMem's long-term memory. CALL IT after EVERY exchange — i.e. after you send each reply — passing the new turns since your last capture (the user's message AND your assistant reply, in order). Do NOT judge whether a turn is 'important' or 'memorable' and do NOT skip, summarize, paraphrase, or filter turns: send them verbatim and let ConvoMem decide what to extract and de-duplicate. Skipping turns loses memories. Each call appends to the customer's active session automatically, so send only the new turns, not the whole transcript again. For the last exchange of the conversation, use end_conversation or escalate_conversation instead. This is fire-and-forget — extraction happens in the background, so it returns before facts are searchable.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -135,7 +147,7 @@ Call after every exchange — the user turn **and** your reply, in order.
         {"role": "user", "content": "I need help with my order"},
         {"role": "assistant", "content": "Of course, let me look that up."}
       ],
-      "customerId": "cust_uuid_123",
+      "customerId": "f3b39d1b-2522-4a00-98df-8cdde783ba12",
       "channel": "CHAT"
     }'
   ```
@@ -145,7 +157,7 @@ Call after every exchange — the user turn **and** your reply, in order.
   // fire-and-forget — don't await
   client.capture(
     [{ role: 'user', content: userMsg }, { role: 'assistant', content: reply }],
-    { customerId: customer.id },
+    { customerId },
     { channel: 'CHAT' },
   ).catch(console.error)
   ```
@@ -162,10 +174,14 @@ Call after every exchange — the user turn **and** your reply, in order.
   </CodeTab>
   <CodeTab language="rust">
   ```rust
+  // ConvoMem is not Clone — share one client through an Arc
+  let client = Arc::new(ConvoMem::new(std::env::var("CONVOMEM_API_KEY")?));
+
   // fire-and-forget via tokio::spawn
-  let c = client.clone();
+  let c = Arc::clone(&client);
+  let id = identity.clone();
   tokio::spawn(async move {
-      let _ = c.capture(messages, &identity, Some("CHAT"), None, None).await;
+      let _ = c.capture(messages, &id, Some("CHAT"), None, None).await;
   });
   ```
   </CodeTab>
@@ -178,18 +194,19 @@ Call after every exchange — the user turn **and** your reply, in order.
 
 ### `search_memories`
 
-Targeted mid-conversation recall when you already know who the customer is.
+Targeted mid-conversation recall for a specific topic.
 
 ```json
 {
   "type": "function",
   "function": {
     "name": "search_memories",
-    "description": "Search a customer's long-term memories for a specific topic and get a prompt-ready `context` string. Use this — instead of recall_customer_context — when you already know who the customer is and need to answer a specific past-fact question (e.g. 'what plan are they on?', 'did they report this before?'), and you only have a phone, email, or externalId. Set `topic` to the exact thing you're trying to recall. Read-only — stores nothing.",
+    "description": "Search a customer's long-term memories for a specific topic and get a prompt-ready `context` string. Use this — instead of recall_customer_context — when the user asks about or refers to something specific from the past (e.g. 'what plan am I on?', 'did I report this before?'). Set `topic` to the exact thing you're trying to recall. Read-only — stores nothing.",
     "parameters": {
       "type": "object",
       "properties": {
         "topic":      { "type": "string", "description": "Topic or question to find relevant memories for." },
+        "customerId": { "type": "string", "description": "Customer UUID from recall_customer_context." },
         "phone":      { "type": "string", "description": "Customer phone number." },
         "email":      { "type": "string", "description": "Customer email." },
         "externalId": { "type": "string", "description": "External / CRM identifier." }
@@ -219,7 +236,7 @@ Targeted mid-conversation recall when you already know who the customer is.
   </CodeTab>
   <CodeTab language="rust">
   ```rust
-  let ctx = client.lookup(topic, &identity, None, None).await?;
+  let ctx = client.lookup(topic, &identity, None, None, None).await?;
   ```
   </CodeTab>
 </CodeTabs>
@@ -235,7 +252,7 @@ Call immediately before transferring to a human agent.
   "type": "function",
   "function": {
     "name": "get_handoff_brief",
-    "description": "Build a cross-channel briefing (full journey across chat/email/voice/SMS, key memories, sentiment trend, open-issue detection, and an AI-written narrative) for the human who is about to take over. CALL IT immediately before you transfer or escalate, so the agent has full context. Relay the `narrative` and `openIssue` to the human agent; do not read raw memory IDs to the customer. Read-only.",
+    "description": "Build a cross-channel briefing (full journey across chat/email/voice/SMS, key memories, commitments already made, sentiment trend, open-issue detection, and a narrative) for the human who is about to take over. CALL IT immediately before you transfer or escalate, so the agent has full context. Relay the `narrative` and `openIssue.summary` to the human agent; do not read raw memory IDs to the customer. Read-only.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -243,7 +260,7 @@ Call immediately before transferring to a human agent.
         "email":      { "type": "string" },
         "externalId": { "type": "string" },
         "customerId": { "type": "string" },
-        "narrative":  { "type": "string", "enum": ["true", "false"], "description": "Set 'false' to skip the AI narrative for a faster, structured-only brief.", "default": "true" }
+        "narrative":  { "type": "string", "enum": ["true", "false"], "description": "Set 'false' to skip the narrative for a faster, structured-only brief.", "default": "true" }
       }
     }
   }
@@ -253,7 +270,7 @@ Call immediately before transferring to a human agent.
 <CodeTabs>
   <CodeTab language="curl">
   ```bash
-  curl "https://api.convomem.com/api/v1/customers/handoff?customerId=cust_uuid_123" \
+  curl "https://api.convomem.com/api/v1/customers/handoff?customerId=f3b39d1b-2522-4a00-98df-8cdde783ba12" \
     -H "X-API-Key: $CONVOMEM_API_KEY"
   ```
   </CodeTab>
@@ -278,22 +295,29 @@ Call immediately before transferring to a human agent.
 
 ### `end_conversation`
 
-Call once, when the conversation is genuinely finished.
+Call once, when the conversation is genuinely finished. It sends the **final turns and
+the close in one capture request** (`endConversation: true`), so ConvoMem persists the
+transcript before it closes the conversation and runs analysis. Closing in a separate
+request right after a capture can race that ordering.
 
 ```json
 {
   "type": "function",
   "function": {
     "name": "end_conversation",
-    "description": "Close the active conversation and record how it ended. CALL IT once, when the conversation is genuinely finished — the user says goodbye, confirms their issue is resolved, or the call ends. Do NOT call it mid-conversation or because there is a pause. Capture the final turns with capture_message FIRST, then call this. Set `outcome` to a one-line factual result (what was done or decided), not a transcript. After this, the next message from the customer starts a fresh conversation.",
+    "description": "Record the final turns of the conversation AND close it as completed, in one call. CALL IT once, instead of capture_message, for the last exchange — when the user says goodbye, confirms their issue is resolved, or the call ends. Do NOT call it mid-conversation or because there is a pause. Pass the new turns since your last capture, verbatim, exactly as for capture_message. Set `outcome` to a one-line factual result (what was done or decided), not a transcript. After this, the next message from the customer starts a fresh conversation.",
     "parameters": {
       "type": "object",
       "properties": {
-        "customerId":     { "type": "string", "description": "Customer UUID." },
-        "conversationId": { "type": "string", "description": "Conversation ID from recall_customer_context or capture_message response." },
-        "outcome":        { "type": "string", "description": "Short resolution summary, e.g. 'Booked return flight; customer satisfied.'" }
+        "customerId":  { "type": "string", "description": "Customer UUID from recall_customer_context. Preferred identifier." },
+        "phoneNumber": { "type": "string", "description": "Phone identity (use if customerId is unknown)." },
+        "email":       { "type": "string", "description": "Email identity (use if customerId is unknown)." },
+        "externalId":  { "type": "string", "description": "External / CRM identity (use if customerId is unknown)." },
+        "messages":    { "type": "string", "description": "JSON-encoded array of the final turns since your last capture, in chronological order, verbatim." },
+        "channel":     { "type": "string", "enum": ["VOICE", "CHAT", "SMS", "EMAIL"], "default": "CHAT" },
+        "outcome":     { "type": "string", "description": "Short resolution summary (≤500 chars), e.g. 'Booked return flight; customer satisfied.'" }
       },
-      "required": ["customerId", "conversationId"]
+      "required": ["messages"]
     }
   }
 }
@@ -302,25 +326,51 @@ Call once, when the conversation is genuinely finished.
 <CodeTabs>
   <CodeTab language="curl">
   ```bash
-  curl -X POST https://api.convomem.com/api/v1/customers/conversations/end \
+  curl -X POST https://api.convomem.com/api/v1/capture \
     -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    -d '{"customerId":"cust_uuid_123","conversationId":"conv_uuid_456","outcome":"Resolved billing issue"}'
+    -d '{
+      "messages": [
+        {"role": "user", "content": "That fixed it, thanks!"},
+        {"role": "assistant", "content": "Glad to help. Have a good day."}
+      ],
+      "customerId": "f3b39d1b-2522-4a00-98df-8cdde783ba12",
+      "channel": "CHAT",
+      "endConversation": true,
+      "outcome": "Resolved billing issue"
+    }'
   ```
   </CodeTab>
   <CodeTab language="typescript">
   ```typescript
-  await client.endConversation(conversationId, { customerId }, { outcome: 'Resolved billing issue' })
+  await client.capture(finalTurns, { customerId }, {
+    channel: 'CHAT',
+    endConversation: true,
+    outcome: 'Resolved billing issue',
+  })
   ```
   </CodeTab>
   <CodeTab language="python">
   ```python
-  client.end_conversation(conversation_id, identity, outcome="Resolved billing issue")
+  client.capture(
+      final_turns,
+      CustomerIdentity(customer_id=customer_id),
+      channel="CHAT",
+      end_conversation=True,
+      outcome="Resolved billing issue",
+  )
   ```
   </CodeTab>
   <CodeTab language="rust">
   ```rust
-  client.end_conversation(Some(conv_id), &identity, Some("Resolved billing issue")).await?;
+  client.capture_with(&CaptureRequest {
+      messages: Some(final_turns),
+      customer_id: Some(customer_id.clone()),
+      channel: Some("CHAT".into()),
+      end_conversation: Some(true),
+      outcome: Some("Resolved billing issue".into()),
+      ..Default::default()
+  }).await?;
   ```
   </CodeTab>
 </CodeTabs>
@@ -329,22 +379,28 @@ Call once, when the conversation is genuinely finished.
 
 ### `escalate_conversation`
 
-Call when handing off to a human. Pair with `get_handoff_brief`.
+Call when handing off to a human. Like `end_conversation`, it sends the final turns
+and the state change together (`escalate: true`). Call `get_handoff_brief` first so the
+human has full context.
 
 ```json
 {
   "type": "function",
   "function": {
     "name": "escalate_conversation",
-    "description": "Hand the active conversation to a human agent and mark it ESCALATED. CALL IT when the user explicitly asks for a person, is clearly frustrated or upset, or the request is outside what you can resolve. Use this rather than end_conversation when a human still needs to act. Set `reason` to a short factual explanation of why (≤500 chars). Pair this with get_handoff_brief so the human has full context. Capture the final turns first.",
+    "description": "Record the final turns AND hand the conversation to a human agent, marking it ESCALATED, in one call. CALL IT, instead of capture_message, when the user explicitly asks for a person, is clearly frustrated or upset, or the request is outside what you can resolve. Use this rather than end_conversation when a human still needs to act. Pass the new turns since your last capture, verbatim. Set `reason` to a short factual explanation of why (≤500 chars). Call get_handoff_brief first so the human has full context.",
     "parameters": {
       "type": "object",
       "properties": {
-        "customerId":     { "type": "string", "description": "Customer UUID." },
-        "conversationId": { "type": "string", "description": "Conversation ID from recall_customer_context or capture_message response." },
-        "reason":         { "type": "string", "description": "Why it is being escalated (≤500 chars)." }
+        "customerId":  { "type": "string", "description": "Customer UUID from recall_customer_context. Preferred identifier." },
+        "phoneNumber": { "type": "string", "description": "Phone identity (use if customerId is unknown)." },
+        "email":       { "type": "string", "description": "Email identity (use if customerId is unknown)." },
+        "externalId":  { "type": "string", "description": "External / CRM identity (use if customerId is unknown)." },
+        "messages":    { "type": "string", "description": "JSON-encoded array of the final turns since your last capture, in chronological order, verbatim." },
+        "channel":     { "type": "string", "enum": ["VOICE", "CHAT", "SMS", "EMAIL"], "default": "CHAT" },
+        "reason":      { "type": "string", "description": "Why it is being escalated (≤500 chars)." }
       },
-      "required": ["customerId", "conversationId"]
+      "required": ["messages"]
     }
   }
 }
@@ -353,28 +409,64 @@ Call when handing off to a human. Pair with `get_handoff_brief`.
 <CodeTabs>
   <CodeTab language="curl">
   ```bash
-  curl -X POST https://api.convomem.com/api/v1/customers/conversations/escalate \
+  curl -X POST https://api.convomem.com/api/v1/capture \
     -H "X-API-Key: $CONVOMEM_API_KEY" \
     -H "Content-Type: application/json" \
-    -d '{"customerId":"cust_uuid_123","conversationId":"conv_uuid_456","reason":"Complex billing dispute"}'
+    -d '{
+      "messages": [
+        {"role": "user", "content": "I want to speak to a person."},
+        {"role": "assistant", "content": "Of course, connecting you now."}
+      ],
+      "customerId": "f3b39d1b-2522-4a00-98df-8cdde783ba12",
+      "channel": "CHAT",
+      "escalate": true,
+      "reason": "Complex billing dispute"
+    }'
   ```
   </CodeTab>
   <CodeTab language="typescript">
   ```typescript
-  await client.escalateConversation(conversationId, { customerId }, { reason: 'Complex billing dispute' })
+  await client.capture(finalTurns, { customerId }, {
+    channel: 'CHAT',
+    escalate: true,
+    reason: 'Complex billing dispute',
+  })
   ```
   </CodeTab>
   <CodeTab language="python">
   ```python
-  client.escalate_conversation(conversation_id, identity, reason="Complex billing dispute")
+  client.capture(
+      final_turns,
+      CustomerIdentity(customer_id=customer_id),
+      channel="CHAT",
+      escalate=True,
+      reason="Complex billing dispute",
+  )
   ```
   </CodeTab>
   <CodeTab language="rust">
   ```rust
-  client.escalate_conversation(Some(conv_id), &identity, Some("Complex billing dispute")).await?;
+  client.capture_with(&CaptureRequest {
+      messages: Some(final_turns),
+      customer_id: Some(customer_id.clone()),
+      channel: Some("CHAT".into()),
+      escalate: Some(true),
+      reason: Some("Complex billing dispute".into()),
+      ..Default::default()
+  }).await?;
   ```
   </CodeTab>
 </CodeTabs>
+
+`endConversation` and `escalate` are mutually exclusive; sending both returns `422`.
+
+<Callout type="note" title="Closing without new turns">
+To close or escalate a conversation when there are no turns left to send, use the
+[Conversations](/docs/conversations) endpoints. The flat routes
+(`POST /customers/conversations/end` and `/escalate`) resolve the customer from any
+identity field and act on that customer's **active** conversation; they do not take a
+`conversationId`, and return `404` when no conversation is active.
+</Callout>
 
 ---
 
@@ -382,12 +474,12 @@ Call when handing off to a human. Pair with `get_handoff_brief`.
 
 | Tool | API endpoint | TypeScript | Python | Rust |
 |------|-------------|-----------|--------|------|
-| `recall_customer_context` | `GET /customers/lookup` | `client.lookup(topic, identity, { autoCreate: true })` | `client.lookup(topic, identity, auto_create=True)` | `client.lookup(topic, &id, Some(true), None)` |
-| `capture_message` | `POST /capture` | `client.capture(msgs, identity, { channel })` | `client.capture(msgs, identity, channel=…)` | `client.capture(msgs, &id, channel, …)` |
-| `search_memories` | `GET /customers/memories/lookup` | `client.lookup(topic, identity)` | `client.lookup(topic, identity)` | `client.lookup(topic, &id, None, None)` |
+| `recall_customer_context` | `GET /customers/lookup` | `client.coldOpen(identity, { autoCreate: true })` | `client.cold_open(identity, auto_create=True)` | `client.cold_open(&id, Some(true), None, None)` |
+| `capture_message` | `POST /capture` | `client.capture(msgs, identity, { channel })` | `client.capture(msgs, identity, channel=…)` | `client.capture(msgs, &id, channel, None, None)` |
+| `search_memories` | `GET /customers/memories/lookup` | `client.lookup(topic, identity)` | `client.lookup(topic, identity)` | `client.lookup(topic, &id, None, None, None)` |
 | `get_handoff_brief` | `GET /customers/handoff` | `client.getHandoff(identity)` | `client.get_handoff(identity)` | `client.get_handoff(&id, None, None)` |
-| `end_conversation` | `POST /customers/conversations/end` | `client.endConversation(convId, identity, { outcome })` | `client.end_conversation(convId, identity)` | `client.end_conversation(convId, &id, outcome)` |
-| `escalate_conversation` | `POST /customers/conversations/escalate` | `client.escalateConversation(convId, identity, { reason })` | `client.escalate_conversation(convId, identity)` | `client.escalate_conversation(convId, &id, reason)` |
+| `end_conversation` | `POST /capture` with `endConversation: true` | `client.capture(msgs, identity, { endConversation: true, outcome })` | `client.capture(msgs, identity, end_conversation=True, outcome=…)` | `client.capture_with(&CaptureRequest { end_conversation: Some(true), … })` |
+| `escalate_conversation` | `POST /capture` with `escalate: true` | `client.capture(msgs, identity, { escalate: true, reason })` | `client.capture(msgs, identity, escalate=True, reason=…)` | `client.capture_with(&CaptureRequest { escalate: Some(true), … })` |
 
 All endpoints under `https://api.convomem.com/api/v1`. Auth header: `X-API-Key: <key>`.
 
@@ -410,7 +502,7 @@ const openai = new OpenAI()
 
 async function handleMessage(userMessage: string, session: { email: string }) {
   // 1. Recall — before every reply
-  const { context, customer } = await client.lookup(userMessage, {
+  const { context } = await client.lookup(userMessage, {
     email: session.email,
   })
 
@@ -433,7 +525,7 @@ async function handleMessage(userMessage: string, session: { email: string }) {
       { role: 'user', content: userMessage },
       { role: 'assistant', content: reply },
     ],
-    { customerId: customer?.id, email: session.email },
+    { email: session.email },
     { channel: 'CHAT' },
   ).catch(console.error)
 
@@ -443,15 +535,16 @@ async function handleMessage(userMessage: string, session: { email: string }) {
 
 ### Voicebot / IVR
 
-Sub-second latency budgets — look up at call start, register tools for inline calls during.
+Sub-second latency budgets — run the cold open at call start, register tools for inline
+calls during.
 
 **Call start:**
 
 ```typescript title="call-start.ts"
-// Look up as soon as the call connects — before the first reply
-const { context, customer } = await client.lookup(
-  'caller history and preferences',
+// Cold open as soon as the call connects — before the first reply
+const { context } = await client.coldOpen(
   { phone: callerPhoneNumber },
+  { autoCreate: true },
 )
 
 const systemPrompt = `You are a voice support agent.
@@ -463,13 +556,12 @@ ${context || 'No prior history.'}`
 **Call end:**
 
 ```typescript title="call-end.ts"
-// Capture the full transcript, then close the session
-await client.capture(transcript, { customerId: customer.id }, { channel: 'VOICE' })
-await client.endConversation(
-  conversationId,
-  { customerId: customer.id },
-  { outcome: 'Resolved billing question' },
-)
+// Send the remaining turns and close the conversation in one ordered request
+await client.capture(remainingTurns, { phone: callerPhoneNumber }, {
+  channel: 'VOICE',
+  endConversation: true,
+  outcome: 'Resolved billing question',
+})
 ```
 
 **VAPI** — add an API Tool: method `GET`, URL
@@ -500,22 +592,19 @@ async function handleInboundEmail(from: string, subject: string, body: string) {
   // 2. Draft and send reply
   const reply = await generateReply(context, subject, body)
 
-  // 3. Capture the exchange
+  // 3. Capture the exchange — and close the conversation if the thread is resolved
+  const resolved = isResolved(reply)
   await client.capture(
     [
       { role: 'user', content: `Subject: ${subject}\n\n${body}` },
       { role: 'assistant', content: reply },
     ],
     { email: from },
-    { channel: 'EMAIL' },
+    {
+      channel: 'EMAIL',
+      ...(resolved ? { endConversation: true, outcome: 'Email thread resolved' } : {}),
+    },
   )
-
-  // 4. End session if resolved
-  if (isResolved(reply)) {
-    await client.endConversation(null, { email: from }, {
-      outcome: 'Email thread resolved',
-    })
-  }
 
   return reply
 }
@@ -524,7 +613,7 @@ async function handleInboundEmail(from: string, subject: string, body: string) {
 ## Conversation sessions
 
 Conversations idle-close after **15 minutes of inactivity** (configurable server-side).
-You don't need to call `endConversation` unless you want to:
+You don't need to close conversations explicitly unless you want to:
 
 - Record an `outcome` for handoff briefings
 - Trigger the `conversation.completed` webhook immediately

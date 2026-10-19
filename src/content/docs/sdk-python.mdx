@@ -34,10 +34,13 @@ Optional configuration:
 ```python
 client = ConvoMem(
     api_key=os.environ["CONVOMEM_API_KEY"],
-    timeout=10.0,    # seconds (default 10)
-    max_retries=3,   # retries on 429 / 5xx
+    timeout=10.0,    # seconds per attempt (default 10)
+    max_retries=3,   # retries on 429 / 5xx / timeout (default 3)
 )
 ```
+
+Retries wait a random delay of up to `retry_delay × attempt` (`retry_delay` defaults to
+1 second). They do not read the `Retry-After` header.
 
 <Callout type="warning" title="Keep keys server-side">
 Never expose an API key in client-side code. All ConvoMem calls should originate from
@@ -55,7 +58,7 @@ read or write. If `customer_id` is set, the SDK routes to the direct
 from convomem import CustomerIdentity
 
 # By known ID — most direct
-identity = CustomerIdentity(customer_id="cust_uuid_123")
+identity = CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12")
 
 # By email — server resolves the customer
 identity = CustomerIdentity(email="alice@example.com")
@@ -95,9 +98,35 @@ print(status.status)  # queued, processing, completed, or failed
 Use bounded polling with a delay and timeout. A failed capture needs investigation;
 it is not evidence that the customer has no memories.
 
+To close the conversation, send the final turns with `end_conversation=True` (or
+`escalate=True`) rather than calling `end_conversation()` right after a capture:
+
+```python
+client.capture(
+    [{"role": "assistant", "content": "All sorted — anything else?"}],
+    CustomerIdentity(phone="+14155550101"),
+    channel="VOICE",
+    end_conversation=True,
+    outcome="Refund issued",
+)
+```
+
+## Cold open
+
+At the start of a conversation, before the customer has said why they are calling, get
+the profile and a call-opening brief that leads with any unresolved issue:
+
+```python
+brief = client.cold_open(CustomerIdentity(phone="+14155550100"), auto_create=True)
+
+print(brief.context)
+if brief.open_issue:
+    print(f"Still open: {brief.open_issue.summary}")
+```
+
 ## Look up context
 
-Recall semantically relevant memories before generating a reply.
+Recall semantically relevant memories for a topic before generating a reply.
 
 ```python
 ctx = client.lookup(
@@ -113,6 +142,7 @@ for mem in ctx.memories:
 ## Agent loop pattern
 
 ```python
+import os
 from convomem import ConvoMem, CustomerIdentity
 
 client = ConvoMem(api_key=os.environ["CONVOMEM_API_KEY"])
@@ -144,7 +174,7 @@ def handle_message(user_msg: str, email: str):
 ```python
 from convomem import CustomerIdentity
 
-identity = CustomerIdentity(customer_id="cust_uuid_123")
+identity = CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12")
 
 # List all memories
 result = client.list_memories(identity, page=1, limit=20)
@@ -160,13 +190,13 @@ memory = client.add_memory(
 
 # Update (requires customer_id)
 client.update_memory(
-    "mem_uuid_456",
+    "c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c",
     identity,
     content="Prefers email and text contact",
 )
 
 # Delete (requires customer_id)
-client.delete_memory("mem_uuid_456", identity)
+client.delete_memory("c2a7e4b1-9f3d-4a6e-8b5c-1d2e3f4a5b6c", identity)
 ```
 
 ## Customers
@@ -186,7 +216,7 @@ print(f"Customer ID: {customer.id}")
 
 # Update — by ID (direct) or by identity (server resolves)
 updated = client.update_customer(
-    CustomerIdentity(customer_id="cust_uuid_123"),
+    CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12"),
     name="Alice Smith",
 )
 
@@ -195,7 +225,7 @@ result = client.list_customers(page=1, limit=20)
 print(f"{len(result.customers)} of {result.total}")
 
 # Delete
-client.delete_customer(CustomerIdentity(customer_id="cust_uuid_123"))
+client.delete_customer(CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12"))
 ```
 
 ## Conversations
@@ -203,7 +233,7 @@ client.delete_customer(CustomerIdentity(customer_id="cust_uuid_123"))
 ```python
 from convomem import CustomerIdentity
 
-identity = CustomerIdentity(customer_id="cust_uuid_123")
+identity = CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12")
 
 # Start
 conversation = client.start_conversation(identity, "CHAT")
@@ -214,12 +244,12 @@ result = client.list_conversations(identity, page=1, limit=20)
 
 # End — path-based when both IDs are known
 client.end_conversation(
-    "conv_uuid_456",
+    "87c53d10-85f8-4447-920f-b1e847c23a1a",
     identity,
     outcome="Resolved billing issue",
 )
 
-# End — flat route when only identity is known
+# End — flat route: closes the customer's active conversation
 client.end_conversation(
     None,
     CustomerIdentity(email="alice@example.com"),
@@ -228,7 +258,7 @@ client.end_conversation(
 
 # Escalate
 client.escalate_conversation(
-    "conv_uuid_456",
+    "87c53d10-85f8-4447-920f-b1e847c23a1a",
     identity,
     reason="Complex billing dispute",
 )
@@ -246,11 +276,23 @@ for mem in handoff.key_memories:
     print(f"  - {mem.content}")
 ```
 
+## Route a live transfer
+
+Resolve which human destination a transfer should go to. Destinations are configured
+in the dashboard.
+
+```python
+route = client.route_handoff(CustomerIdentity(phone="+14155550100"))
+
+if route.destination:
+    print(route.destination.value, route.source)
+```
+
 ## Embed tokens
 
 ```python
 result = client.create_embed_token(
-    CustomerIdentity(customer_id="cust_uuid_123"),
+    CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12"),
     ttl_seconds=3600,
 )
 
@@ -264,7 +306,7 @@ print(f"Expires in: {result.expires_in}s")
 from convomem import ConvoMemApiError
 
 try:
-    customer = client.get_customer(CustomerIdentity(customer_id="cust_uuid_123"))
+    customer = client.get_customer(CustomerIdentity(customer_id="f3b39d1b-2522-4a00-98df-8cdde783ba12"))
 except ConvoMemApiError as e:
     print(f"Status: {e.status}")
     print(f"Body: {e.body}")
@@ -292,22 +334,6 @@ async def main():
         )
 
 asyncio.run(main())
-```
-
-## Low-level resource client
-
-For advanced use cases (webhook integrations, raw resource access) you can use
-`ConvoMemClient` directly:
-
-```python
-from convomem import ConvoMemClient, CaptureRequest, Message
-
-client = ConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
-
-result = client.capture(CaptureRequest(
-    messages=[Message(role="user", content="Hello")],
-    email="alice@example.com",
-))
 ```
 
 ## Other SDKs

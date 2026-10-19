@@ -30,7 +30,9 @@ const client = new ConvoMem({
 ```
 
 <Callout type="note" title="No Bearer prefix">
-ConvoMem uses `X-API-Key` header authentication, not `Authorization: Bearer`.
+ConvoMem uses `X-API-Key` header authentication, not `Authorization: Bearer`. The one
+exception is the [hosted MCP endpoint](/docs/mcp), which also accepts a bearer token
+because most MCP clients can only send one.
 </Callout>
 
 ## Keys are bound to one agent
@@ -84,11 +86,12 @@ Organization API keys (`sk-org-*`) have **integration scope** and can access:
 - Memory management (`/customers/*/memories`)
 - Conversations (`/customers/*/conversations`)
 - Handoff briefings (`/customers/*/handoff`, `/customers/handoff`)
+- Live transfer routing (`POST /handoff/route`)
 - Embed tokens (`/embed/tokens`)
 
-Administrative endpoints — webhooks management, org settings, audit logs, and analytics
-dashboards — require session-based authentication through the dashboard. They **cannot**
-be accessed with an org API key.
+Administrative endpoints — webhooks management, handoff destinations, org settings, audit
+logs, and analytics dashboards — require session-based authentication through the
+dashboard. They **cannot** be accessed with an org API key.
 
 <Callout type="danger" title="Rotate compromised keys immediately">
 If a key leaks, revoke it from the dashboard. Revocation takes effect within seconds and
@@ -97,15 +100,25 @@ cannot be undone.
 
 ## PII redaction
 
-Before any memory is persisted, ConvoMem runs detection for emails, phone numbers, card
-numbers, and other sensitive patterns, replacing them with typed placeholders. The
-original values are never written to long-term storage.
+Before an extracted memory is stored, ConvoMem drops any fact that contains credentials
+or secrets, then applies your organization's sensitive-data policy. By default the policy
+**masks** the matched value and keeps the rest of the fact:
 
-## Data residency
+| Category | Default | Stored as |
+| --- | --- | --- |
+| Credit / debit card numbers (Luhn-validated) | On | `•••• 1111` (last four digits) |
+| Bank account / IBAN | On | `[redacted:bank]` |
+| US Social Security numbers | On | `[redacted:ssn]` |
+| API keys, tokens, and passwords | Always | The whole fact is dropped |
+| Aadhaar and PAN numbers | On | `[redacted:aadhaar]`, `[redacted:pan]` |
+| Email addresses | Off | `[redacted:email]` when enabled |
+| Phone numbers | Off | `[redacted:phone]` when enabled |
+| IP addresses, passport numbers, and other tax IDs | Off | `[redacted:…]` when enabled |
 
-Choose where your data lives at the project level. On-prem and single-tenant deployments
-are available for regulated workloads — see the [changelog](/changelog) for the latest
-availability.
+Admins can change the categories, switch the action from mask to drop, and (on plans
+that include it) add custom patterns in the dashboard. Email and phone are off by default because they usually
+identify the customer rather than describe them. Redaction applies to stored memories;
+conversation transcripts have their own retention and access controls.
 
 ## What's next
 

@@ -22,3 +22,6 @@ public/llms.txt
 public/blog/*.md
 public/docs/*.md
 public/changelog/*.md
+
+# Editor settings
+.zed/

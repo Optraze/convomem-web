@@ -47,8 +47,10 @@ support via cURL.
 
 ## Get an API key
 
-Create a key from the [dashboard](https://app.convomem.com/settings/keys). Keys are
-scoped per environment — use separate keys for development and production.
+Create a key from the [dashboard](https://app.convomem.com/settings/keys). Each key is
+bound to one **agent** — the workspace for one bot or use case — and everything you
+capture or recall with it stays inside that agent. Give each bot its own key. See
+[Authentication](/docs/authentication#keys-are-bound-to-one-agent).
 
 <Callout type="warning" title="Keep keys server-side">
 Never expose an API key in client-side code. All ConvoMem calls should originate from
@@ -60,9 +62,9 @@ your backend or an edge function. For browser widgets, use [embed tokens](/docs/
 <CodeTabs>
   <CodeTab language="typescript" filename="convomem.ts">
   ```typescript
-  import { ConvoMemClient } from '@optraze/convomem-sdk'
+  import { ConvoMem } from '@optraze/convomem-sdk'
 
-  const client = new ConvoMemClient({
+  const client = new ConvoMem({
     apiKey: process.env.CONVOMEM_API_KEY!,
   })
   ```
@@ -70,19 +72,18 @@ your backend or an edge function. For browser widgets, use [embed tokens](/docs/
   <CodeTab language="python" filename="convomem.py">
   ```python
   import os
-  from convomem import ConvoMemClient
+  from convomem import ConvoMem
 
-  client = ConvoMemClient(api_key=os.environ["CONVOMEM_API_KEY"])
+  client = ConvoMem(api_key=os.environ["CONVOMEM_API_KEY"])
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  use convomem::ConvoMemClient;
+  use convomem::ConvoMem;
 
-  fn main() -> Result<(), Box<dyn std::error::Error>> {
-      let client = ConvoMemClient::new(
-          std::env::var("CONVOMEM_API_KEY")?
-      );
+  #[tokio::main]
+  async fn main() -> Result<(), Box<dyn std::error::Error>> {
+      let client = ConvoMem::new(std::env::var("CONVOMEM_API_KEY")?);
       Ok(())
   }
   ```
@@ -99,20 +100,20 @@ your backend or an edge function. For browser widgets, use [embed tokens](/docs/
 <CodeTabs>
   <CodeTab language="typescript" filename="verify.ts">
   ```typescript
-  const customers = await client.customers.list({ limit: 1 })
-  console.log('Connected:', customers.total >= 0)
+  const { total } = await client.listCustomers({ limit: 1 })
+  console.log(`Connected — ${total} customers`)
   ```
   </CodeTab>
   <CodeTab language="python" filename="verify.py">
   ```python
-  result = client.customers.list(limit=1)
-  print(f"Connected: {result.total >= 0}")
+  result = client.list_customers(limit=1)
+  print(f"Connected — {result.total} customers")
   ```
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  let result = client.list_customers(Some(1), Some(1)).await?;
-  println!("Connected: {}", result.total >= 0);
+  let result = client.list_customers(Some(1), Some(1), None).await?;
+  println!("Connected — {} customers", result.total);
   ```
   </CodeTab>
   <CodeTab language="curl" filename="Terminal">

@@ -5,9 +5,9 @@ status: "published"
 ---
 
 A handoff briefing is a structured snapshot of everything ConvoMem knows about a customer:
-their full conversation journey, key memories, sentiment trend, open-issue detection, and
-an AI-written narrative. Designed to be injected directly into a human agent's context the
-moment they take over.
+their full conversation journey, key memories, commitments already made, sentiment trend,
+open-issue detection, and a narrative summary. Designed to be injected directly into a
+human agent's context the moment they take over.
 
 ## Get a briefing
 
@@ -32,9 +32,9 @@ moment they take over.
   </CodeTab>
   <CodeTab language="python" filename="handoff.py">
   ```python
-  from convomem import HandoffParams
+  from convomem import CustomerIdentity
 
-  handoff = client.customers.handoff(HandoffParams(email="alice@example.com"))
+  handoff = client.get_handoff(CustomerIdentity(email="alice@example.com"))
 
   if handoff.found:
       print(f"Narrative: {handoff.narrative}")
@@ -44,12 +44,13 @@ moment they take over.
   </CodeTab>
   <CodeTab language="rust" filename="main.rs">
   ```rust
-  use convomem::HandoffParams;
+  use convomem::CustomerIdentity;
 
-  let handoff = client.handoff(&HandoffParams {
-      email: Some("alice@example.com".into()),
-      ..Default::default()
-  }).await?;
+  let handoff = client.get_handoff(
+      &CustomerIdentity::from_email("alice@example.com"),
+      None, // fresh
+      None, // narrative
+  ).await?;
 
   if handoff.found {
       println!("Narrative: {:?}", handoff.narrative);
@@ -62,12 +63,17 @@ moment they take over.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `fresh` | boolean | `false` | Bypass the 10-minute cache to get the latest state |
-| `narrative` | boolean | `true` | Set to `false` to skip the LLM-written summary — faster, structured-data only |
+| `fresh` | boolean | `false` | Rebuild the brief instead of serving the cached copy |
+| `narrative` | boolean | `true` | Set to `false` to skip the narrative — faster, structured data only |
+
+Briefs are cached for up to **24 hours** by default and rebuilt automatically whenever a
+conversation ends or is escalated, or the open issue is triaged. Turns captured in a
+conversation that is still active do not refresh the cache, so pass `fresh: true` when
+you need them in the brief.
 
 ```typescript
 const handoff = await client.getHandoff(
-  { customerId: 'cust_uuid_123' },
+  { customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' },
   { fresh: true, narrative: true },
 )
 ```
@@ -76,14 +82,33 @@ const handoff = await client.getHandoff(
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `found` | boolean | `false` if the customer doesn't exist or has no history |
-| `customer` | Customer | Full customer profile |
-| `journey` | ConversationSummary[] | Recent conversation sessions, newest first |
-| `keyMemories` | Memory[] | Top memories ranked by importance and recency |
-| `sentimentTrend` | object | `{ direction: "positive" \| "neutral" \| "negative" \| "stable", current: number }` |
-| `openIssue` | object | `{ isOpen: boolean, summary?: string }` — unresolved issue detection |
-| `narrative` | string \| null | AI-written paragraph summarizing the customer's history |
-| `narrativeSource` | string | `"generated"`, `"cached"`, or `"skipped"` |
+| `found` | boolean | `false` only when no customer matches the identity; the response is then `{ found: false, customer: null }` |
+| `customer` | object | Profile summary: `id`, `name`, `email`, `phone`, `externalId`, `lastContactAt`, `lastSentiment` |
+| `journey` | object[] | Every conversation, oldest first: `conversationId`, `channel`, `status`, `startedAt`, `endedAt`, `summary`, `outcome`, `sentiment`, `messagesCount` |
+| `keyMemories` | object[] | Customer-stated facts ranked by relevance to the open issue: `id`, `content`, `category`, `memoryType`, `sentiment`, `conversationId`, `channelSource`, `relevantToIssue` |
+| `agentCommitments` | object[] | What your side already committed to (same shape as `keyMemories`), kept separate from the customer's own statements; empty unless agent capture is enabled |
+| `sentimentTrend` | object | `{ direction, current, points }` — see below |
+| `openIssue` | object | `{ isOpen, reason, conversationId, summary, priority, tags, snoozedUntil, resolvedAt, insights, effectivePriority }`; `reason` is `ESCALATED`, `ACTIVE`, `OUTCOME_UNRESOLVED`, or `null` |
+| `recentInsights` | object[] | Open insights for the customer: `id`, `insightType`, `content`, `status`, `confidence`, `conversationId`, `createdAt` |
+| `notes` | object[] | Internal agent notes, newest first: `id`, `body`, `authorId`, `conversationId`, `createdAt` |
+| `narrative` | string \| null | Narrative summary of the customer's history; `null` when `narrative=false` |
+| `narrativeSource` | string | How the narrative was produced — see below |
+| `generatedAt` | string | ISO-8601 time the brief was built |
+| `cached` | boolean | `true` when served from the cache |
+
+**`sentimentTrend`** — `direction` is `improving`, `declining`, `stable`, or `unknown`
+(no conversation has a sentiment score yet). `current` is the latest sentiment score (or the
+customer's last known score, or `null`). `points` lists each scored conversation as
+`{ at, channel, sentiment }`, oldest first.
+
+**`narrativeSource`**
+
+| Value | Meaning |
+| --- | --- |
+| `llm` | Written by the model |
+| `pending` | A deterministic summary served now while the model-written version is generated in the background; a later request returns `llm` |
+| `fallback` | The model was unavailable, so a deterministic summary is used |
+| `skipped` | You passed `narrative=false` |
 
 ## Injecting into a human agent
 
@@ -102,7 +127,7 @@ ${handoff.narrative ?? 'No prior history.'}
 ${handoff.keyMemories.map((m) => `- ${m.content}`).join('\n')}
 
 ### Sentiment
-${handoff.sentimentTrend.direction} (score: ${handoff.sentimentTrend.current})
+${handoff.sentimentTrend.direction} (score: ${handoff.sentimentTrend.current ?? 'n/a'})
 
 ### Open issue
 ${handoff.openIssue.isOpen ? handoff.openIssue.summary : 'None'}
@@ -111,7 +136,7 @@ ${handoff.openIssue.isOpen ? handoff.openIssue.summary : 'None'}
 
 <Callout type="tip" title="Warm the cache for call queues">
 When a call enters the queue, call `getHandoff()` with `fresh: false` (cheap, cached).
-Call it again with `fresh: true` when the agent picks up to include anything that happened
+Call it again with `fresh: true` when the agent picks up to include anything captured
 while the customer waited.
 </Callout>
 
@@ -121,16 +146,75 @@ For direct ID access, the SDK routes to the path-based endpoint:
 
 ```typescript
 // With customerId → GET /api/v1/customers/:id/handoff
-const handoff = await client.getHandoff({ customerId: 'cust_uuid_123' })
+const byId = await client.getHandoff({ customerId: 'f3b39d1b-2522-4a00-98df-8cdde783ba12' })
 
 // Without customerId → GET /api/v1/customers/handoff?email=…
-const handoff = await client.getHandoff({ email: 'alice@example.com' })
+const byEmail = await client.getHandoff({ email: 'alice@example.com' })
 ```
+
+## Route a live transfer
+
+`POST /handoff/route` answers the question a voice platform asks mid-call: which human
+destination should take this customer? The decision is made ahead of time, when the
+customer's last conversation ends, so the call is a single fast read. It is designed to
+always return `200`: an unknown customer or missing decision falls back to the agent's
+default destination. Read `source` (`memory`, `default`, `none`, or `invalid_request`)
+to see which tier answered.
+
+Handoff destinations are configured per agent in the **dashboard**; they cannot be
+created or edited with an API key.
+
+<CodeTabs>
+  <CodeTab language="curl" filename="Terminal">
+  ```bash
+  curl -s -X POST -H "X-API-Key: $CONVOMEM_API_KEY" \
+    -H "Content-Type: application/json" \
+    "https://api.convomem.com/api/v1/handoff/route" \
+    -d '{"phone": "+14155550101"}'
+  ```
+  </CodeTab>
+  <CodeTab language="typescript" filename="route.ts">
+  ```typescript
+  const { destination, source, reasoning } = await client.routeHandoff({
+    phone: '+14155550101',
+  })
+
+  if (destination) {
+    await telephony.transfer(destination.value, destination.transferMessage)
+  }
+  ```
+  </CodeTab>
+  <CodeTab language="python" filename="route.py">
+  ```python
+  route = client.route_handoff(CustomerIdentity(phone="+14155550101"))
+
+  if route.destination:
+      print(route.destination.value, route.source)
+  ```
+  </CodeTab>
+  <CodeTab language="rust" filename="main.rs">
+  ```rust
+  let route = client.route_handoff(
+      &CustomerIdentity::from_phone("+14155550101"),
+      None, // format
+  ).await?;
+
+  if let Some(destination) = &route.destination {
+      println!("{} ({})", destination.value, route.source);
+  }
+  ```
+  </CodeTab>
+</CodeTabs>
+
+The response is `{ destination, source, reasoning, customerId }`, where `destination`
+is `{ id, name, type, value, transferMessage }` (`type` is `PHONE` or `SIP`) or `null`
+when no destination is configured. Add `?format=dograh` to receive Dograh's
+`transfer_context` shape instead.
 
 ## What's next
 
 - [Customers](/docs/customers) — manage the profiles behind briefings
 - [Conversations](/docs/conversations) — manage and escalate sessions
-- [Embed](/docs/embed) — browser widget for customer-facing agent panels
+- [Embed](/docs/embed) — the hosted agent panel for browser-based handoff
 
 **SDK:** [TypeScript](/docs/sdk-typescript) · [Python](/docs/sdk-python) · [Rust](/docs/sdk-rust)

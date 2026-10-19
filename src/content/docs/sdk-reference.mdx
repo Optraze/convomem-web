@@ -1,7 +1,7 @@
 ---
 title: "TypeScript SDK"
 description: "Install, initialize, and use the ConvoMem TypeScript / JavaScript SDK."
-status: "published"
+status: "draft"
 ---
 
 The ConvoMem TypeScript SDK works in Node.js, Deno, Bun, and edge runtimes. Published to
@@ -35,27 +35,31 @@ import { ConvoMem } from '@optraze/convomem-sdk'
 
 const client = new ConvoMem({
   apiKey: process.env.CONVOMEM_API_KEY!, // required
-  timeout: 10_000,                        // optional — ms (default 30 000)
-  maxRetries: 3,                          // optional — retries on 429 / 5xx
+  timeout: 10_000,                        // optional — ms per attempt (default 10 000)
+  maxRetries: 3,                          // optional — retries on 429 / 5xx / timeout (default 3)
 })
 ```
+
+Retries wait a random delay of up to `retryDelay × attempt` (`retryDelay` defaults to
+1,000 ms). They do not read the `Retry-After` header.
 
 <Callout type="warning" title="Keep keys server-side">
 Never expose an API key in client-side code. All ConvoMem calls should originate from
 your backend or an edge function. For browser widgets, use [embed tokens](/docs/embed).
 </Callout>
 
-## ConvoMem (primary class)
+## Methods
 
-Flat API — every method accepts a `CustomerIdentity` and routes to the correct endpoint.
-Use this for all new integrations.
+Every method that operates on a customer accepts a `CustomerIdentity` and routes to the
+correct endpoint.
 
 ### Memory methods
 
 | Method | Description |
 | --- | --- |
-| `capture(messages, identity, options?)` | Send conversation turns for background extraction |
+| `capture(messages, identity, options?)` | Send conversation turns for background extraction; `endConversation` / `escalate` close the conversation after the turns are stored |
 | `getCaptureStatus(captureId)` | Poll queued, processing, completed, or failed capture state |
+| `coldOpen(identity, options?)` | Customer profile plus a call-opening brief, before the customer states a topic |
 | `lookup(topic, identity, options?)` | Recall relevant memories as a ready-to-use context string |
 | `listMemories(identity, options?)` | Page through all memories for a customer |
 | `addMemory(content, identity, options?)` | Write a memory directly (synchronous, no extraction lag) |
@@ -68,8 +72,8 @@ Use this for all new integrations.
 | --- | --- |
 | `createCustomer(data)` | Create a new customer profile |
 | `getCustomer(identity)` | Get a customer by any identity field |
-| `listCustomers(options?)` | List all customers with pagination and filters |
-| `updateCustomer(identity, data)` | Update customer fields (metadata is merged) |
+| `listCustomers(options?)` | List customers with pagination and filters |
+| `updateCustomer(identity, data)` | Update customer fields; `metadata` replaces the stored object |
 | `deleteCustomer(identity)` | Request permanent customer erasure; unresolved retained sources can return a conflict |
 
 ### Conversation methods
@@ -86,32 +90,41 @@ Use this for all new integrations.
 | Method | Description |
 | --- | --- |
 | `getHandoff(identity, options?)` | Full cross-channel briefing for a human takeover |
-| `createEmbedToken(identity, options?)` | Mint a short-lived browser token |
+| `routeHandoff(identity, options?)` | Resolve which destination a live transfer should go to |
+| `createEmbedToken(identity, options?)` | Mint a short-lived, read-only browser token |
 
-The SDK also exposes public handoff-destination and routing operations from the Integration
-API. Dashboard-only analytics, exports, request logs, memory health, organization settings,
-entities, insights, and webhook administration are intentionally not shipped in the SDK.
+Handoff destinations are configured in the dashboard. Dashboard-only analytics, exports,
+request logs, memory health, organization settings, entities, insights, and webhook
+administration are intentionally not shipped in the SDK.
 
-## ConvoMemClient (advanced)
-
-Resource-based client — organized as `client.customers.*`, `client.memories.*`,
-`client.conversations.*`, `client.embed.*`. Use this for direct path-based access without
-identity routing.
+## Capture completion
 
 ```typescript
-import { ConvoMemClient } from '@optraze/convomem-sdk'
+const accepted = await client.capture(
+  [{ role: 'user', content: 'I prefer email contact' }],
+  { email: 'alice@example.com' },
+)
+const status = await client.getCaptureStatus(accepted.captureId)
+console.log(status.status) // queued, processing, completed, or failed
+```
 
-const client = new ConvoMemClient({
-  apiKey: process.env.CONVOMEM_API_KEY!,
-})
+Acceptance is not extraction completion. Poll with a bounded delay and timeout;
+do not interpret a failed or still-processing capture as an empty memory result.
 
-const customer = await client.customers.get('cust_uuid_123')
-const { memories } = await client.memories.list('cust_uuid_123')
+To close the conversation, send the final turns with `endConversation: true` (or
+`escalate: true`) instead of calling `endConversation()` right after a capture:
+
+```typescript
+await client.capture(
+  [{ role: 'assistant', content: 'All sorted — anything else?' }],
+  { phone: '+14155550101' },
+  { channel: 'VOICE', endConversation: true, outcome: 'Refund issued' },
+)
 ```
 
 ## CustomerIdentity
 
-All `ConvoMem` methods that operate on a customer accept a `CustomerIdentity` object.
+All methods that operate on a customer accept a `CustomerIdentity` object.
 Provide at least one field:
 
 ```typescript
@@ -135,7 +148,7 @@ try {
   await client.capture([...turns], { email: 'alice@example.com' })
 } catch (err) {
   if (err instanceof ConvoMemApiError) {
-    console.error(err.status, err.body) // { status: 401, body: { error: '...' } }
+    console.error(err.status, err.body) // e.g. 422, { error: '…', code: 'VALIDATION_ERROR' }
   }
 }
 ```
@@ -146,22 +159,7 @@ try {
 | `body` | unknown | Parsed response body |
 | `url` | string | Full request URL |
 
-## Cancellation
-
-Pass an `AbortSignal` to cancel any in-flight request:
-
-```typescript
-const controller = new AbortController()
-
-const result = await client.lookup(
-  'billing',
-  { email: 'alice@example.com' },
-  { signal: controller.signal },
-)
-
-// Cancel:
-controller.abort()
-```
+A request that exhausts its timeout on every attempt throws `ConvoMemError`.
 
 ## TypeScript types
 
@@ -171,11 +169,13 @@ Key types exported from `@optraze/convomem-sdk`:
 import type {
   CustomerIdentity,
   Customer,
+  CustomerLookupResponse,
   Memory,
   MemoryContext,
   CaptureResponse,
   Conversation,
   HandoffResponse,
+  HandoffRouteResponse,
   EmbedTokenResponse,
 } from '@optraze/convomem-sdk/types'
 ```
