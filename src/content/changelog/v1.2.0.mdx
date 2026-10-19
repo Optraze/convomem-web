@@ -1,13 +1,26 @@
 ---
-title: "Next major release"
-description: "A working draft for the stability and memory-parity release."
-date: "2026-09-08"
-status: "draft"
+title: "v1.2.0"
+description: "Memory integrity, reviewed patterns, and new SDKs — grounded extraction, safer recall, the TypeScript, Python, and Rust SDKs, and a hosted MCP endpoint."
+date: "2026-10-19"
+status: "published"
 ---
 
-This entry stays private until the full parity program and release gates are
-complete. It is updated alongside implementation so the final release notes do
-not have to be reconstructed from commits.
+v1.2.0 focuses on memory you can trust. Extraction is grounded in exact source
+turns, recall is controllable and delimited as untrusted content, every memory
+keeps an auditable history, and operators get new tools to review what ConvoMem
+stores. This release also ships the official TypeScript, Python, and Rust SDKs on
+one public Integration API contract, plus a hosted MCP endpoint.
+
+## Upgrading
+
+- The legacy npm package `convomem-sdk` and the server-bundled `packages/sdk`
+  are replaced by the official SDKs, version 0.3.0: `@optraze/convomem-sdk` on
+  JSR for TypeScript and JavaScript, and `convomem` on PyPI and crates.io for
+  Python and Rust. See the [TypeScript](/docs/sdk-typescript),
+  [Python](/docs/sdk-python), and [Rust](/docs/sdk-rust) guides.
+- Memory types `goal`, `temporary`, and `technical` are retired. Extraction never
+  produced them, and the database migration refuses to run while any stored
+  memory still uses one.
 
 ## Memory quality and integrity
 
@@ -51,6 +64,22 @@ not have to be reconstructed from commits.
 - Exact source quotes tolerate curly quotes, dashes, and non-breaking spaces,
   and short English memories are no longer rejected when the local language
   detector misreads them. Translated memories are still rejected.
+
+- Memory types now distinguish `episodic` (a dated event), `procedural` (a
+  standing handling rule), `relationship` (people around the customer),
+  `commitment` (something the agent promised), and `pattern` (a reviewed
+  synthesis of several memories), alongside `fact`, `preference`, `intent`,
+  `decision`, and `context`.
+- Extraction instructions can be set per agent, with separate instructions for
+  customer memories and agent memories. Agents without their own instructions
+  use the organization setting.
+- ConvoMem can draft extraction instructions for an agent from a bounded sample
+  of its active memories. Credentials are dropped and recognized PII is masked
+  before the model sees them, the draft is shown as a keep/ignore preview, and
+  nothing changes until an operator applies and saves it.
+- Operators can mark an individual memory helpful or wrong. A wrong verdict
+  removes the memory from lookups immediately; withdrawing the verdict restores
+  it, and the memory stays listed as "Not used in lookups" in the meantime.
 
 ## Reviewed patterns
 
@@ -96,6 +125,13 @@ not have to be reconstructed from commits.
 - Per-request recall controls cover result limit, context-token budget,
   threshold, optional reranking, latest-only reads, deterministic reference
   time, agent-fact opt-in, answerability verification, and score diagnostics.
+- Lookup context is returned inside a delimited `<untrusted_caller_memory>`
+  block whose header marks every line as unverified background, never
+  instructions. When agent facts are opted in, each line is tagged `[caller]` or
+  `[agent]`. Inject the context verbatim.
+- A sparse keyword index adds a separately scored keyword signal alongside
+  semantic similarity, so memories that share exact terms with the query are
+  found even when semantic similarity is low.
 - Multilingual source provenance and temporal event metadata survive capture,
   storage, retrieval, the SDKs, and operator views.
 - Caller-owned expiry, immutable memory versions, supersession history, and
@@ -142,7 +178,13 @@ not have to be reconstructed from commits.
   distinct-customer counts, responder mix, and source-conversation links, while
   findings remain review-only and are never presented as proof that content is
   missing.
-
-This remains an unpublished draft. The final entry will include only results
-from the frozen release-candidate protocol; current quality diagnostics and
-competitor comparisons are intentionally excluded until that gate passes.
+- Analytics now includes a Memory health section: conversation linkage, memory
+  lifecycle, lookup success, error, and empty-result rates, p50/p95 lookup
+  latency, and result-set feedback, scoped by agent and date range. It reads no
+  memory content, every rate shows its sample, and unavailable measures are
+  shown as unavailable rather than zero. It is an operational inventory, not a
+  semantic quality score.
+- Memory Exports produce a private, asynchronous JSON export of memories with
+  their exact source evidence from the dashboard. Exports can be cancelled,
+  downloaded repeatedly for seven days, and then expire. They are not part of
+  the public API or SDKs.

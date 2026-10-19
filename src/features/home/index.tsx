@@ -35,7 +35,7 @@ import {
 } from './data'
 import { useActiveSection } from './hooks/use-active-section'
 
-const trustItems = ['7-day trial', 'No card', 'On-prem on Custom'] as const
+const trustItems = ['7-day trial', 'No card', 'On-prem on request'] as const
 
 const heroStats = [
   { value: '4', label: 'channels unified' },
@@ -236,8 +236,8 @@ export function Home() {
           </SectionHeading>
 
           <p className="mb-8 max-w-2xl text-muted-foreground text-sm leading-relaxed">
-            Next-release scope, currently under final validation. The new SDK
-            contract and hosted MCP support are not yet a published release.
+            Available in v1.2.0, including the official TypeScript, Python, and
+            Rust SDKs and the hosted MCP endpoint.
           </p>
 
           <ul className="border-t border-border">
@@ -443,6 +443,11 @@ export function Home() {
                 </Link>
               </div>
             ))}
+
+          <p className="mt-6 text-muted-foreground text-xs leading-relaxed">
+            Every new workspace starts with a free 7-day trial — no card
+            required. Trial limits are listed under Questions below.
+          </p>
         </section>
 
         <section
@@ -476,8 +481,8 @@ export function Home() {
                 Stop introducing your AI to the same customer twice.
               </h2>
               <p className="mx-auto mt-5 max-w-md text-muted-foreground text-sm leading-[1.7]">
-                Start your 7-day free trial. No credit card. On-prem deployment
-                available on the Custom tier.
+                Start your 7-day free trial. No credit card. On-premises
+                deployment available on request.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a

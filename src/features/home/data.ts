@@ -16,7 +16,6 @@ export const enterprisePlans = [
       '5 webhooks',
       '2 agents',
       '365-day retention',
-      '7-day free trial',
     ],
     cta: 'Start Starter',
     highlighted: false,
@@ -35,7 +34,6 @@ export const enterprisePlans = [
       '5 agents',
       '5 active lead playbooks',
       '3-year retention',
-      '7-day free trial',
     ],
     cta: 'Start Growth',
     highlighted: true,
@@ -56,7 +54,6 @@ export const enterprisePlans = [
       'Entity knowledge graph',
       'Custom PII filters',
       '5-year retention',
-      '7-day free trial',
     ],
     cta: 'Start Pro',
     highlighted: false,
@@ -77,7 +74,6 @@ export const enterprisePlans = [
       'Entity knowledge graph',
       'Custom PII filters',
       '10-year retention',
-      '7-day free trial',
     ],
     cta: 'Start Scale',
     highlighted: false,
@@ -89,7 +85,7 @@ export const enterprisePlans = [
     description: 'Contact sales',
     features: [
       'Unlimited everything',
-      'On-prem deployment',
+      'On-prem deployment on request',
       'Custom SLA',
       'Dedicated Discord channel',
     ],
@@ -165,7 +161,7 @@ export const pipeline = [
 export const faqs = [
   {
     q: 'What happens to my data?',
-    a: 'You own your data. We encrypt it at rest and in transit, and never use it to train third-party models. On the Custom tier, we can deploy ConvoMem entirely inside your own infrastructure (on-prem) for full control.',
+    a: 'You own your data. We encrypt it at rest and in transit, and never use it to train third-party models. For organizations that need data to stay inside their own infrastructure, an on-premises deployment is available on request.',
   },
   {
     q: 'Do you train AI models on my conversations?',
@@ -173,7 +169,7 @@ export const faqs = [
   },
   {
     q: 'Can ConvoMem run on-prem?',
-    a: 'Yes — on the Custom tier. We offer on-prem deployments inside your own infrastructure for enterprises with strict data-residency or compliance requirements. Talk to sales to scope it. All other tiers run on our managed cloud.',
+    a: 'Yes. ConvoMem runs as a hosted service by default, and an on-premises deployment inside your own infrastructure is available on request. Contact support@convomem.com to scope it.',
   },
   {
     q: 'How long is data retained?',
@@ -185,7 +181,7 @@ export const faqs = [
   },
   {
     q: 'Is there a free trial?',
-    a: 'Every paid plan includes a 7-day free trial. No credit card required to start.',
+    a: 'Yes. Every new workspace starts on a 7-day free trial, with no credit card required. The trial includes up to 50 customers, 1,000 API calls, 5 AI chat queries, 3 team members, 2 webhooks, and 1 agent, with 30-day retention. Choose a paid plan to continue once the trial ends.',
   },
 ] as const
 

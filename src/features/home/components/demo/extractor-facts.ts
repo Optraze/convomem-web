@@ -13,11 +13,13 @@ type MemoryType =
   | 'fact'
   | 'preference'
   | 'intent'
-  | 'goal'
-  | 'temporary'
   | 'decision'
   | 'context'
-  | 'technical'
+  | 'episodic'
+  | 'procedural'
+  | 'relationship'
+  | 'commitment'
+  | 'pattern'
 
 type Sentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE'
 
@@ -109,7 +111,7 @@ const RULES: Rule[] = [
   },
   {
     test: /\b(?:next\s+(?:week|month|quarter)|tomorrow|Q[1-4]\s*20\d{2}|by\s+\w+day)\b/i,
-    type: 'temporary',
+    type: 'context',
     label: (m) => `timeframe · ${m[0].toLowerCase()}`,
     tags: (m) => [
       'timeframe',
@@ -128,7 +130,7 @@ const RULES: Rule[] = [
   },
   {
     test: /\b(?:API|SDK|webhook|integration|endpoint|latency|deploy|database|self-?host)\b/i,
-    type: 'technical',
+    type: 'fact',
     label: (m) => `technical · ${m[0].toLowerCase()}`,
     tags: (m) => ['technical', m[0].toLowerCase()],
   },

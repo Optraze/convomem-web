@@ -15,13 +15,11 @@ const docs = readdirSync('src/content/docs')
   }))
 
 describe('public content release boundary', () => {
-  test('production MDX loading excludes the draft body, including query IDs', () => {
+  test('production MDX loading leaves the published v1.2.0 entry intact', () => {
     const plugin = draftContentPlugin('build')
-    const path = resolve('src/content/changelog/v-next.mdx')
-    expect(plugin.load(path)).toContain('status: "draft"')
-    expect(plugin.load(`${path}?import`)).toBe(plugin.load(path))
-    expect(plugin.load(path)).not.toContain('This entry stays private')
-    expect(plugin.load(path)).not.toContain('Next major release')
+    const path = resolve('src/content/changelog/v1.2.0.mdx')
+    expect(plugin.load(path)).toBeUndefined()
+    expect(plugin.load(`${path}?import`)).toBeUndefined()
   })
 
   test('published MDX and local draft previews are not changed', () => {
@@ -33,22 +31,22 @@ describe('public content release boundary', () => {
     ).toBeUndefined()
   })
 
-  test('the upcoming changelog is discoverable only when drafts are requested', () => {
+  test('the v1.2.0 changelog replaces the unpublished draft', () => {
     expect(
-      contentFiles('changelog').some((file) => file.slug === 'v-next')
-    ).toBe(false)
-    expect(allContentFiles().some((file) => file.slug === 'v-next')).toBe(false)
+      contentFiles('changelog').find((file) => file.slug === 'v1.2.0')?.data
+        .status
+    ).toBe('published')
     expect(
-      contentFiles('changelog', { includeDrafts: true }).find(
+      allContentFiles({ includeDrafts: true }).some(
         (file) => file.slug === 'v-next'
-      )?.data.status
-    ).toBe('draft')
+      )
+    ).toBe(false)
   })
 
-  test('SDK pages identify the contract as unpublished release-candidate work', () => {
+  test('SDK pages state the released SDK version, not a pre-release contract', () => {
     for (const name of sdkPages) {
-      expect(read(name)).toContain('upcoming SDK 0.3.0')
-      expect(read(name)).toContain('Publication is a separate')
+      expect(read(name)).toContain('SDK 0.3.0, released with ConvoMem v1.2.0')
+      expect(read(name)).not.toContain('upcoming SDK')
     }
   })
 

@@ -99,7 +99,7 @@ export function MarketingFooter() {
             </a>
           </p>
           <p className="font-mono text-[11px] tracking-[0.12em] text-hint/80">
-            API-first · On-prem on Custom · Zero lock-in
+            API-first · On-prem on request · Zero lock-in
           </p>
         </div>
       </div>

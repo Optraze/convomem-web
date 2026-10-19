@@ -17,35 +17,37 @@ ConvoMem fixes this by providing a **memory layer** for conversational AI. It ca
 
 1. **Capture** — Every conversation is processed through our extraction pipeline
 2. **Store** — Facts are categorized, scored for durability, and stored with metadata
-3. **Retrieve** — When a new conversation starts, relevant context is injected automatically
+3. **Retrieve** — When a new conversation starts, relevant context is returned ready to inject into your model's prompt
 
 ```typescript
-import { ConvoMem } from '@convomem/sdk'
+import { ConvoMem } from '@optraze/convomem-sdk'
 
-const client = new ConvoMem({ apiKey: process.env.CONVOMEM_API_KEY })
+const client = new ConvoMem({ apiKey: process.env.CONVOMEM_API_KEY! })
 
-// Store a conversation
-await client.capture({
-  channel: 'chat',
-  messages: [
+// Send conversation turns for background extraction
+await client.capture(
+  [
     { role: 'user', content: 'I need help with my order #4471' },
-    { role: 'assistant', content: 'I see your order was delayed. Let me fix that.' }
-  ]
-})
+    { role: 'assistant', content: 'I see your order was delayed. Let me fix that.' },
+  ],
+  { email: 'alice@example.com' },
+  { channel: 'CHAT' },
+)
 
-// Retrieve context for the next interaction
-const context = await client.retrieve({
-  customerId: 'cust_123',
-  limit: 10
-})
+// Recall relevant context before the next reply
+const { context } = await client.lookup(
+  'order delivery status',
+  { email: 'alice@example.com' },
+  { limit: 10 },
+)
 ```
 
 ## What's next
 
-We're working on:
+Since this post was first published, several items from our roadmap have shipped:
 
-- **Real-time streaming** — capture conversations as they happen
-- **Custom memory types** — define your own categories beyond the built-in ones
-- **On-prem deployment** — run ConvoMem entirely on your own infrastructure
+- **On-prem deployment** — available on request for organizations that need ConvoMem inside their own infrastructure; contact [support@convomem.com](mailto:support@convomem.com)
+- **Custom categories** — organizations can define their own memory categories alongside the built-in ones
+- **More integration surfaces** — the official TypeScript, Python, and Rust SDKs and a hosted MCP endpoint ship in [v1.2.0](/changelog/v1.2.0)
 
 Stay tuned for updates.
