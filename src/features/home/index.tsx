@@ -347,6 +347,15 @@ export function Home() {
                     <div className="mt-5 mb-5">
                       {plan.price !== null ? (
                         <>
+                          {'pricePrefix' in plan && plan.pricePrefix && (
+                            <span
+                              className={`mb-1 block font-mono text-[9px] tracking-[0.16em] uppercase ${
+                                hi ? 'text-background/65' : 'text-hint/90'
+                              }`}
+                            >
+                              {plan.pricePrefix}
+                            </span>
+                          )}
                           <span
                             className={`tnum font-mono ${
                               hi ? 'text-background' : 'text-foreground'
@@ -445,8 +454,9 @@ export function Home() {
             ))}
 
           <p className="mt-6 text-muted-foreground text-xs leading-relaxed">
-            Every new workspace starts with a free 7-day trial — no card
-            required. Trial limits are listed under Questions below.
+            Starter, Growth, and Pro start with a free 7-day trial — no card
+            required. Scale is sales-led so we can size capacity, retention,
+            support, and deployment requirements before activation.
           </p>
         </section>
 

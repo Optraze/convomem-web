@@ -62,7 +62,8 @@ export const enterprisePlans = [
     name: 'Scale',
     price: 1500,
     period: 'month',
-    description: 'For enterprise AI products',
+    pricePrefix: 'Starting at',
+    description: 'Capacity-planned for enterprise AI products',
     features: [
       '500,000 customers',
       '15M API calls/mo',
@@ -75,7 +76,7 @@ export const enterprisePlans = [
       'Custom PII filters',
       '10-year retention',
     ],
-    cta: 'Start Scale',
+    cta: 'Contact sales',
     highlighted: false,
   },
   {

@@ -1,0 +1,37 @@
+---
+title: "v1.3.3"
+description: "A faster, safer Agent Assist handoff and sales-led capacity planning for Scale."
+date: "2026-10-26"
+status: "published"
+---
+
+v1.3.3 tightens the last mile between memory and a human agent. Handoff briefs
+are now compact enough for a CRM side panel, distinguish verified customer
+context from unconfirmed actions reported by an agent, and keep resolution
+controls in the authenticated embed where they belong.
+
+## Agent Assist
+
+- Handoff briefs now lead with a deterministic issue state, next best action,
+  and a copyable suggested opening so an agent can understand the customer and
+  begin the conversation quickly.
+- Customer context, reported actions, pending checks, and evidence are separated
+  instead of being collapsed into one repetitive narrative.
+- Actions from another conversation are no longer presented as evidence that the
+  current issue was handled.
+- The dashboard handoff view is a compact, read-only preview. Resolve, review,
+  reopen, snooze, priority, tags, and notes remain available in the
+  token-authenticated CRM embed.
+- Embed actions update immediately while the refreshed brief loads in the
+  background, avoiding a full-panel loading state after every action.
+- Settings now show a clear unsaved, saving, saved, or failed state without a
+  persistent success message competing with the form.
+
+## Billing
+
+- Scale is now presented as **starting at $1,500/month** with capacity planning
+  and a Contact sales flow.
+- Starter, Growth, and Pro remain self-serve with their existing seven-day
+  trials.
+- The API rejects attempts to bypass the sales-led Scale flow by posting its
+  plan slug directly to checkout.
