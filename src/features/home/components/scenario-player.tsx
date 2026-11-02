@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Headphones, MessageSquare, Phone } from 'lucide-react'
+import {
+  Check,
+  Headphones,
+  MessageSquare,
+  Phone,
+  Play,
+  Square,
+} from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -155,6 +162,7 @@ function Bubble({
 export function ScenarioPlayer() {
   const reduce = useReducedMotion()
   const [active, setActive] = useState(0)
+  const [playing, setPlaying] = useState(false)
   const [step, setStep] = useState(0) // how many beats are visible
   const advance = useRef<number>(0)
 
@@ -162,7 +170,7 @@ export function ScenarioPlayer() {
 
   // Drive the beats of the current scenario, then move to the next scenario.
   useEffect(() => {
-    if (reduce) {
+    if (reduce || !playing) {
       setStep(scn.beats.length)
       return
     }
@@ -184,7 +192,7 @@ export function ScenarioPlayer() {
     }
     advance.current = window.setTimeout(tick, 700)
     return () => window.clearTimeout(advance.current)
-  }, [reduce, scn])
+  }, [reduce, scn, playing])
 
   const Icon = scn.icon
 
@@ -199,7 +207,10 @@ export function ScenarioPlayer() {
             <button
               type="button"
               key={s.key}
-              onClick={() => setActive(i)}
+              onClick={() => {
+                setActive(i)
+                setPlaying(false)
+              }}
               aria-label={s.title}
               className={`group flex-1 flex items-center gap-2 px-3 sm:px-4 py-3 text-left transition-colors ${on ? 'bg-background' : 'hover:bg-muted/50'}`}
             >
@@ -252,8 +263,8 @@ export function ScenarioPlayer() {
                 key={b.text}
                 beat={b}
                 show={i < step}
-                typing={i === step - 1}
-                reduce={!!reduce}
+                typing={playing && i === step - 1}
+                reduce={!!reduce || !playing}
               />
             ))}
           </motion.div>
@@ -268,9 +279,26 @@ export function ScenarioPlayer() {
             className={`h-0.75 rounded-full transition-all duration-500 ${i === active ? 'w-7 bg-foreground' : 'w-3 bg-border-strong'}`}
           />
         ))}
-        <span className="font-mono ml-auto text-hint text-[10px] tracking-[0.14em] uppercase">
-          auto-playing
-        </span>
+        <button
+          type="button"
+          className="ml-auto inline-flex items-center gap-1.5 text-hint text-[10px]"
+          disabled={!!reduce}
+          onClick={() => setPlaying(!playing)}
+          aria-label={
+            reduce
+              ? 'Animation disabled by reduced motion preference'
+              : playing
+                ? 'Stop example animation'
+                : 'Play example animation'
+          }
+        >
+          {playing && !reduce ? <Square size={10} /> : <Play size={10} />}
+          {reduce
+            ? 'Reduced motion'
+            : playing
+              ? 'Stop animation'
+              : 'Play example'}
+        </button>
       </div>
     </div>
   )

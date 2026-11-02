@@ -15,12 +15,12 @@ export function ChangelogTemplate({
   return (
     <Frame badge="Changelog">
       <div tw="flex items-center gap-4 mb-4">
-        <h1 tw="text-white text-6xl font-bold leading-tight">
+        <h1 tw="text-[#172037] text-6xl font-bold leading-tight">
           {clampTitle(title, 40)}
         </h1>
         {formattedDate && (
           <span
-            tw="text-gray-500 text-lg"
+            tw="text-[#627087] text-lg"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
             {formattedDate}
@@ -28,7 +28,7 @@ export function ChangelogTemplate({
         )}
       </div>
       {description && (
-        <p tw="text-gray-400 text-2xl max-w-[760px] leading-relaxed">
+        <p tw="text-[#627087] text-2xl max-w-[760px] leading-relaxed">
           {description}
         </p>
       )}

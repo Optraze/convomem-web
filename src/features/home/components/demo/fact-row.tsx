@@ -8,7 +8,7 @@ export function FactRow({ fact, index }: { fact: DemoFact; index: number }) {
   const s = SENT[fact.sentiment] ?? SENT.NEUTRAL
   return (
     <motion.li
-      initial={{ opacity: 0, y: 6 }}
+      initial={{ opacity: 1, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className="flex items-start gap-3 py-2 border-b border-border last:border-0"
@@ -19,7 +19,7 @@ export function FactRow({ fact, index }: { fact: DemoFact; index: number }) {
       <div className="flex-1 min-w-0">
         <span
           className="text-foreground"
-          style={{ fontSize: '12.5px', fontWeight: 500 }}
+          style={{ fontSize: '14px', fontWeight: 500 }}
         >
           {fact.content}
         </span>

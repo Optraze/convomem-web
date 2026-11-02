@@ -1,8 +1,14 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 
-import { ContentFooter } from '@/components/content-footer'
+import { ResourceLayout } from '@/components/resource-layout'
+import { collectionSchema } from '@/lib/collection-schema'
 import { getAllContent, getMdxComponent } from '@/lib/content'
-import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo'
+import {
+  createPageMeta,
+  getSeoUrl,
+  SITE_NAME,
+  serializeStructuredData,
+} from '@/lib/seo'
 
 export const Route = createFileRoute('/changelog/')({
   head: () => ({
@@ -13,6 +19,23 @@ export const Route = createFileRoute('/changelog/')({
       path: '/changelog',
     }),
     links: [{ rel: 'canonical', href: getSeoUrl('/changelog') }],
+    scripts: [
+      {
+        type: 'application/ld+json',
+        children: serializeStructuredData(
+          collectionSchema({
+            title: 'ConvoMem release notes',
+            description:
+              'Product updates, improvements, and fixes for ConvoMem.',
+            path: '/changelog',
+            items: getAllContent('changelog').map((entry) => ({
+              title: entry.frontmatter.title,
+              path: `/changelog/${entry.slug}`,
+            })),
+          })
+        ),
+      },
+    ],
   }),
   component: ChangelogIndex,
 })
@@ -22,85 +45,75 @@ function formatDate(date: string) {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'UTC',
   })
 }
 
 function ChangelogIndex() {
   const entries = getAllContent('changelog')
-
   return (
-    <>
-      <main className="mx-auto max-w-4xl px-5 pt-28 pb-14 sm:px-8 sm:pt-32 sm:pb-20">
-        <p className="font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase">
-          Changelog
-        </p>
-        <h1 className="mt-4 text-[clamp(28px,5vw,44px)] font-semibold tracking-[-0.03em] text-foreground">
-          What's new
-        </h1>
-        <p className="mt-3 max-w-md text-[15px] leading-7 text-muted-foreground">
-          Product updates, features, and improvements. Newest first.
-        </p>
-
-        {/* Full entries render inline on a single timeline: a changelog is read
-            by scanning several releases at once, not by opening them one by
-            one. Per-version pages still exist for deep links and sharing. */}
-        <div className="mt-14 sm:pl-8">
-          {entries.map((entry, i) => {
-            const MDXContent = getMdxComponent('changelog', entry.slug)
-
-            return (
-              <section
-                key={entry.slug}
-                className="relative pb-14 sm:border-l sm:border-border sm:pl-10 last:pb-0"
-              >
-                {/* Timeline node, aligned to the version heading. */}
-                <span
-                  aria-hidden="true"
-                  className="absolute -left-[5px] top-1.5 hidden size-2.5 rounded-full border-2 border-background bg-foreground/30 sm:block"
-                />
-
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <Link
-                    to="/changelog/$slug"
-                    params={{ slug: entry.slug }}
-                    className="font-mono text-lg font-semibold tracking-tight text-foreground hover:underline"
-                  >
+    <ResourceLayout active="changelog">
+      <main className="editorial-main" id="resource-content">
+        <header>
+          <p className="editorial-kicker">Changelog</p>
+          <h1 className="editorial-title">Product updates.</h1>
+          <p className="editorial-intro">
+            New capabilities, fixes, and improvements to ConvoMem. Every
+            release, in one place.
+          </p>
+        </header>
+        <div className="release-layout">
+          <aside className="release-index">
+            <div>
+              <p>Releases</p>
+              <nav aria-label="Jump to a release">
+                {entries.map((entry) => (
+                  <a key={entry.slug} href={`#release-${entry.slug}`}>
                     {entry.frontmatter.title}
-                  </Link>
-                  {i === 0 && (
-                    <span className="rounded-full bg-foreground px-2 py-0.5 font-mono text-[10px] tracking-wide text-background uppercase">
-                      Latest
-                    </span>
+                  </a>
+                ))}
+              </nav>
+            </div>
+          </aside>
+          <div>
+            {entries.map((entry, index) => {
+              const MDXContent = getMdxComponent('changelog', entry.slug)
+              return (
+                <section
+                  key={entry.slug}
+                  id={`release-${entry.slug}`}
+                  className="release-entry"
+                >
+                  <header>
+                    <div className="journal-meta">
+                      {entry.frontmatter.date && (
+                        <time dateTime={entry.frontmatter.date}>
+                          {formatDate(entry.frontmatter.date)}
+                        </time>
+                      )}
+                      {index === 0 && (
+                        <span className="release-latest">Latest release</span>
+                      )}
+                    </div>
+                    <h2>
+                      <Link to="/changelog/$slug" params={{ slug: entry.slug }}>
+                        {entry.frontmatter.title}
+                      </Link>
+                    </h2>
+                    <p>{entry.frontmatter.description}</p>
+                  </header>
+                  {MDXContent && (
+                    <div className="prose prose-compact max-w-none">
+                      <MDXContent />
+                    </div>
                   )}
-                  {entry.frontmatter.date && (
-                    <time
-                      dateTime={entry.frontmatter.date}
-                      className="text-xs text-muted-foreground"
-                    >
-                      {formatDate(entry.frontmatter.date)}
-                    </time>
-                  )}
-                </div>
-
-                <p className="mt-2 max-w-2xl text-[15px] leading-7 text-pretty text-muted-foreground">
-                  {entry.frontmatter.description}
-                </p>
-
-                {MDXContent && (
-                  <div className="prose prose-compact mt-6 max-w-none">
-                    <MDXContent />
-                  </div>
-                )}
-              </section>
-            )
-          })}
-
-          {entries.length === 0 && (
-            <p className="text-sm text-muted-foreground">No entries yet.</p>
-          )}
+                </section>
+              )
+            })}
+            {entries.length === 0 && <p>No releases yet.</p>}
+          </div>
         </div>
       </main>
-      <ContentFooter />
-    </>
+    </ResourceLayout>
   )
 }

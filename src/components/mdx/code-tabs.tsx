@@ -48,16 +48,23 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState<Language>('typescript')
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored && (LANGUAGES as readonly string[]).includes(stored)) {
-      setActive(stored as Language)
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored && (LANGUAGES as readonly string[]).includes(stored))
+        setActive(stored as Language)
+    } catch {
+      /* Use TypeScript when preferences cannot be read. */
     }
   }, [])
 
   const handleChange = (lang: Language) => {
     setActive(lang)
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, lang)
+      try {
+        localStorage.setItem(STORAGE_KEY, lang)
+      } catch {
+        /* Language selection still works for this session. */
+      }
     }
   }
 
@@ -99,7 +106,7 @@ export function CodeTabs({ children }: { children: React.ReactNode }) {
     <Tabs
       value={activeValue}
       onValueChange={(value) => ctx?.setActive(value as Language)}
-      className="my-6 flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+      className="mdx-code-tabs my-6 flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm"
     >
       <TabsList className="h-auto w-full justify-start gap-1 rounded-none border-b border-border bg-muted/30 px-2 pt-2 pb-0 group-data-horizontal/tabs:h-auto">
         {validTabs.map((tab) => {
@@ -112,6 +119,7 @@ export function CodeTabs({ children }: { children: React.ReactNode }) {
             >
               <img
                 src={LANGUAGE_ICONS[lang]}
+                data-language={lang}
                 alt=""
                 className="h-4 w-4"
                 aria-hidden="true"

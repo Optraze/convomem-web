@@ -1,0 +1,318 @@
+.memory-film {
+  color: #253148;
+  width: 100%;
+}
+.film-eyebrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 13px;
+  font-size: 0.625rem;
+  line-height: 1.5;
+  letter-spacing: 0.1em;
+  color: #5e6779;
+}
+.film-eyebrow > span:last-child {
+  letter-spacing: 0;
+  color: #81858a;
+}
+.film-player {
+  overflow: hidden;
+  border: 1px solid #dcded7;
+  border-radius: 14px;
+  background: #fffdf8;
+}
+.film-viewport {
+  aspect-ratio: 16 / 9;
+  position: relative;
+  overflow: hidden;
+  background: #0d0a11;
+}
+.film-viewport iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  border: 0;
+  pointer-events: none;
+}
+.film-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  color: #f6f4ff;
+  font-size: clamp(1rem, 1.4vw, 1.5rem);
+  z-index: 1;
+}
+.film-loading svg {
+  width: 30px;
+  height: 30px;
+}
+.film-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 10px;
+}
+.film-controls button,
+.film-dialog-header button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  color: #596882;
+  cursor: pointer;
+}
+.film-controls button:hover,
+.film-dialog-header button:hover {
+  color: #294bff;
+  background: #edf0fa;
+}
+.film-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.film-controls button:focus-visible,
+.film-seek:focus-visible,
+.film-caption button:focus-visible,
+.film-dialog-header button:focus-visible {
+  outline: 2px solid #294bff;
+  outline-offset: 2px;
+}
+.film-seek {
+  appearance: none;
+  min-width: 30px;
+  width: 100%;
+  height: 32px;
+  background: transparent;
+  accent-color: #294bff;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.film-seek::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: #dce1eb;
+}
+.film-seek::-webkit-slider-thumb {
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #294bff;
+  margin-top: -4px;
+}
+.film-seek::-moz-range-track {
+  height: 3px;
+  background: #dce1eb;
+}
+.film-seek::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: #294bff;
+}
+.film-time {
+  font-size: 0.6875rem;
+  color: #58657a;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  padding-inline: 8px;
+}
+.film-time > span {
+  color: #888e99;
+}
+.memory-film .film-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 0;
+  text-align: left;
+  color: #253148;
+}
+.film-caption strong {
+  font-size: 0.875rem;
+  font-weight: 550;
+  line-height: 1.5;
+}
+.film-caption p {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  margin-top: 3px;
+  color: #757e8c;
+}
+.film-caption button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 44px;
+  font-size: 0.75rem;
+  color: #294bff;
+  cursor: pointer;
+}
+.film-backdrop {
+  background: #151820a6;
+  z-index: 80;
+}
+.film-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  z-index: 81;
+  width: min(1200px, calc(100vw - 40px), calc((100dvh - 190px) * 16 / 9));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  background: #fffdf8;
+  color: #253148;
+  border-radius: 16px;
+  outline: none;
+  box-shadow: 0 24px 90px #11172840;
+}
+.film-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px 8px 22px;
+}
+.film-dialog-header h2 {
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 550;
+  line-height: 1.5;
+}
+.film-dialog .film-player {
+  border: 0;
+  border-radius: 0;
+}
+.film-credits {
+  padding: 4px 22px 18px;
+  color: #7a8190;
+  font-size: 0.6875rem;
+  line-height: 1.7;
+}
+.film-credits a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 700px) {
+  .film-eyebrow > span:last-child {
+    display: none;
+  }
+  .film-controls {
+    gap: 0;
+    padding-inline: 4px;
+  }
+  .film-time {
+    font-size: 0.625rem;
+    padding-inline: 5px;
+  }
+  .memory-film .film-caption {
+    flex-wrap: wrap;
+    gap: 5px 20px;
+    margin-top: 13px;
+  }
+  .film-caption p {
+    font-size: 0.75rem;
+  }
+  .film-dialog {
+    width: calc(100vw - 20px);
+    border-radius: 12px;
+  }
+  .film-dialog-header {
+    padding-left: 16px;
+  }
+  .film-dialog-header h2 {
+    font-size: 0.875rem;
+  }
+  .film-credits {
+    padding-inline: 16px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .film-dialog[data-open] {
+    animation: film-dialog-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes film-dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+.film-player:fullscreen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #0d0a11;
+  border: 0;
+  border-radius: 0;
+}
+.film-player:fullscreen .film-viewport {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+.film-player:fullscreen .film-controls {
+  flex-shrink: 0;
+  background: #fffdf8;
+}
+
+.film-screen-toggle {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 2;
+  background: transparent;
+  border: 0;
+}
+.film-screen-toggle > span {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #10121bc9;
+  border: 1px solid #ffffff45;
+  color: white;
+  opacity: 1;
+}
+.film-screen-toggle[data-playing="true"] > span {
+  opacity: 0;
+}
+.film-screen-toggle:disabled {
+  cursor: default;
+}
+.film-screen-toggle:disabled > span {
+  opacity: 0;
+}
+@media (hover: hover) {
+  .film-screen-toggle[data-playing="true"]:hover > span {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .film-screen-toggle > span {
+    transition: opacity 160ms ease;
+  }
+}

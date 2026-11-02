@@ -22,7 +22,13 @@ function flatten(toc: Toc, acc: FlatHeading[] = []): FlatHeading[] {
   return acc
 }
 
-export function OnThisPage({ toc }: { toc: Toc }) {
+export function OnThisPage({
+  toc,
+  onNavigate,
+}: {
+  toc: Toc
+  onNavigate?: () => void
+}) {
   const items = useMemo(() => flatten(toc), [toc])
   const ids = useMemo(() => items.map((i) => i.id), [items])
   const active = useActiveHeading(ids)
@@ -30,7 +36,7 @@ export function OnThisPage({ toc }: { toc: Toc }) {
   if (items.length === 0) return null
 
   return (
-    <nav aria-label="On this page" className="text-sm">
+    <nav aria-label="On this page" className="docs-toc text-sm">
       <p className="mb-3 font-mono text-[11px] tracking-[0.18em] text-hint/90 uppercase">
         On this page
       </p>
@@ -39,6 +45,8 @@ export function OnThisPage({ toc }: { toc: Toc }) {
           <li key={item.id} style={{ paddingLeft: (item.depth - 2) * 12 }}>
             <a
               href={`#${item.id}`}
+              onClick={onNavigate}
+              aria-current={active === item.id ? 'location' : undefined}
               className={cn(
                 '-ml-px block border-l border-transparent pl-3 text-[13px] leading-snug transition-colors',
                 active === item.id

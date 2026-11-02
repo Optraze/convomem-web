@@ -208,8 +208,8 @@ export function groupConversations(
 
 /* Sample dataset for the "load sample" affordance — realistic, varied. */
 export const SAMPLE_CSV = `channel,message
-chat,"Hey — my order #4471 still hasn't shipped and it's been a week. Pretty frustrated honestly."
-voice,"Hi this is Maria, I'd like to renew our plan but want to add 5 seats next month."
-email,"We decided to go with the annual contract. Send the invoice to billing@acme.co please."
-sms,"The webhook integration keeps timing out, latency is over 3s. Can someone help?"
-chat,"Loved the onboarding — smooth. Thinking about upgrading to the Scale tier in Q3 2026."`
+voice,"My espresso machine still leaks. I reseated the tank and restarted it. Please email me after 3pm."
+chat,"Any update on the leak? I called about this yesterday."
+email,"Please keep the updates in this email thread. After 3pm is best for me."
+chat,"I followed the cleaning steps but the water is still cold."
+voice,"Can I buy a replacement seal instead of replacing the whole machine?"`

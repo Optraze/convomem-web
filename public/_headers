@@ -14,3 +14,77 @@
 
 /
   Cache-Control: public, max-age=0, must-revalidate
+
+# BEGIN GENERATED MARKDOWN CANONICALS
+/blog/introducing-convomem.md
+  Link: <https://convomem.com/blog/introducing-convomem>; rel="canonical"
+
+/docs/agents.md
+  Link: <https://convomem.com/docs/agents>; rel="canonical"
+
+/docs/memory-model.md
+  Link: <https://convomem.com/docs/memory-model>; rel="canonical"
+
+/docs/retrieval.md
+  Link: <https://convomem.com/docs/retrieval>; rel="canonical"
+
+/docs/conversations.md
+  Link: <https://convomem.com/docs/conversations>; rel="canonical"
+
+/docs/authentication.md
+  Link: <https://convomem.com/docs/authentication>; rel="canonical"
+
+/docs/webhooks.md
+  Link: <https://convomem.com/docs/webhooks>; rel="canonical"
+
+/docs/errors.md
+  Link: <https://convomem.com/docs/errors>; rel="canonical"
+
+/docs/introduction.md
+  Link: <https://convomem.com/docs/introduction>; rel="canonical"
+
+/docs/sdk-rust.md
+  Link: <https://convomem.com/docs/sdk-rust>; rel="canonical"
+
+/docs/memories.md
+  Link: <https://convomem.com/docs/memories>; rel="canonical"
+
+/docs/getting-started.md
+  Link: <https://convomem.com/docs/getting-started>; rel="canonical"
+
+/docs/sdk-python.md
+  Link: <https://convomem.com/docs/sdk-python>; rel="canonical"
+
+/docs/customers.md
+  Link: <https://convomem.com/docs/customers>; rel="canonical"
+
+/docs/capture.md
+  Link: <https://convomem.com/docs/capture>; rel="canonical"
+
+/docs/sdk-typescript.md
+  Link: <https://convomem.com/docs/sdk-typescript>; rel="canonical"
+
+/docs/embed.md
+  Link: <https://convomem.com/docs/embed>; rel="canonical"
+
+/docs/handoff.md
+  Link: <https://convomem.com/docs/handoff>; rel="canonical"
+
+/docs/installation.md
+  Link: <https://convomem.com/docs/installation>; rel="canonical"
+
+/docs/mcp.md
+  Link: <https://convomem.com/docs/mcp>; rel="canonical"
+
+/changelog/v1.1.0.md
+  Link: <https://convomem.com/changelog/v1.1.0>; rel="canonical"
+
+/changelog/v1.3.3.md
+  Link: <https://convomem.com/changelog/v1.3.3>; rel="canonical"
+
+/changelog/v1.0.0.md
+  Link: <https://convomem.com/changelog/v1.0.0>; rel="canonical"
+
+/changelog/v1.2.0.md
+  Link: <https://convomem.com/changelog/v1.2.0>; rel="canonical"
+# END GENERATED MARKDOWN CANONICALS

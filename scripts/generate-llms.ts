@@ -1,4 +1,11 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
 import type { ContentFile } from './content-files'
@@ -67,7 +74,7 @@ const sections = (['docs', 'blog', 'changelog'] as const)
 
 const llmsTxt = `# ConvoMem
 
-> AI memory layer for customer conversations. Capture and inject context into every support interaction.
+> Customer memory and AI analytics across voice, chat, SMS, and email. Connect customer context, semantic memory search, and agent handoffs.
 
 ${sections.join('\n\n')}
 `
@@ -75,3 +82,21 @@ ${sections.join('\n\n')}
 writeFileSync(resolve('public/llms.txt'), llmsTxt)
 
 console.log(`Generated ${files.length} markdown files + public/llms.txt`)
+
+// Static hosts consume _headers; the Node server uses the matching Nitro rules.
+// Replace only this generated block, preserving hand-written cache/header rules.
+const headersPath = resolve('public/_headers')
+const headers = readFileSync(headersPath, 'utf8').replace(
+  /\n*# BEGIN GENERATED MARKDOWN CANONICALS\n[\s\S]*?# END GENERATED MARKDOWN CANONICALS\n?/g,
+  '\n\n'
+)
+const markdownHeaders = files
+  .map(
+    (file) =>
+      `/${file.type}/${file.slug}.md\n  Link: <${SITE_URL}/${file.type}/${file.slug}>; rel="canonical"`
+  )
+  .join('\n\n')
+writeFileSync(
+  headersPath,
+  `${headers.trimEnd()}\n\n# BEGIN GENERATED MARKDOWN CANONICALS\n${markdownHeaders}\n# END GENERATED MARKDOWN CANONICALS\n`
+)

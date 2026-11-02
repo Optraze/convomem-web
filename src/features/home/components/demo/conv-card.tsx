@@ -1,4 +1,4 @@
-import { ShieldCheck } from 'lucide-react'
+import { ChevronDown, ShieldCheck } from 'lucide-react'
 
 import type { ConvState } from './use-demo-pipeline'
 
@@ -8,7 +8,7 @@ import { PipelineTrace } from './pipeline-trace'
 
 export function ConvCard({ c, n }: { c: ConvState; n: number }) {
   return (
-    <div className="rounded-lg border border-border bg-background overflow-hidden">
+    <div className="demo-conversation-result rounded-lg border border-border bg-background overflow-hidden">
       <div className="flex items-center justify-between px-3.5 py-2 border-b border-border bg-muted/40">
         <span className="font-mono text-subtle text-[11px]">
           conversation {String(n + 1).padStart(2, '0')}{' '}
@@ -18,9 +18,6 @@ export function ConvCard({ c, n }: { c: ConvState; n: number }) {
           {c.facts.length} {c.facts.length === 1 ? 'fact' : 'facts'}
         </span>
       </div>
-
-      {/* the REAL pipeline, as a detailed live trace */}
-      <PipelineTrace stages={c.stages} done={c.done} />
 
       {/* facts stream in here */}
       {c.facts.length > 0 && (
@@ -44,6 +41,14 @@ export function ConvCard({ c, n }: { c: ConvState; n: number }) {
           </span>
         </p>
       )}
+
+      <details className="demo-processing-details" open={!c.done}>
+        <summary>
+          Processing trace <span>{c.done ? 'Complete' : 'Processing'}</span>
+          <ChevronDown size={14} />
+        </summary>
+        <PipelineTrace stages={c.stages} done={c.done} />
+      </details>
 
       {/* this conversation's own insights (sentiment · intent · complaints) */}
       {c.insights && <InsightsPanel ins={c.insights} nested />}

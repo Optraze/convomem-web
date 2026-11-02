@@ -12,6 +12,8 @@ export function getRouter() {
     routeTree,
     context,
     scrollRestoration: true,
+    scrollRestorationBehavior: 'instant',
+    defaultHashScrollIntoView: { behavior: 'auto', block: 'start' },
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
   })

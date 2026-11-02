@@ -7,11 +7,11 @@ import { Renderer } from 'takumi-js/node'
 import type React from 'react'
 import type { ContentFile, ContentType } from './content-files'
 
-import { BaseTemplate } from '../src/components/og/base-template'
 import { BlogTemplate } from '../src/components/og/blog-template'
 import { ChangelogTemplate } from '../src/components/og/changelog-template'
 import { DocsTemplate } from '../src/components/og/docs-template'
 import { loadOgFonts } from '../src/components/og/fonts'
+import { HomeTemplate } from '../src/components/og/home-template'
 import { allContentFiles } from './content-files'
 
 const OUT_DIR = join(process.cwd(), 'public/og')
@@ -62,16 +62,13 @@ async function main() {
   mkdirSync(OUT_DIR, { recursive: true })
 
   // Default fallback image.
-  const fallback = await renderPng(
-    <BaseTemplate
-      title="ConvoMem"
-      description="AI memory for customer conversations."
-    />
-  )
+  const fallback = await renderPng(<HomeTemplate />)
   writeFileSync(join(OUT_DIR, 'default.png'), fallback)
+  writeFileSync(join(OUT_DIR, 'home.png'), fallback)
+  writeFileSync(join(process.cwd(), 'public/og-image.png'), fallback)
 
   const files = allContentFiles() // published only
-  let count = 1
+  let count = 2
   for (const file of files) {
     try {
       const buf = await renderPng(templateFor(file.type, file.data))

@@ -1,15 +1,29 @@
 import { useRef, useState } from 'react'
-import { ArrowRight, RotateCcw, ShieldCheck, Upload } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
+import {
+  ArrowRight,
+  Check,
+  Database,
+  FileText,
+  Loader2,
+  MessageSquare,
+  RotateCcw,
+  ShieldCheck,
+  Sparkles,
+  Upload,
+} from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-
+import { customerExample } from '../../customer-example'
 import { ConvCard } from './conv-card'
 import { CsvMapper } from './csv-mapper'
 import { MAX_CONVERSATIONS, SAMPLE_CSV } from './extractor'
 import { InsightsPanel } from './insights-panel'
 import { useDemoPipeline } from './use-demo-pipeline'
+
+const examples = [
+  { label: 'Earlier call', text: customerExample.voice },
+  { label: 'Returning customer', text: customerExample.chat },
+  { label: 'Follow-up preference', text: customerExample.emailMessage },
+]
 
 export function MemoryTerminal() {
   const {
@@ -30,203 +44,270 @@ export function MemoryTerminal() {
   const [drag, setDrag] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
-
   const onFile = (file?: File) => {
-    if (!file) return
+    if (!file || phase !== 'idle') return
     setFileName(file.name)
     const reader = new FileReader()
-    // CSV uploads open the column-mapping step (typed text / sample run directly).
     reader.onload = () => {
       setText('')
       prepareCsv(String(reader.result || ''))
     }
     reader.readAsText(file)
   }
-
   const resetAll = () => {
     reset()
     setText('')
     setFileName(null)
     if (fileRef.current) fileRef.current.value = ''
   }
-
-  const showInput = phase === 'idle'
-  const totalFacts = convs.reduce((n, c) => n + c.facts.length, 0)
-
+  const totalFacts = convs.reduce(
+    (count, conversation) => count + conversation.facts.length,
+    0
+  )
   return (
-    // biome-ignore lint/a11y/useSemanticElements: section tag not suitable here
-    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: drag-and-drop container
-    <div
-      role="region"
-      tabIndex={-1}
-      aria-label="Demo pipeline terminal"
-      onDragOver={(e) => {
-        e.preventDefault()
-        setDrag(true)
+    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: file drop supplements the keyboard-accessible Import CSV button
+    <section
+      aria-label="Customer memory demo"
+      className={`demo-terminal ${drag ? 'demo-terminal-dragging' : ''}`}
+      onDragOver={(event) => {
+        event.preventDefault()
+        if (phase === 'idle') setDrag(true)
       }}
       onDragLeave={() => setDrag(false)}
-      onDrop={(e) => {
-        e.preventDefault()
+      onDrop={(event) => {
+        event.preventDefault()
         setDrag(false)
-        onFile(e.dataTransfer.files?.[0])
+        onFile(event.dataTransfer.files?.[0])
       }}
-      className={cn('transition-colors', drag && 'bg-foreground/5')}
     >
-      {phase !== 'idle' && (
-        <div className="flex items-center justify-end gap-3 py-2.5 border-b border-border">
-          {phase === 'running' && (
-            <span className="font-mono text-hint text-[10px] tracking-[0.14em] uppercase scan-text">
-              live · processing
-            </span>
-          )}
-          {phase === 'mapping' && (
-            <span className="font-mono text-hint text-[10px] tracking-[0.12em] uppercase">
-              map · preview
-            </span>
-          )}
-          {(phase === 'done' || phase === 'error') && (
-            <>
-              <span className="font-mono text-hint text-[10px] tracking-[0.12em] uppercase">
-                {mode === 'offline' ? 'offline preview' : 'live · real model'}
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={resetAll}
-                className="font-mono text-[10px] tracking-[0.12em] uppercase"
-              >
-                <RotateCcw size={11} /> reset
-              </Button>
-            </>
-          )}
-        </div>
-      )}
-
-      <AnimatePresence mode="wait">
-        {showInput ? (
-          <motion.div
-            key="input"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <label
-              htmlFor="demo-message"
-              className="font-mono block text-hint text-[10px] tracking-[0.18em] uppercase mb-2.5"
-            >
-              paste a real message — run it through the real pipeline
-            </label>
+      {phase === 'idle' ? (
+        <div className="demo-input-layout">
+          <div className="demo-compose">
+            <span className="demo-step-eyebrow">01 / YOUR CONVERSATION</span>
+            <h2>Start with a conversation.</h2>
+            <p>Choose an example, or add a customer message of your own.</p>
+            <label htmlFor="demo-message">Customer message</label>
             <textarea
               id="demo-message"
               value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={(event) => setText(event.target.value)}
+              onKeyDown={(event) => {
                 if (
-                  (e.metaKey || e.ctrlKey) &&
-                  e.key === 'Enter' &&
-                  text.trim()
-                )
+                  (event.metaKey || event.ctrlKey) &&
+                  event.key === 'Enter' &&
+                  text.trim() &&
+                  !rateLimited &&
+                  !event.nativeEvent.isComposing
+                ) {
+                  event.preventDefault()
                   run(text)
+                }
               }}
-              rows={3}
-              placeholder="Try: &quot;Hey — my order #4471 still hasn't shipped and it's been a week. Pretty frustrated honestly.&quot;"
-              className="w-full resize-none bg-background border border-border rounded-lg px-3.5 py-3 text-foreground placeholder:text-hint/80 focus:outline-none focus:border-foreground/30 focus:ring-1 focus:ring-foreground/10 transition-all"
-              style={{ fontSize: '13px', lineHeight: 1.6 }}
+              rows={5}
+              placeholder="Tell us what the customer said. Preferences, plans, questions, and concerns are a good place to start."
+              aria-describedby="demo-message-help"
             />
-            <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2.5">
-              <Button
+            <div className="demo-example-row">
+              <span>Try an example</span>
+              {examples.map((example) => (
+                <button
+                  type="button"
+                  key={example.label}
+                  onClick={() => setText(example.text)}
+                  aria-label={`Use ${example.label.toLowerCase()} example`}
+                >
+                  {example.label}
+                </button>
+              ))}
+            </div>
+            <div className="demo-compose-actions">
+              <button
                 type="button"
-                onClick={() => text.trim() && run(text)}
+                className="demo-primary-action"
                 disabled={!text.trim() || rateLimited}
-                className="group"
+                onClick={() => text.trim() && run(text)}
               >
                 {rateLimited ? (
-                  <>Retry in {retryAfter}s</>
+                  `Retry in ${retryAfter}s`
                 ) : (
                   <>
-                    Run the pipeline
-                    <ArrowRight
-                      size={14}
-                      className="transition-transform group-hover:translate-x-0.5"
-                    />
+                    Extract memory
+                    <ArrowRight size={15} />
                   </>
                 )}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileRef.current?.click()}
-              >
-                <Upload size={13} /> Drop a CSV
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => prepareCsv(SAMPLE_CSV)}
-                className="font-mono text-[11px] sm:ml-1"
-              >
-                or load sample →
-              </Button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".csv,.txt,text/csv,text/plain"
-                className="hidden"
-                onChange={(e) => onFile(e.target.files?.[0] ?? undefined)}
-              />
+              </button>
+              <span>Ctrl / ⌘ + Enter</span>
             </div>
-            <p className="font-mono mt-3 flex items-center gap-1.5 text-hint text-[10px] leading-relaxed">
-              <ShieldCheck size={10} className="text-hint/80" />
-              {fileName ? <>file · {fileName} · </> : null}
-              up to {MAX_CONVERSATIONS} conversations · nothing is stored
+            <p className="demo-privacy-note" id="demo-message-help">
+              <ShieldCheck size={13} />
+              Up to {MAX_CONVERSATIONS} conversations. Nothing is stored.
             </p>
             {rateLimited && (
-              <p className="font-mono mt-2 text-subtle text-[10px] leading-relaxed">
-                Rate limited · retry in {retryAfter}s
+              <p className="demo-input-error" role="alert">
+                Please wait {retryAfter} seconds before trying again.
               </p>
             )}
-          </motion.div>
-        ) : phase === 'mapping' && csvTable ? (
-          <motion.div
-            key="mapping"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <CsvMapper table={csvTable} onRun={runMapped} onCancel={resetAll} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="output"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-3 max-h-150 overflow-y-auto scrollbar-hide"
-          >
-            {convs.map((c, i) => (
-              <ConvCard key={c.index} c={c} n={i} />
-            ))}
-            {insights && (
-              <InsightsPanel ins={insights} title="across all conversations" />
-            )}
-            {error && (
-              <p className="font-mono text-subtle text-[11px] px-1">{error}</p>
-            )}
-            {phase === 'done' && (
-              <div className="flex items-center justify-between pt-1">
-                <span className="font-mono text-hint text-[11px]">
-                  {totalFacts} facts · {convs.length}{' '}
-                  {convs.length === 1 ? 'conversation' : 'conversations'}
-                </span>
-                <span className="font-mono inline-flex items-center gap-1.5 text-hint text-[10px] tracking-[0.12em] uppercase">
-                  <ShieldCheck size={11} /> nothing stored
-                </span>
+            <div className="demo-csv-option">
+              <Upload size={20} />
+              <div>
+                <strong>Have a transcript file?</strong>
+                <p>Import a CSV and map its columns before running.</p>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    Import CSV
+                    <FileText size={12} />
+                  </button>
+                  <button type="button" onClick={() => prepareCsv(SAMPLE_CSV)}>
+                    Try a sample CSV
+                  </button>
+                </div>
               </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv,.txt,text/csv,text/plain"
+              className="hidden"
+              onChange={(event) => onFile(event.target.files?.[0] ?? undefined)}
+            />
+          </div>
+          <aside className="demo-guide">
+            <span className="demo-guide-icon">
+              <Database size={22} />
+            </span>
+            <span className="demo-step-eyebrow">02 / WHAT YOU’LL SEE</span>
+            <h3>
+              From words
+              <br />
+              to useful memory.
+            </h3>
+            <div>
+              <span>
+                <Check size={14} />
+              </span>
+              <div>
+                <strong>Customer facts</strong>
+                <p>Preferences, plans, and details worth remembering.</p>
+              </div>
+            </div>
+            <div>
+              <span>
+                <Sparkles size={14} />
+              </span>
+              <div>
+                <strong>Conversation signals</strong>
+                <p>Intent, sentiment, and issues found in the message.</p>
+              </div>
+            </div>
+            <div>
+              <span>
+                <FileText size={14} />
+              </span>
+              <div>
+                <strong>A visible processing trace</strong>
+                <p>See the steps behind the result, as they happen.</p>
+              </div>
+            </div>
+            <p className="demo-guide-note">
+              <MessageSquare size={14} />
+              The live demo uses a model. If the service is unavailable, results
+              are clearly marked as a local preview.
+            </p>
+          </aside>
+        </div>
+      ) : phase === 'mapping' && csvTable ? (
+        <div className="demo-mapping">
+          <div className="demo-state-heading">
+            <div>
+              <span className="demo-step-eyebrow">IMPORT / REVIEW</span>
+              <h2>Connect your columns.</h2>
+              <p>
+                {fileName ? fileName : 'Sample CSV'} · Preview the conversations
+                before running.
+              </p>
+            </div>
+          </div>
+          <CsvMapper table={csvTable} onRun={runMapped} onCancel={resetAll} />
+        </div>
+      ) : (
+        <div className="demo-results">
+          <div className="demo-state-heading">
+            <div>
+              <span className="demo-step-eyebrow">
+                {phase === 'running'
+                  ? 'EXTRACTING CUSTOMER MEMORY'
+                  : 'YOUR RESULTS'}
+              </span>
+              <h2>
+                {phase === 'running'
+                  ? 'Finding what matters.'
+                  : phase === 'error'
+                    ? 'The demo needs another try.'
+                    : 'Your conversation, understood.'}
+              </h2>
+              <p>
+                {phase === 'running'
+                  ? 'Facts and signals appear here as the conversation is processed.'
+                  : `${totalFacts} ${totalFacts === 1 ? 'fact' : 'facts'} across ${convs.length} ${convs.length === 1 ? 'conversation' : 'conversations'}.`}
+              </p>
+            </div>
+            <div className="demo-result-actions">
+              <span
+                className={`demo-mode-badge ${mode === 'offline' ? 'demo-mode-offline' : ''}`}
+              >
+                {phase === 'running' ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <span />
+                )}
+                {mode === 'offline'
+                  ? 'Local preview'
+                  : phase === 'running'
+                    ? 'Live · processing'
+                    : 'Live model'}
+              </span>
+              {phase !== 'running' && (
+                <button type="button" onClick={resetAll}>
+                  <RotateCcw size={12} />
+                  Try another message
+                </button>
+              )}
+            </div>
+          </div>
+          {mode === 'offline' && (
+            <p className="demo-offline-notice" role="status">
+              The live service is unavailable. These results are a local
+              heuristic preview, rather than a live model response.
+            </p>
+          )}
+          {convs.map((conversation, index) => (
+            <ConvCard key={conversation.index} c={conversation} n={index} />
+          ))}
+          {insights && (
+            <InsightsPanel ins={insights} title="Across all conversations" />
+          )}
+          {error && (
+            <p className="demo-input-error" role="alert">
+              {error}
+            </p>
+          )}
+          {phase === 'running' && convs.length === 0 && (
+            <div className="demo-starting" role="status">
+              <Loader2 size={22} className="animate-spin" />
+              <span>Connecting to the live extraction service…</span>
+            </div>
+          )}
+          {phase === 'done' && (
+            <div className="demo-results-footer">
+              <ShieldCheck size={13} />
+              Demo complete. Nothing is stored.
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   )
 }

@@ -1,106 +1,67 @@
-import { Link } from '@tanstack/react-router'
+import { ArrowUpRight } from 'lucide-react'
+import { Link, useLocation } from '@tanstack/react-router'
 
 import { Logo } from '@/components/logo'
 import { ThemeSwitcher } from '@/components/theme-switcher'
-import { useMarketingNavigation } from '@/hooks/use-marketing-navigation'
 
-const footerColumns = [
-  {
-    heading: 'Product',
-    items: [
-      { label: 'Try it', action: 'try' },
-      { label: 'Pricing', action: 'pricing' },
-    ],
-  },
-  {
-    heading: 'Resources',
-    items: [
-      { label: 'Blog', href: '/blog' },
-      { label: 'Docs', href: '/docs' },
-      { label: 'Changelog', href: '/changelog' },
-      { label: 'Contact', href: '/contact' },
-    ],
-  },
-  {
-    heading: 'Legal',
-    items: [
-      { label: 'Privacy', href: '/privacy' },
-      { label: 'Terms', href: '/terms' },
-      { label: 'Cookies', href: '/privacy' },
-    ],
-  },
-] as const
-
-export function MarketingFooter() {
-  const { jumpToSection } = useMarketingNavigation()
-
+export function MarketingFooter({
+  appearance = 'light',
+}: {
+  appearance?: 'light' | 'dark'
+} = {}) {
+  const isHome = useLocation({
+    select: (location) => location.pathname === '/',
+  })
   return (
-    <footer className="border-t border-border bg-background px-5 py-12 sm:px-8">
-      <div className="mx-auto w-full max-w-5xl px-5 sm:px-8">
-        <div className="mb-10 grid grid-cols-2 gap-8 md:grid-cols-4">
-          <div className="col-span-2 flex items-start justify-between gap-6 md:col-span-1 md:flex-col md:justify-start">
-            <div>
-              <div className="mb-4 flex items-center gap-2">
-                <Logo />
-                <span className="font-mono text-[13px] font-semibold text-foreground">
-                  ConvoMem
-                </span>
-              </div>
-              <p className="max-w-55 text-xs leading-[1.6] text-hint/80">
-                The memory layer for conversational AI. API-first. On-prem
-                available.
-              </p>
-            </div>
-            <ThemeSwitcher />
+    <footer className="cm-footer" data-surface={appearance}>
+      <div className="cm-footer-inner">
+        <div className="cm-footer-top">
+          <div>
+            <Link to="/" hash="top" className="cm-brand">
+              <Logo appearance={appearance} aria-hidden="true" />
+              <span>ConvoMem</span>
+            </Link>
+            <p>
+              The memory behind <br />
+              better customer relationships.
+            </p>
           </div>
-
-          {footerColumns.map((column) => (
-            <div key={column.heading}>
-              <p className="mb-3 font-mono text-[11px] tracking-[0.16em] text-hint/90 uppercase">
-                {column.heading}
-              </p>
-              <div className="space-y-2">
-                {column.items.map((item) =>
-                  'href' in item ? (
-                    <Link
-                      key={item.label}
-                      to={item.href}
-                      className="block text-xs text-hint/75 transition-colors hover:text-foreground"
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <Link
-                      key={item.label}
-                      to="/"
-                      hash={item.action}
-                      onClick={() => jumpToSection(item.action)}
-                      className="block text-xs text-hint/75 transition-colors hover:text-foreground"
-                    >
-                      {item.label}
-                    </Link>
-                  )
-                )}
-              </div>
-            </div>
-          ))}
+          <div>
+            <h3>PRODUCT</h3>
+            <Link to="/" hash="features">
+              Why ConvoMem
+            </Link>
+            <Link to="/" hash="try">
+              Live demo
+            </Link>
+            <Link to="/" hash="pricing">
+              Pricing
+            </Link>
+          </div>
+          <div>
+            <h3>EXPLORE</h3>
+            <Link to="/docs">
+              Documentation <ArrowUpRight size={12} />
+            </Link>
+            <Link to="/blog">Journal</Link>
+            <Link to="/changelog">Changelog</Link>
+            <Link to="/contact">Get in touch</Link>
+          </div>
+          <div>
+            <h3>THE FINE PRINT</h3>
+            <Link to="/privacy">Privacy policy</Link>
+            <Link to="/terms">Terms of service</Link>
+            {!isHome && <ThemeSwitcher />}
+          </div>
         </div>
-
-        <div className="flex flex-col items-center justify-between gap-3 border-t border-border pt-8 sm:flex-row">
-          <p className="font-mono text-[11px] text-hint/80">
-            © {new Date().getFullYear()} ConvoMem · A product by{' '}
-            <a
-              href="https://optraze.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-hint/80 underline-offset-2 transition-colors hover:text-foreground hover:underline"
-            >
-              Optraze
-            </a>
-          </p>
-          <p className="font-mono text-[11px] tracking-[0.12em] text-hint/80">
-            API-first · On-prem on request · Zero lock-in
-          </p>
+        <div className="cm-footer-bottom">
+          <span>
+            © {new Date().getFullYear()} ConvoMem. A product by{' '}
+            <a href="https://optraze.com">Optraze ↗</a>
+          </span>
+          <span>
+            <i /> Built for the next conversation.
+          </span>
         </div>
       </div>
     </footer>

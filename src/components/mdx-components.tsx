@@ -29,13 +29,17 @@ function Heading({
   children?: React.ReactNode
 } & React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <Tag id={id} className="group scroll-mt-24" {...props}>
+    <Tag
+      id={id}
+      className="mdx-heading group relative scroll-mt-24 pr-7"
+      {...props}
+    >
       {children}
       {id && (
         <a
           href={`#${id}`}
           aria-label="Link to this section"
-          className="ml-2 inline-flex align-middle text-hint no-underline opacity-0 transition group-hover:opacity-100 hover:text-foreground"
+          className="absolute top-1 right-0 inline-flex text-hint no-underline opacity-0 transition focus-visible:opacity-100 group-hover:opacity-100 hover:text-foreground"
         >
           <HashIcon className="size-4" />
         </a>

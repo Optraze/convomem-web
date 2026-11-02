@@ -1,7 +1,8 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 
-import { ContentFooter } from '@/components/content-footer'
+import { ArticlePager } from '@/components/article-pager'
 import { CopyMarkdownButton } from '@/components/copy-markdown-button'
+import { ResourceLayout } from '@/components/resource-layout'
 import {
   getAdjacent,
   getAllContent,
@@ -9,13 +10,20 @@ import {
   getMdxComponent,
 } from '@/lib/content'
 import { getOgImageUrl } from '@/lib/og'
-import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo'
+import {
+  createPageMeta,
+  getSeoUrl,
+  ORGANIZATION_ID,
+  SITE_NAME,
+  serializeStructuredData,
+} from '@/lib/seo'
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'UTC',
   })
 }
 
@@ -43,6 +51,7 @@ export const Route = createFileRoute('/changelog/$slug')({
         description: frontmatter.description,
         path: `/changelog/${slug}`,
         ogImage,
+        noIndex: frontmatter.status === 'draft',
       }),
       links: [
         { rel: 'canonical', href: url },
@@ -55,13 +64,14 @@ export const Route = createFileRoute('/changelog/$slug')({
       scripts: [
         {
           type: 'application/ld+json',
-          children: JSON.stringify({
+          children: serializeStructuredData({
             '@context': 'https://schema.org',
             '@type': 'TechArticle',
             headline: frontmatter.title,
             description: frontmatter.description,
             image: ogImage,
             url,
+            publisher: { '@id': ORGANIZATION_ID },
             ...(frontmatter.date && { datePublished: frontmatter.date }),
             ...(frontmatter.updated && { dateModified: frontmatter.updated }),
             author: { '@type': 'Organization', name: SITE_NAME },
@@ -85,73 +95,43 @@ function ChangelogEntry() {
   if (!MDXContent) throw notFound()
 
   return (
-    <>
-      <main className="mx-auto max-w-3xl px-5 pt-28 pb-14 sm:px-8 sm:pt-32 sm:pb-20">
-        <div className="flex items-center justify-between">
-          <Link
-            to="/changelog"
-            className="font-mono text-[11px] tracking-[0.22em] text-hint/90 uppercase hover:text-foreground"
-          >
-            ← Changelog
-          </Link>
-          <CopyMarkdownButton mdUrl={`/changelog/${slug}.md`} />
-        </div>
-        <article className="mt-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-[clamp(24px,4vw,36px)] font-semibold tracking-[-0.02em] text-foreground">
-              {frontmatter.title}
-            </h1>
+    <ResourceLayout active="changelog">
+      <main className="article-main release-single" id="resource-content">
+        <Link to="/changelog" className="article-back">
+          ← All releases
+        </Link>
+        <header className="article-header">
+          <div className="journal-meta">
             {frontmatter.date && (
-              <time
-                dateTime={frontmatter.date}
-                className="font-mono text-xs text-muted-foreground"
-              >
+              <time dateTime={frontmatter.date}>
                 {formatDate(frontmatter.date)}
               </time>
             )}
           </div>
-          <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
-            {frontmatter.description}
-          </p>
-          <div className="prose mt-8 max-w-none">
-            <MDXContent />
+          <h1>{frontmatter.title}</h1>
+          <p className="article-description">{frontmatter.description}</p>
+          <div className="article-byline">
+            <span className="editorial-kicker">Release notes</span>
+            <CopyMarkdownButton mdUrl={`/changelog/${slug}.md`} />
           </div>
+        </header>
+        <article className="prose max-w-none article-body">
+          <MDXContent />
         </article>
-
-        {(prevMeta || nextMeta) && (
-          <nav className="mt-12 grid gap-4 border-t border-border pt-8 sm:grid-cols-2">
-            {prevMeta ? (
-              <Link
-                to="/changelog/$slug"
-                params={{ slug: prevMeta.slug }}
-                className="group rounded-lg border border-border p-4 transition-colors hover:border-foreground/15 hover:bg-muted/40"
-              >
-                <span className="text-xs text-muted-foreground">← Newer</span>
-                <span className="mt-1 block font-medium text-foreground transition-transform group-hover:-translate-x-0.5">
-                  {prevMeta.frontmatter.title}
-                </span>
-              </Link>
-            ) : (
-              <span />
-            )}
-            {nextMeta ? (
-              <Link
-                to="/changelog/$slug"
-                params={{ slug: nextMeta.slug }}
-                className="group rounded-lg border border-border p-4 text-right transition-colors hover:border-foreground/15 hover:bg-muted/40"
-              >
-                <span className="text-xs text-muted-foreground">Older →</span>
-                <span className="mt-1 block font-medium text-foreground transition-transform group-hover:translate-x-0.5">
-                  {nextMeta.frontmatter.title}
-                </span>
-              </Link>
-            ) : (
-              <span />
-            )}
-          </nav>
-        )}
+        <ArticlePager
+          section="changelog"
+          prev={
+            prevMeta
+              ? { slug: prevMeta.slug, title: prevMeta.frontmatter.title }
+              : null
+          }
+          next={
+            nextMeta
+              ? { slug: nextMeta.slug, title: nextMeta.frontmatter.title }
+              : null
+          }
+        />
       </main>
-      <ContentFooter />
-    </>
+    </ResourceLayout>
   )
 }

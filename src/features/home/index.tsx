@@ -1,519 +1,509 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
-import { ArrowRight, ArrowUpRight, Check } from 'lucide-react'
-import { motion, useReducedMotion } from 'motion/react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  ChevronDown,
+  Code2,
+  Copy,
+  FileText,
+  LockKeyhole,
+  Mail,
+  MessageSquare,
+  Phone,
+  Play,
+  ShieldCheck,
+} from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
+import pythonIcon from '@/assets/icons/python.svg'
+import rustIcon from '@/assets/icons/rust.svg'
+import typescriptIcon from '@/assets/icons/typescript.svg'
 import { MarketingFooter } from '@/components/marketing-footer'
 import { MarketingNavbar } from '@/components/marketing-navbar'
-import { Accordion } from '@/components/ui/accordion'
-import { useMarketingNavigation } from '@/hooks/use-marketing-navigation'
+
+import { AnalyticsPreview } from './components/analytics-preview'
+import { ConversationPoster } from './components/conversation-poster'
+import { CookieBanner } from './components/cookie-banner'
+import { CustomerStory } from './components/customer-story'
+import { FeatureCatalog } from './components/feature-catalog'
+import { enterprisePlans, faqs } from './data'
 
 const DemoModal = lazy(() =>
-  import('./components/demo/demo-modal').then((m) => ({
-    default: m.DemoModal,
+  import('./components/demo/demo-modal').then((module) => ({
+    default: module.DemoModal,
   }))
 )
-const ScenarioPlayer = lazy(() =>
-  import('./components/scenario-player').then((m) => ({
-    default: m.ScenarioPlayer,
-  }))
+const snippet = `import { ConvoMem } from '@optraze/convomem-sdk'
+
+const client = new ConvoMem({
+  apiKey: process.env.CONVOMEM_API_KEY!,
+})
+
+// Recall relevant, previously captured memory.
+const { context } = await client.lookup(
+  'water leak and troubleshooting already tried',
+  { email: 'alex@example.com' },
 )
 
-import { CookieBanner } from './components/cookie-banner'
-import { Crosshair } from './components/crosshair'
-import { FaqItem } from './components/faq-item'
-import { MemoryRail } from './components/memory-rail'
-import { SectionHeading } from './components/section-heading'
-import { SectionLabel } from './components/section-label'
-import {
-  capabilities,
-  EASE,
-  enterprisePlans,
-  faqs,
-  pipeline,
-  SECTIONS,
-} from './data'
-import { useActiveSection } from './hooks/use-active-section'
+// Add the returned context to your agent's next turn.`
 
-const trustItems = ['7-day trial', 'No card', 'On-prem on request'] as const
-
-const heroStats = [
-  { value: '4', label: 'channels unified' },
-  { value: '20', label: 'memories / recall' },
-  { value: '3', label: 'official SDKs' },
-  { value: '1', label: 'customer timeline' },
-] as const
-
-const pipelineSignal = [
-  'extract',
-  'filter',
-  'score',
-  'redact',
-  'reconcile',
-  'insights',
-] as const
+function CodeExample() {
+  const [status, setStatus] = useState('Copy')
+  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(
+    () => () => {
+      if (timeout.current) clearTimeout(timeout.current)
+    },
+    []
+  )
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(snippet)
+      setStatus('Copied')
+    } catch {
+      setStatus('Copy unavailable')
+    }
+    if (timeout.current) clearTimeout(timeout.current)
+    timeout.current = setTimeout(() => setStatus('Copy'), 2000)
+  }
+  return (
+    <div className="p-code">
+      <div>
+        <span>
+          <Code2 size={15} /> agent.ts
+        </span>
+        <button
+          type="button"
+          onClick={copy}
+          aria-label="Copy TypeScript integration example"
+        >
+          {status === 'Copied' ? <Check size={13} /> : <Copy size={13} />}
+          <span role="status">{status}</span>
+        </button>
+      </div>
+      <pre>
+        <code>
+          {snippet.split('\n').map((line, index) => (
+            <span
+              className={line.trim().startsWith('//') ? 'p-code-comment' : ''}
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed read-only code lines never reorder
+              key={`${index}-${line}`}
+            >
+              <i aria-hidden="true">{index + 1}</i>
+              {line || ' '}
+            </span>
+          ))}
+        </code>
+      </pre>
+      <footer>
+        <span>TypeScript · Runs on your server</span>
+        <Link to="/docs/$slug" params={{ slug: 'sdk-typescript' }}>
+          Full SDK reference <ArrowUpRight size={12} />
+        </Link>
+      </footer>
+    </div>
+  )
+}
 
 export function Home() {
-  const reduce = useReducedMotion()
   const [demoOpen, setDemoOpen] = useState(false)
-  const sectionIds = useMemo(() => SECTIONS.map((section) => section.id), [])
-  const active = useActiveSection(sectionIds)
-  const { jumpToSection } = useMarketingNavigation()
-
+  const [mobilePlan, setMobilePlan] = useState('Starter')
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background text-foreground antialiased">
-      <MemoryRail active={active} onJump={jumpToSection} />
-      <MarketingNavbar />
-
-      <main className="mx-auto w-full max-w-5xl px-5 sm:px-8">
-        <section id="top" className="relative pt-20 pb-12 sm:pt-44 sm:pb-28">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-160 overflow-hidden mask-[linear-gradient(to_bottom,black,transparent_85%)]">
-            <div className="bg-blueprint absolute inset-0 text-foreground opacity-[0.08]" />
-            {!reduce && (
-              <div className="sweep-line absolute inset-x-0 top-0 h-px bg-foreground/12" />
-            )}
-          </div>
-
-          <div className="relative">
-            <Crosshair className="-top-3 -left-1.5" />
-            <Crosshair className="-top-3 -right-1.5" />
-
-            <div className="grid items-end gap-14 lg:grid-cols-[1fr_auto] lg:gap-20">
-              <motion.div
-                initial={reduce ? false : { opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: EASE }}
-              >
-                <div className="mb-6 flex items-center gap-4 sm:mb-10">
-                  <span className="tnum font-mono text-[11px] tracking-[0.2em] text-hint/80">
-                    00
-                  </span>
-                  <span className="h-px w-12 bg-foreground/15" />
-                  <span className="font-mono text-[11px] tracking-[0.22em] text-muted-foreground uppercase">
-                    Memory layer for conversational AI
-                  </span>
-                </div>
-
-                <h1 className="text-balance leading-[0.94] font-semibold tracking-[-0.045em]">
-                  <span className="block text-[clamp(26px,5.4vw,66px)] text-foreground">
-                    Every customer conversation,
-                  </span>
-                  <span className="block text-[clamp(34px,10.5vw,124px)] tracking-[-0.06em] text-foreground">
-                    remembered.
-                  </span>
-                </h1>
-
-                <p className="mt-6 max-w-md text-[clamp(14px,1.5vw,16px)] leading-[1.7] text-muted-foreground sm:mt-9">
-                  Voice bots, chat bots, and support agents forget every caller
-                  the moment a session ends. ConvoMem gives them durable
-                  customer memory — so the next interaction starts with context,
-                  not repetition.
-                </p>
-
-                <div className="mt-6 flex flex-col items-start gap-3 sm:mt-9 sm:flex-row sm:items-center">
-                  <a
-                    href="https://app.convomem.com/register"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center gap-2 rounded-md bg-foreground px-5 py-2.5 font-medium text-background text-sm transition-all hover:opacity-90 active:scale-[0.98]"
-                  >
-                    Start free trial
-                    <ArrowRight
-                      size={15}
-                      className="transition-transform group-hover:translate-x-0.5"
-                    />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => setDemoOpen(true)}
-                    className="group border-border-strong flex items-center gap-2 rounded-md border px-5 py-2.5 font-medium text-foreground text-sm transition-all hover:bg-muted active:scale-[0.98]"
-                  >
-                    Try the live demo
-                    <ArrowUpRight
-                      size={15}
-                      className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                    />
-                  </button>
-                </div>
-                <div className="mt-4 flex flex-wrap items-center gap-5 sm:mt-6">
-                  {trustItems.map((t) => (
-                    <span
-                      key={t}
-                      className="flex items-center gap-1.5 font-mono text-[11px] text-hint/75"
-                    >
-                      <Check size={11} className="text-foreground" /> {t}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-
-              <motion.dl
-                initial={reduce ? false : { opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
-                className="hidden grid-cols-1 border-l border-border lg:grid"
-              >
-                {heroStats.map((s) => (
-                  <div
-                    key={s.label}
-                    className="border-b border-border py-4 pr-2 pl-8 last:border-0"
-                  >
-                    <dd className="tnum font-mono text-[clamp(24px,2.4vw,36px)] leading-none font-semibold tracking-[-0.03em] text-foreground">
-                      <span>{s.value}</span>
-                    </dd>
-                    <dt className="mt-2.5 font-mono text-[10px] tracking-[0.16em] text-hint/90 uppercase">
-                      {s.label}
-                    </dt>
-                  </div>
-                ))}
-              </motion.dl>
-            </div>
-          </div>
-        </section>
-
-        <section id="try" className="border-t border-border py-14 sm:py-28">
-          <SectionLabel index="01" label="Try it" />
-          <div className="max-w-2xl">
-            <SectionHeading variant="lead">
-              Run a message through the real pipeline.
-            </SectionHeading>
-            <p className="mt-6 text-[15px] leading-[1.7] text-muted-foreground">
-              Paste a message or drop a small CSV. It runs the same capture,
-              scoring, redaction, reconciliation, and insight pipeline we use in
-              production — streamed back live. Nothing is stored.
+    <div className="premium-site cm-light-surface">
+      <MarketingNavbar appearance="light" />
+      <main id="main-content">
+        <section className="p-hero p-wrap" id="top">
+          <div className="p-hero-copy">
+            <span className="p-hero-label">
+              <span />
+              ONE CUSTOMER. EVERY CONVERSATION.
+            </span>
+            <h1>
+              Customer
+              <br />
+              intelligence.
+              <br />
+              <em>With a memory.</em>
+            </h1>
+            <p>
+              Unify calls, chats, texts, and emails into one customer history.
+              Give your agents context—and your team the insight to act.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <div className="p-hero-actions">
+              <a
+                className="p-button p-button-blue"
+                href="https://app.convomem.com/register"
+              >
+                Start your free trial
+                <ArrowUpRight size={19} />
+              </a>
               <button
                 type="button"
+                className="p-button p-button-outline"
                 onClick={() => setDemoOpen(true)}
-                className="group inline-flex items-center gap-2.5 rounded-md bg-foreground px-6 py-3 font-medium text-background text-sm transition-all hover:opacity-90 active:scale-[0.98]"
               >
-                Run the live demo
-                <ArrowUpRight
-                  size={16}
-                  className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                />
+                <Play size={12} />
+                Try a conversation
               </button>
             </div>
-
-            <p className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] tracking-[0.14em] text-hint/75">
-              {pipelineSignal.map((s, i) => (
-                <span key={s} className="flex items-center gap-2">
-                  {i > 0 && <span className="text-ghost/70">→</span>}
-                  <span>{s}</span>
-                </span>
-              ))}
+            <span className="p-trial-note">
+              7 days to explore. No credit card required.
+            </span>
+          </div>
+          <ConversationPoster />
+        </section>
+        <div className="p-channel-band">
+          <div className="p-wrap">
+            <span>
+              Every channel. <br />
+              <strong>One connected story.</strong>
+            </span>
+            <div>
+              <span>
+                <Phone />
+                Voice
+              </span>
+              <span>
+                <MessageSquare />
+                Chat
+              </span>
+              <span>
+                <MessageSquare />
+                SMS
+              </span>
+              <span>
+                <Mail />
+                Email
+              </span>
+            </div>
+          </div>
+        </div>
+        <CustomerStory />
+        <section className="p-handoff p-wrap" id="features">
+          <div className="p-handoff-title">
+            <span className="p-kicker">
+              PASS THE CONTEXT. KEEP THE CONNECTION.
+            </span>
+            <h2>
+              A new agent.
+              <br />
+              The same <em>understanding.</em>
+            </h2>
+          </div>
+          <div className="p-handoff-body">
+            <p>
+              Pick up where the last conversation left off. Give your agents a
+              shared memory, a useful handoff, and the context to make the next
+              interaction feel personal.
+            </p>
+            <div>
+              <span>
+                <Check size={16} />
+                Source-linked customer memories
+              </span>
+              <span>
+                <Check size={16} />
+                AI-written handoff briefs
+              </span>
+              <span>
+                <Check size={16} />
+                Scoped, embeddable agent context
+              </span>
+            </div>
+            <Link
+              className="p-text-link"
+              to="/docs/$slug"
+              params={{ slug: 'handoff' }}
+            >
+              See how handoffs work
+              <ArrowRight size={17} />
+            </Link>
+          </div>
+        </section>
+        <AnalyticsPreview />
+        <FeatureCatalog />
+        <section className="p-developers" id="developers">
+          <div className="p-wrap p-developer-grid">
+            <div>
+              <span className="p-kicker">
+                BIG POSSIBILITIES. SMALL INTEGRATION.
+              </span>
+              <h2>
+                Add memory.
+                <br />
+                Keep your
+                <br />
+                <em>stack.</em>
+              </h2>
+              <p>
+                Your agents, with more context. Bring ConvoMem to the tools you
+                already use through the API, hosted MCP, or official SDKs.
+              </p>
+              <Link className="p-button p-button-white" to="/docs">
+                Build with ConvoMem
+                <ArrowUpRight size={18} />
+              </Link>
+              <div className="p-sdk-links">
+                <Link to="/docs/$slug" params={{ slug: 'sdk-typescript' }}>
+                  <img
+                    src={typescriptIcon}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  TypeScript
+                </Link>
+                <Link to="/docs/$slug" params={{ slug: 'sdk-python' }}>
+                  <img
+                    src={pythonIcon}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  Python
+                </Link>
+                <Link to="/docs/$slug" params={{ slug: 'sdk-rust' }}>
+                  <img src={rustIcon} alt="" loading="lazy" decoding="async" />
+                  Rust
+                </Link>
+                <Link to="/docs/$slug" params={{ slug: 'mcp' }}>
+                  MCP ↗
+                </Link>
+              </div>
+            </div>
+            <CodeExample />
+          </div>
+        </section>
+        <section className="p-trust p-wrap">
+          <div className="p-section-head">
+            <div>
+              <span className="p-kicker">
+                CONTEXT IS PERSONAL. TREAT IT THAT WAY.
+              </span>
+              <h2>
+                Memory worth keeping.
+                <br />
+                Controls worth <em>trusting.</em>
+              </h2>
+            </div>
+            <Link className="p-text-link" to="/privacy">
+              Privacy & data control
+              <ArrowUpRight size={18} />
+            </Link>
+          </div>
+          <div className="p-trust-grid">
+            {[
+              {
+                icon: FileText,
+                title: 'Keep the source in sight.',
+                text: 'Trace memories back to their conversations. Follow versions, changes, and the context behind every fact.',
+              },
+              {
+                icon: ShieldCheck,
+                title: 'Put sensitive data in its place.',
+                text: 'Apply PII policies, role-based access, retention, and customer-data controls around your memory.',
+              },
+              {
+                icon: LockKeyhole,
+                title: 'Draw the right boundaries.',
+                text: 'Organization isolation, agent scoping, and controlled recall keep customer context in the right hands.',
+              },
+            ].map((item) => (
+              <article key={item.title}>
+                <item.icon size={27} />
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+        <section className="p-try p-wrap" id="try">
+          <div>
+            <span className="p-kicker">YOUR WORDS. THE REAL PIPELINE.</span>
+            <h2>
+              See what one
+              <br />
+              <em>conversation can reveal.</em>
+            </h2>
+            <p>
+              Bring a message. See the facts, signals, and context it can
+              become.
             </p>
           </div>
+          <button
+            type="button"
+            className="p-button p-button-white"
+            onClick={() => setDemoOpen(true)}
+          >
+            Try the live demo
+            <ArrowUpRight size={21} />
+          </button>
         </section>
-
-        <section id="scenarios" className="py-12 sm:py-20">
-          <SectionLabel index="02" label="In the wild" />
-          <div className="grid items-start gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
-            <div className="lg:sticky lg:top-24">
-              <SectionHeading>
-                What it feels like for your customer.
-              </SectionHeading>
-              <p className="mt-5 max-w-sm text-muted-foreground text-sm leading-[1.75]">
-                Three real moments — a returning caller, a frustrated customer,
-                an expansion. In each one, the agent already knows the story.
-              </p>
+        <section className="p-pricing p-wrap" id="pricing">
+          <div className="p-section-head">
+            <div>
+              <span className="p-kicker">START A NEW CHAPTER</span>
+              <h2>
+                Room for your next
+                <br />
+                <em>big thing.</em>
+              </h2>
             </div>
-            <Suspense>
-              <ScenarioPlayer />
-            </Suspense>
+            <p>
+              Start with a 7-day trial on Starter, Growth, or Pro. Find the plan
+              that fits your customer relationships.
+            </p>
           </div>
-        </section>
-
-        <section
-          id="features"
-          className="border-t border-border py-12 sm:py-24"
-        >
-          <SectionLabel index="03" label="Capabilities" />
-          <SectionHeading className="mb-10">
-            Customer intelligence,
-            <br className="hidden sm:block" /> assembled automatically.
-          </SectionHeading>
-
-          <p className="mb-8 max-w-2xl text-muted-foreground text-sm leading-relaxed">
-            Available in v1.2.0, including the official TypeScript, Python, and
-            Rust SDKs and the hosted MCP endpoint.
-          </p>
-
-          <ul className="border-t border-border">
-            {capabilities.map((c, i) => (
-              <motion.li
-                key={c.term}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.4, delay: (i % 3) * 0.06 }}
-                className="group -mx-4 grid grid-cols-1 gap-x-8 gap-y-2 rounded-md border-b border-border px-4 py-6 transition-colors hover:bg-muted/40 md:grid-cols-[auto_1fr_auto] md:items-baseline"
-              >
-                <div className="flex items-baseline gap-4 md:w-64">
-                  <span className="tnum font-mono text-[11px] text-hint/80">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <h3 className="font-semibold text-[17px] tracking-[-0.01em] text-foreground transition-transform group-hover:translate-x-0.5">
-                    {c.term}
-                  </h3>
-                </div>
-                <p className="max-w-xl text-[13.5px] leading-[1.7] text-muted-foreground">
-                  {c.desc}
-                </p>
-                <span className="font-mono text-[11px] whitespace-nowrap text-hint/90 md:text-right">
-                  {c.tag}
-                </span>
-              </motion.li>
-            ))}
-          </ul>
-        </section>
-
-        <section
-          id="how-it-works"
-          className="border-t border-border py-12 sm:py-24"
-        >
-          <SectionLabel index="04" label="Pipeline" />
-          <SectionHeading className="mb-10">
-            Three steps. Zero friction.
-          </SectionHeading>
-
-          <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-3">
-            {pipeline.map((p) => (
-              <motion.div
-                key={p.step}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.45 }}
-                className="bg-background p-7"
-              >
-                <div className="mb-6 flex items-baseline justify-between">
-                  <span className="tnum font-mono text-[clamp(30px,5vw,52px)] leading-none font-semibold tracking-[-0.04em] text-foreground">
-                    {p.step}
-                  </span>
-                  <span className="font-mono text-[10px] tracking-[0.2em] text-hint/80 uppercase">
-                    step
-                  </span>
-                </div>
-                <h3 className="mb-2 font-semibold text-foreground text-base">
-                  {p.title}
-                </h3>
-                <p className="text-[13.5px] leading-[1.75] text-muted-foreground">
-                  {p.desc}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        <section id="pricing" className="border-t border-border py-12 sm:py-24">
-          <SectionLabel index="05" label="Pricing" />
-          <SectionHeading className="mb-10">
-            Transparent. No surprises.
-          </SectionHeading>
-
-          <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+          <fieldset
+            className="p-plan-picker"
+            aria-label="Explore pricing plans"
+          >
             {enterprisePlans
               .filter((plan) => plan.price !== null)
-              .map((plan) => {
-                const hi = plan.highlighted
-                return (
-                  <div
-                    key={plan.name}
-                    className={`relative flex flex-col p-6 ${
-                      hi ? 'bg-foreground text-background' : 'bg-background'
-                    }`}
-                  >
-                    {hi && (
-                      <span className="absolute top-6 right-6 font-mono text-[9px] tracking-[0.18em] text-background/70 uppercase">
-                        popular
-                      </span>
-                    )}
-                    <h3
-                      className={`font-semibold text-sm ${
-                        hi ? 'text-background' : 'text-foreground'
-                      }`}
-                    >
-                      {plan.name}
-                    </h3>
-                    <p
-                      className={`mt-1 text-xs ${
-                        hi ? 'text-background/70' : 'text-muted-foreground'
-                      }`}
-                    >
-                      {plan.description}
-                    </p>
-                    <div className="mt-5 mb-5">
-                      {plan.price !== null ? (
-                        <>
-                          {'pricePrefix' in plan && plan.pricePrefix && (
-                            <span
-                              className={`mb-1 block font-mono text-[9px] tracking-[0.16em] uppercase ${
-                                hi ? 'text-background/65' : 'text-hint/90'
-                              }`}
-                            >
-                              {plan.pricePrefix}
-                            </span>
-                          )}
-                          <span
-                            className={`tnum font-mono ${
-                              hi ? 'text-background' : 'text-foreground'
-                            }`}
-                          >
-                            <span className="font-semibold text-[34px] tracking-[-0.04em]">
-                              ${plan.price}
-                            </span>
-                          </span>
-                          <span
-                            className={`ml-1 text-[13px] ${
-                              hi ? 'text-background/65' : 'text-hint/90'
-                            }`}
-                          >
-                            /{plan.period}
-                          </span>
-                        </>
-                      ) : (
-                        <span
-                          className={`font-mono font-semibold text-[26px] tracking-[-0.03em] ${
-                            hi ? 'text-background' : 'text-foreground'
-                          }`}
-                        >
-                          Custom
-                        </span>
-                      )}
-                    </div>
-                    <ul className="mb-6 flex-1 space-y-2">
-                      {plan.features.map((f) => (
-                        <li key={f} className="flex items-start gap-2">
-                          <Check
-                            size={12}
-                            className={`mt-0.5 shrink-0 ${
-                              hi ? 'text-background/70' : 'text-foreground'
-                            }`}
-                          />
-                          <span
-                            className={`text-xs leading-normal ${
-                              hi ? 'text-background/75' : 'text-subtle'
-                            }`}
-                          >
-                            {f}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    <Link
-                      to="/contact"
-                      className={`mt-auto inline-flex h-10 w-full items-center justify-center rounded-md px-4 font-medium text-[13px] transition-opacity hover:opacity-90 active:scale-[0.98] ${
-                        hi
-                          ? 'bg-background text-foreground'
-                          : 'bg-foreground text-background'
-                      }`}
-                    >
-                      {plan.cta}
+              .map((plan) => (
+                <button
+                  type="button"
+                  key={plan.name}
+                  aria-pressed={mobilePlan === plan.name}
+                  onClick={() => setMobilePlan(plan.name)}
+                >
+                  {plan.name}
+                </button>
+              ))}
+            <button
+              className="p-plan-compare"
+              type="button"
+              aria-pressed={mobilePlan === 'all'}
+              onClick={() => setMobilePlan('all')}
+            >
+              Compare all plans <ArrowRight size={15} />
+            </button>
+          </fieldset>
+          <div className="p-plans">
+            {enterprisePlans
+              .filter((plan) => plan.price !== null)
+              .map((plan) => (
+                <article
+                  className={`p-plan ${plan.highlighted ? 'p-plan-featured' : ''}`}
+                  key={plan.name}
+                  data-current={
+                    mobilePlan === 'all' || mobilePlan === plan.name
+                  }
+                >
+                  <div className="p-plan-top">
+                    <h3>{plan.name}</h3>
+                    {plan.highlighted && <span>FOR GROWING TEAMS</span>}
+                  </div>
+                  <p>{plan.description}</p>
+                  <div className="p-plan-price">
+                    <small>
+                      {'pricePrefix' in plan ? plan.pricePrefix : 'Monthly'}
+                    </small>
+                    <strong>
+                      ${plan.price?.toLocaleString('en-US')}
+                      <span>/mo</span>
+                    </strong>
+                  </div>
+                  {plan.name === 'Scale' ? (
+                    <Link to="/contact" className="p-plan-action">
+                      Talk to sales
+                      <ArrowUpRight size={17} />
                     </Link>
-                  </div>
-                )
-              })}
-          </div>
-
-          {enterprisePlans
-            .filter((plan) => plan.price === null)
-            .map((plan) => (
-              <div
-                key={plan.name}
-                className="mt-3 flex flex-col gap-6 rounded-xl border border-border bg-background p-6 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-baseline gap-x-3">
-                    <h3 className="font-semibold text-sm text-foreground">
-                      {plan.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                      {plan.description}
-                    </p>
-                  </div>
-                  <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2">
-                        <Check size={12} className="shrink-0 text-foreground" />
-                        <span className="text-xs leading-normal text-subtle">
-                          {f}
-                        </span>
+                  ) : (
+                    <a
+                      href="https://app.convomem.com/register"
+                      className="p-plan-action"
+                    >
+                      Try {plan.name}
+                      <ArrowUpRight size={17} />
+                    </a>
+                  )}
+                  <ul>
+                    {plan.features.map((feature) => (
+                      <li key={feature}>
+                        <Check size={14} />
+                        {feature}
                       </li>
                     ))}
                   </ul>
-                </div>
-                <Link
-                  to="/contact"
-                  className="inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-foreground px-6 font-medium text-[13px] text-background transition-opacity hover:opacity-90 active:scale-[0.98]"
-                >
-                  {plan.cta}
-                </Link>
-              </div>
-            ))}
-
-          <p className="mt-6 text-muted-foreground text-xs leading-relaxed">
-            Starter, Growth, and Pro start with a free 7-day trial — no card
-            required. Scale is sales-led so we can size capacity, retention,
-            support, and deployment requirements before activation.
-          </p>
+                </article>
+              ))}
+          </div>
+          <div className="p-custom">
+            <p>
+              <strong>Something bigger in mind?</strong> Custom capacity,
+              on-premises deployment on request, and a dedicated SLA.
+            </p>
+            <Link className="p-text-link" to="/contact">
+              Let’s talk
+              <ArrowUpRight size={17} />
+            </Link>
+          </div>
         </section>
-
-        <section
-          id="faq"
-          itemScope
-          itemType="https://schema.org/FAQPage"
-          className="border-t border-border py-12 sm:py-24"
-        >
-          <SectionLabel index="06" label="Questions" />
-          <SectionHeading className="mb-8">Questions, answered.</SectionHeading>
-          <Accordion className="border-b border-border">
-            {faqs.map((f, i) => (
-              <FaqItem
-                key={f.q}
-                q={f.q}
-                a={f.a}
-                index={String(i + 1).padStart(2, '0')}
-              />
+        <section className="p-faq p-wrap" id="faq">
+          <div>
+            <span className="p-kicker">THE THINGS YOU MIGHT BE WONDERING</span>
+            <h2>
+              A little more
+              <br />
+              <em>context.</em>
+            </h2>
+            <Link className="p-text-link" to="/contact">
+              Ask us anything
+              <ArrowUpRight size={17} />
+            </Link>
+          </div>
+          <div>
+            {faqs.map((faq) => (
+              <details key={faq.q}>
+                <summary>
+                  {faq.q}
+                  <ChevronDown size={19} />
+                </summary>
+                <p>{faq.a}</p>
+              </details>
             ))}
-          </Accordion>
+          </div>
         </section>
-
-        <section className="border-t border-border py-14 sm:py-28">
-          <div className="border-border-strong bg-surface relative overflow-hidden rounded-2xl border px-5 py-10 text-center sm:px-12 sm:py-14">
-            <div className="bg-blueprint pointer-events-none absolute inset-0 mask-[radial-gradient(ellipse_at_center,black,transparent_75%)] text-foreground opacity-[0.4]" />
-            <div className="relative">
-              <p className="mb-4 font-mono text-[11px] tracking-[0.24em] text-hint/90 uppercase sm:mb-5">
-                Every conversation remembered · from the first call
-              </p>
-              <h2 className="mx-auto max-w-2xl text-balance font-semibold text-[clamp(22px,4.5vw,52px)] leading-[1.05] tracking-[-0.04em] text-foreground">
-                Stop introducing your AI to the same customer twice.
-              </h2>
-              <p className="mx-auto mt-5 max-w-md text-muted-foreground text-sm leading-[1.7]">
-                Start your 7-day free trial. No credit card. On-premises
-                deployment available on request.
-              </p>
-              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <a
-                  href="https://app.convomem.com/register"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-md bg-foreground px-6 py-2.5 font-medium text-background text-sm transition-opacity hover:opacity-90"
-                >
-                  Start free trial <ArrowRight size={15} />
-                </a>
-              </div>
+        <section className="p-closing">
+          <div className="p-wrap">
+            <span className="p-kicker">
+              EVERY CONVERSATION IS A CHANCE TO CONNECT.
+            </span>
+            <h2>
+              Customer context.
+              <br />
+              <em>Ready for your agents.</em>
+            </h2>
+            <a
+              className="p-button p-button-blue"
+              href="https://app.convomem.com/register"
+            >
+              Start your free trial
+              <ArrowUpRight size={21} />
+            </a>
+            <span className="p-trial-note">
+              7 days free. No credit card required.
+            </span>
+            <div className="p-closing-wordmark" aria-hidden="true">
+              ConvoMem
             </div>
           </div>
         </section>
       </main>
-
-      <MarketingFooter />
-
-      <Suspense>
-        <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
-      </Suspense>
+      <MarketingFooter appearance="light" />
+      {demoOpen && (
+        <Suspense
+          fallback={
+            <div className="p-demo-loading" role="status">
+              Loading live demo…
+            </div>
+          }
+        >
+          <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
+        </Suspense>
+      )}
       <CookieBanner />
     </div>
   )

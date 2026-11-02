@@ -14,12 +14,30 @@ import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
 
-import { contentFiles, readingTimes } from './scripts/content-files'
+import {
+  allContentFiles,
+  contentFiles,
+  readingTimes,
+} from './scripts/content-files'
 import { draftContentPlugin } from './scripts/draft-content'
+import { filmAudioServer } from './scripts/media-server'
 
 const blogSlugs = contentFiles('blog').map((f) => f.slug)
 const docsSlugs = contentFiles('docs').map((f) => f.slug)
 const changelogSlugs = contentFiles('changelog').map((f) => f.slug)
+
+// Raw Markdown remains available to tools, with its HTML counterpart canonical.
+const markdownRouteRules = Object.fromEntries(
+  allContentFiles().map((file) => [
+    `/${file.type}/${file.slug}.md`,
+    {
+      headers: {
+        Link: `<https://convomem.com/${file.type}/${file.slug}>; rel="canonical"`,
+        'Content-Type': 'text/markdown; charset=utf-8',
+      },
+    },
+  ])
+)
 
 const READING_TIMES_MODULE_ID = 'virtual:reading-times'
 
@@ -40,11 +58,13 @@ function readingTimesPlugin() {
 const config = defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
   plugins: [
+    filmAudioServer(),
     draftContentPlugin(command),
     readingTimesPlugin(),
     command === 'serve' && devtools(),
     nitro({
       compatibilityDate: 'latest',
+      plugins: ['./server/plugins/media-ranges.ts'],
       prerender: {
         routes: [
           '/',
@@ -71,6 +91,7 @@ const config = defineConfig(({ command }) => ({
         '/blog/**': { prerender: true },
         '/docs/**': { prerender: true },
         '/changelog/**': { prerender: true },
+        ...markdownRouteRules,
         '/assets/**': {
           headers: { 'cache-control': 'public, max-age=31536000, immutable' },
         },

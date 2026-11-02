@@ -1,25 +1,26 @@
 import { useState } from 'react'
-import { MenuIcon, XIcon } from 'lucide-react'
+import { ArrowUpRight, MenuIcon, XIcon } from 'lucide-react'
+import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { Link } from '@tanstack/react-router'
 
 import type React from 'react'
 import type { Toc } from '@/lib/content'
 import type { DocSearchEntry, ResolvedNavGroup } from '../nav'
 
-import { ContentFooter } from '@/components/content-footer'
-import { Logo } from '@/components/logo'
+import { ResourceHeader, resourceLinks } from '@/components/resource-header'
+import { ResourceFooter } from '@/components/resource-layout'
+import {
+  Dialog,
+  DialogClose,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 import { DocsSearch } from './docs-search'
 import { DocsSidebar } from './docs-sidebar'
 import { OnThisPage } from './on-this-page'
-
-const APP_URL = 'https://app.convomem.com'
-
-const headerLinks = [
-  { label: 'Docs', to: '/docs' as const },
-  { label: 'Blog', to: '/blog' as const },
-  { label: 'Changelog', to: '/changelog' as const },
-]
 
 export function DocsLayout({
   nav,
@@ -35,100 +36,81 @@ export function DocsLayout({
   children: React.ReactNode
 }) {
   const [mobileNav, setMobileNav] = useState(false)
-  const hasToc = toc !== undefined && toc.length > 0
-
+  const hasToc = !!toc?.length
   return (
-    <div className="min-h-svh">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6">
-          <button
-            type="button"
-            onClick={() => setMobileNav((o) => !o)}
-            aria-label="Toggle navigation"
-            className="-ml-1 grid size-8 place-items-center rounded-md hover:bg-muted lg:hidden"
-          >
-            {mobileNav ? (
-              <XIcon className="size-5" />
-            ) : (
-              <MenuIcon className="size-5" />
-            )}
-          </button>
-          <Link to="/" className="flex items-center gap-2.5">
-            <Logo />
-            <span className="font-mono text-[14px] font-semibold tracking-[-0.01em]">
-              ConvoMem
-            </span>
-          </Link>
-          <nav className="ml-4 hidden items-center gap-6 md:flex">
-            {headerLinks.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                className="text-[13px] text-muted-foreground transition-colors hover:text-foreground data-[status=active]:text-foreground"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="ml-auto flex items-center gap-2.5">
-            <DocsSearch index={searchIndex} />
-            <a
-              href={`${APP_URL}/register`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden rounded-md bg-foreground px-3.5 py-1.5 font-medium text-[13px] text-background transition-opacity hover:opacity-90 sm:block"
+    <Dialog open={mobileNav} onOpenChange={setMobileNav}>
+      <div className="docs-shell resource-surface">
+        <a className="docs-skip" href="#docs-content">
+          Skip to content
+        </a>
+        <ResourceHeader
+          active="docs"
+          search={<DocsSearch index={searchIndex} />}
+          menu={
+            <DialogTrigger
+              render={
+                <button
+                  type="button"
+                  className="docs-menu"
+                  aria-label="Open documentation navigation"
+                />
+              }
             >
-              Get started
-            </a>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[15rem_minmax(0,1fr)_15rem]">
-          {/* Left sidebar (desktop) */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-14 max-h-[calc(100svh-3.5rem)] overflow-y-auto py-8 pr-2">
+              <MenuIcon size={20} />
+            </DialogTrigger>
+          }
+        />
+        <div className="docs-columns" data-has-toc={hasToc}>
+          <aside className="docs-left-rail">
+            <div>
               <DocsSidebar nav={nav} currentSlug={currentSlug} />
+              <div className="docs-sidebar-help">
+                <span>Building something?</span>
+                <Link to="/contact">
+                  Talk to the team
+                  <ArrowUpRight size={13} />
+                </Link>
+              </div>
             </div>
           </aside>
-
-          {/* Center content */}
-          <main className="min-w-0 py-8 lg:py-10">{children}</main>
-
-          {/* Right rail (xl) */}
-          {hasToc && (
-            <aside className="hidden xl:block">
-              <div className="sticky top-14 max-h-[calc(100svh-3.5rem)] overflow-y-auto py-10">
-                <OnThisPage toc={toc} />
-              </div>
+          <main className="docs-main" id="docs-content">
+            {children}
+          </main>
+          {toc && hasToc && (
+            <aside className="docs-right-rail">
+              <OnThisPage toc={toc} />
             </aside>
           )}
         </div>
+        <ResourceFooter />
       </div>
-
-      <ContentFooter />
-
-      {/* Mobile sidebar drawer */}
-      {mobileNav && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <button
-            type="button"
-            aria-label="Close navigation"
-            tabIndex={-1}
-            className="absolute inset-0 cursor-default bg-black/50 backdrop-blur-sm"
-            onClick={() => setMobileNav(false)}
-          />
-          <div className="absolute top-14 bottom-0 left-0 w-72 max-w-[80%] overflow-y-auto border-r border-border bg-background p-6">
-            <DocsSidebar
-              nav={nav}
-              currentSlug={currentSlug}
-              onNavigate={() => setMobileNav(false)}
-            />
+      <DialogPortal>
+        <DialogOverlay className="docs-nav-backdrop" />
+        <DialogPrimitive.Popup className="docs-nav-drawer resource-surface">
+          <div className="docs-drawer-heading">
+            <DialogTitle>Documentation</DialogTitle>
+            <DialogClose aria-label="Close documentation navigation">
+              <XIcon size={20} />
+            </DialogClose>
           </div>
-        </div>
-      )}
-    </div>
+          <nav className="docs-drawer-resources" aria-label="Resources">
+            {resourceLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setMobileNav(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <DocsSidebar
+            nav={nav}
+            currentSlug={currentSlug}
+            onNavigate={() => setMobileNav(false)}
+          />
+        </DialogPrimitive.Popup>
+      </DialogPortal>
+    </Dialog>
   )
 }

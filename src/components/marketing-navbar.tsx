@@ -1,126 +1,145 @@
-import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
-import { motion } from 'motion/react'
+import { useEffect, useState } from 'react'
+import { ArrowUpRight, Menu, X } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
 import { Logo } from '@/components/logo'
-import { useMarketingNavigation } from '@/hooks/use-marketing-navigation'
 
-const APP_URL = 'https://app.convomem.com'
-
-const navItems = [
-  { label: 'Try it', hash: 'try' },
-  { label: 'In the wild', hash: 'scenarios' },
-  { label: 'Pricing', hash: 'pricing' },
-] as const
-
-export function MarketingNavbar() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const { jumpToSection } = useMarketingNavigation({
-    onNavigate: () => setMobileOpen(false),
-  })
-
+export function MarketingNavbar({
+  appearance = 'light',
+}: {
+  appearance?: 'light' | 'dark'
+} = {}) {
+  const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (!open) return
+    const close = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        document.getElementById('marketing-menu-toggle')?.focus()
+      }
+    }
+    const closeWhenNavigationFits = () => {
+      const toggle = document.getElementById('marketing-menu-toggle')
+      if (toggle && getComputedStyle(toggle).display === 'none') setOpen(false)
+    }
+    window.addEventListener('resize', closeWhenNavigationFits)
+    window.addEventListener('keydown', close)
+    return () => {
+      window.removeEventListener('resize', closeWhenNavigationFits)
+      window.removeEventListener('keydown', close)
+    }
+  }, [open])
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-5 sm:px-8">
+    <header className="cm-header" data-surface={appearance}>
+      <a className="cm-skip-link" href="#main-content">
+        Skip to content
+      </a>
+      <nav className="cm-nav" aria-label="Main navigation">
         <Link
           to="/"
-          onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-2.5"
+          hash="top"
+          className="cm-brand"
+          onClick={() => setOpen(false)}
         >
-          <Logo />
-          <span className="font-mono text-[14px] font-semibold tracking-[-0.01em]">
-            ConvoMem
-          </span>
+          <Logo appearance={appearance} aria-hidden="true" />
+          <span>ConvoMem</span>
         </Link>
-
-        <div className="hidden items-center gap-8 md:flex">
-          {navItems.map((n) => (
-            <Link
-              key={n.hash}
-              to="/"
-              hash={n.hash}
-              onClick={() => jumpToSection(n.hash)}
-              className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {n.label}
-            </Link>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <a
-            href={`${APP_URL}/login`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden px-3 py-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground sm:block"
+        <div className="cm-nav-links">
+          <Link
+            to="/"
+            hash="feature-catalog"
+            activeOptions={{ exact: true, includeHash: true }}
+            activeProps={{ className: 'cm-section-active' }}
           >
+            Platform
+          </Link>
+          <Link
+            to="/"
+            hash="how-it-works"
+            activeOptions={{ exact: true, includeHash: true }}
+            activeProps={{ className: 'cm-section-active' }}
+          >
+            How it works
+          </Link>
+          <Link
+            to="/"
+            hash="analytics"
+            activeOptions={{ exact: true, includeHash: true }}
+            activeProps={{ className: 'cm-section-active' }}
+          >
+            Intelligence
+          </Link>
+          <Link
+            to="/"
+            hash="pricing"
+            activeOptions={{ exact: true, includeHash: true }}
+            activeProps={{ className: 'cm-section-active' }}
+          >
+            Pricing
+          </Link>
+          <Link to="/docs">
+            Developers <ArrowUpRight size={12} />
+          </Link>
+        </div>
+        <div className="cm-nav-actions">
+          <a className="cm-login" href="https://app.convomem.com/login">
             Log in
           </a>
-          <a
-            href={`${APP_URL}/register`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 font-medium text-[13px] text-background transition-opacity hover:opacity-90"
-          >
-            Get started
+          <a className="cm-nav-cta" href="https://app.convomem.com/register">
+            Get started <ArrowUpRight size={14} />
           </a>
-
           <button
+            id="marketing-menu-toggle"
+            className="cm-menu-toggle"
             type="button"
-            onClick={() => setMobileOpen((open) => !open)}
-            className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-muted md:hidden"
-            aria-label="Menu"
+            aria-label={open ? 'Close navigation' : 'Open navigation'}
+            aria-expanded={open}
+            aria-controls="mobile-navigation"
+            onClick={() => setOpen(!open)}
           >
-            {mobileOpen ? <X size={16} /> : <Menu size={16} />}
+            {open ? <X size={21} /> : <Menu size={21} />}
           </button>
         </div>
-      </div>
-
-      {mobileOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-3 border-t border-border bg-background/95 px-5 py-4 backdrop-blur-xl md:hidden"
+      </nav>
+      {open && (
+        <nav
+          id="mobile-navigation"
+          className="cm-mobile-nav"
+          aria-label="Mobile navigation"
         >
-          {navItems.map((n) => (
+          {[
+            { label: 'Platform', hash: 'feature-catalog' },
+            { label: 'Intelligence', hash: 'analytics' },
+            { label: 'How it works', hash: 'how-it-works' },
+            { label: 'Pricing', hash: 'pricing' },
+          ].map((item) => (
             <Link
-              key={n.hash}
+              key={item.hash}
               to="/"
-              hash={n.hash}
-              onClick={() => jumpToSection(n.hash)}
-              className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
+              hash={item.hash}
+              activeOptions={{ exact: true, includeHash: true }}
+              activeProps={{ className: 'cm-section-active' }}
+              onClick={() => setOpen(false)}
             >
-              {n.label}
+              {item.label}
+              <ArrowUpRight size={16} />
             </Link>
           ))}
-          <Link
-            to="/contact"
-            onClick={() => setMobileOpen(false)}
-            className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
-          >
+          <Link to="/docs" onClick={() => setOpen(false)}>
+            Developers
+          </Link>
+          <Link to="/contact" onClick={() => setOpen(false)}>
             Contact
           </Link>
-          <div className="border-t border-border pt-3 flex flex-col gap-2">
-            <a
-              href={`${APP_URL}/login`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
-            >
-              Log in
-            </a>
-            <a
-              href={`${APP_URL}/register`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full text-left text-[13px] text-muted-foreground hover:text-foreground"
-            >
-              Get started
-            </a>
-          </div>
-        </motion.div>
+          <a href="https://app.convomem.com/login">Log in</a>
+          <a
+            className="cm-mobile-start"
+            href="https://app.convomem.com/register"
+          >
+            Start your free trial <ArrowUpRight size={16} />
+          </a>
+        </nav>
       )}
-    </nav>
+    </header>
   )
 }

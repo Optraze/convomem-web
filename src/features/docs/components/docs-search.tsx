@@ -1,49 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { FileTextIcon, HashIcon, SearchIcon } from 'lucide-react'
+import { FileTextIcon, HashIcon, SearchIcon, XIcon } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 
 import type { DocSearchEntry } from '../nav'
+import type { DocSearchHit } from '../search'
 
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 
-interface Hit {
-  slug: string
-  title: string
-  /** Heading hit within a doc, if any. */
-  hash?: string
-  label: string
-}
-
-function search(index: DocSearchEntry[], q: string): Hit[] {
-  const query = q.trim().toLowerCase()
-  if (!query) {
-    return index.map((e) => ({ slug: e.slug, title: e.title, label: e.title }))
-  }
-  const hits: Hit[] = []
-  for (const e of index) {
-    const inTitle =
-      e.title.toLowerCase().includes(query) ||
-      e.description.toLowerCase().includes(query)
-    if (inTitle) hits.push({ slug: e.slug, title: e.title, label: e.title })
-    for (const h of e.headings) {
-      if (h.text.toLowerCase().includes(query)) {
-        hits.push({
-          slug: e.slug,
-          title: e.title,
-          hash: h.id,
-          label: h.text,
-        })
-      }
-    }
-  }
-  return hits.slice(0, 12)
-}
+import { searchDocs } from '../search'
 
 export function DocsSearch({ index }: { index: DocSearchEntry[] }) {
   const [open, setOpen] = useState(false)
@@ -52,7 +23,7 @@ export function DocsSearch({ index }: { index: DocSearchEntry[] }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
-  const hits = useMemo(() => search(index, query), [index, query])
+  const hits = useMemo(() => searchDocs(index, query), [index, query])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -72,7 +43,14 @@ export function DocsSearch({ index }: { index: DocSearchEntry[] }) {
     }
   }, [open])
 
-  const go = (hit: Hit) => {
+  useEffect(() => {
+    if (open)
+      document
+        .getElementById(`docs-hit-${active}`)
+        ?.scrollIntoView({ block: 'nearest' })
+  }, [active, open])
+
+  const go = (hit: DocSearchHit) => {
     setOpen(false)
     navigate({
       to: '/docs/$slug',
@@ -82,6 +60,7 @@ export function DocsSearch({ index }: { index: DocSearchEntry[] }) {
   }
 
   const onListKey = (e: React.KeyboardEvent) => {
+    if (!hits.length) return
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       setActive((a) => Math.min(a + 1, hits.length - 1))
@@ -100,7 +79,8 @@ export function DocsSearch({ index }: { index: DocSearchEntry[] }) {
         render={
           <button
             type="button"
-            className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-muted sm:w-56"
+            aria-label="Search documentation"
+            className="docs-search-trigger flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-muted sm:w-56"
           />
         }
       >
@@ -114,7 +94,7 @@ export function DocsSearch({ index }: { index: DocSearchEntry[] }) {
       <DialogContent
         showCloseButton={false}
         initialFocus={inputRef}
-        className="top-[12vh] max-w-lg translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-lg"
+        className="resource-surface docs-search-dialog top-[12vh] max-w-lg translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-lg"
       >
         <DialogTitle className="sr-only">Search documentation</DialogTitle>
         <div className="flex items-center gap-2.5 border-b border-border px-4">
@@ -128,19 +108,40 @@ export function DocsSearch({ index }: { index: DocSearchEntry[] }) {
             }}
             onKeyDown={onListKey}
             placeholder="Search documentation…"
-            className="w-full bg-transparent py-3.5 text-sm outline-none placeholder:text-muted-foreground"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="docs-search-results"
+            aria-autocomplete="list"
+            aria-activedescendant={
+              hits[active] ? `docs-hit-${active}` : undefined
+            }
+            className="min-w-0 flex-1 bg-transparent py-3.5 text-sm outline-none placeholder:text-muted-foreground"
           />
+          <DialogClose className="docs-search-close" aria-label="Close search">
+            <XIcon size={18} />
+          </DialogClose>
         </div>
-        <ul className="max-h-80 overflow-y-auto p-2">
+        <div
+          id="docs-search-results"
+          role="listbox"
+          aria-label="Documentation results"
+          className="max-h-80 overflow-y-auto p-2"
+        >
           {hits.length === 0 && (
-            <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+            <div
+              role="presentation"
+              className="px-3 py-6 text-center text-sm text-muted-foreground"
+            >
               No results for “{query}”.
-            </li>
+            </div>
           )}
           {hits.map((hit, i) => (
-            <li key={`${hit.slug}-${hit.hash ?? 'root'}`}>
+            <div role="presentation" key={`${hit.slug}-${hit.hash ?? 'root'}`}>
               <button
                 type="button"
+                role="option"
+                id={`docs-hit-${i}`}
+                aria-selected={i === active}
                 onClick={() => go(hit)}
                 onMouseEnter={() => setActive(i)}
                 className={cn(
@@ -162,9 +163,9 @@ export function DocsSearch({ index }: { index: DocSearchEntry[] }) {
                   </span>
                 )}
               </button>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       </DialogContent>
     </Dialog>
   )

@@ -30,15 +30,15 @@ export function CodeBlock({
   }
 
   return (
-    <div className="group/code relative">
+    <div className="mdx-code group/code relative">
       <button
         type="button"
         onClick={copy}
         aria-label={copied ? 'Copied' : 'Copy code'}
-        className="absolute top-2.5 right-2.5 z-10 grid size-8 place-items-center rounded-md border border-border bg-background/80 text-muted-foreground opacity-0 backdrop-blur transition group-hover/code:opacity-100 hover:text-foreground focus-visible:opacity-100"
+        className="mdx-code-copy absolute top-2.5 right-2.5 z-10 grid size-8 place-items-center rounded-md border border-border bg-background/80 text-muted-foreground opacity-0 backdrop-blur transition group-hover/code:opacity-100 hover:text-foreground focus-visible:opacity-100"
       >
         {copied ? (
-          <CheckIcon className="size-4 text-emerald-500" />
+          <CheckIcon className="size-4 text-primary" />
         ) : (
           <CopyIcon className="size-4" />
         )}

@@ -6,6 +6,7 @@ import { BlogTemplate } from '@/components/og/blog-template'
 import { ChangelogTemplate } from '@/components/og/changelog-template'
 import { DocsTemplate } from '@/components/og/docs-template'
 import { loadOgFonts } from '@/components/og/fonts'
+import { HomeTemplate } from '@/components/og/home-template'
 
 export const Route = createFileRoute('/api/og')({
   server: {
@@ -47,7 +48,11 @@ export const Route = createFileRoute('/api/og')({
             )
             break
           default:
-            template = <BaseTemplate title={title} description={description} />
+            template = url.searchParams.has('title') ? (
+              <BaseTemplate title={title} description={description} />
+            ) : (
+              <HomeTemplate />
+            )
         }
 
         return new ImageResponse(template, {

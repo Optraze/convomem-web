@@ -8,21 +8,25 @@ import {
 import type { QueryClient } from '@tanstack/react-query'
 import type React from 'react'
 
+import { AnalyticsConsent } from '@/components/analytics-consent'
 import { Devtools } from '@/components/devtools'
 import { mdxComponents } from '@/components/mdx-components'
 import { ThemeProvider, themeScript } from '@/components/theme-provider'
 import { GeneralError } from '@/features/errors/general-error'
 import { NotFoundError } from '@/features/errors/not-found'
 import {
+  DEFAULT_OG_ALT,
+  DEFAULT_OG_PATH,
   getSeoUrl,
+  organizationSchema,
   SITE_DESCRIPTION,
-  SITE_KEYWORDS,
   SITE_NAME,
   SITE_TITLE,
+  serializeStructuredData,
 } from '@/lib/seo'
 import appCss from '@/styles.css?url'
 
-const OG_IMAGE = getSeoUrl('/og-image.png')
+const OG_IMAGE = getSeoUrl(DEFAULT_OG_PATH)
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   {
@@ -41,10 +45,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         {
           name: 'description',
           content: SITE_DESCRIPTION,
-        },
-        {
-          name: 'keywords',
-          content: SITE_KEYWORDS,
         },
         {
           name: 'author',
@@ -74,32 +74,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { property: 'og:image', content: OG_IMAGE },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
-        { property: 'og:image:alt', content: SITE_TITLE },
+        { property: 'og:image:alt', content: DEFAULT_OG_ALT },
         { property: 'og:locale', content: 'en_US' },
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:title', content: SITE_TITLE },
         { name: 'twitter:description', content: SITE_DESCRIPTION },
         { name: 'twitter:image', content: OG_IMAGE },
-        { name: 'twitter:image:alt', content: SITE_TITLE },
+        { name: 'twitter:image:alt', content: DEFAULT_OG_ALT },
       ],
       links: [
         {
           rel: 'stylesheet',
           href: appCss,
-        },
-        {
-          rel: 'preload',
-          href: '/assets/inter-latin-wght-normal-Dx4kXJAl.woff2',
-          as: 'font',
-          type: 'font/woff2',
-          crossOrigin: 'anonymous',
-        },
-        {
-          rel: 'preload',
-          href: '/assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2',
-          as: 'font',
-          type: 'font/woff2',
-          crossOrigin: 'anonymous',
         },
         {
           rel: 'icon',
@@ -136,24 +122,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       ],
       scripts: [
         {
-          src: 'https://www.googletagmanager.com/gtag/js?id=G-47DNQJVNV6',
-          async: true,
-        },
-        {
-          children: `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-47DNQJVNV6');`,
-        },
-        {
           children: themeScript,
         },
         {
           type: 'application/ld+json',
-          children: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Organization',
-            name: SITE_NAME,
-            url: getSeoUrl('/'),
-            logo: getSeoUrl('/logo.svg'),
-          }),
+          children: serializeStructuredData(organizationSchema),
         },
       ],
     }),
@@ -173,6 +146,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ThemeProvider>
           <MDXProvider components={mdxComponents}>{children}</MDXProvider>
         </ThemeProvider>
+        <AnalyticsConsent />
         <Devtools />
         <Scripts />
       </body>

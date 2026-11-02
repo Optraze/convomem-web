@@ -12,7 +12,7 @@ export function DocPager({
 }) {
   if (!prev && !next) return null
   return (
-    <nav className="mt-12 grid gap-4 border-t border-border pt-8 sm:grid-cols-2">
+    <nav className="docs-pager mt-12 grid gap-4 border-t border-border pt-8 sm:grid-cols-2">
       {prev ? (
         <Link
           to="/docs/$slug"

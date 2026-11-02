@@ -21,18 +21,25 @@ const linkGroups = [
   },
 ] as const
 
-export function ContentFooter() {
+export function ContentFooter({
+  showThemeSwitcher = true,
+}: {
+  showThemeSwitcher?: boolean
+} = {}) {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
         <div className="space-y-3">
           {linkGroups.map((group) => (
-            <div key={group.heading} className="flex items-baseline gap-3">
+            <div
+              key={group.heading}
+              className="flex flex-wrap items-baseline gap-3"
+            >
               <span className="shrink-0 font-mono text-[11px] tracking-[0.16em] text-hint/90 uppercase">
                 {group.heading}
               </span>
               <span className="h-0 flex-1 border-t border-dotted border-border" />
-              <div className="flex shrink-0 items-center gap-2 text-xs text-hint/75">
+              <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-hint/75">
                 {group.items.map((item, i) => (
                   <span key={item.to} className="flex items-center gap-2">
                     <Link
@@ -63,7 +70,7 @@ export function ContentFooter() {
               Optraze
             </a>
           </p>
-          <ThemeSwitcher />
+          {showThemeSwitcher && <ThemeSwitcher />}
         </div>
       </div>
 
@@ -71,7 +78,7 @@ export function ContentFooter() {
         className="mx-auto max-w-7xl overflow-hidden px-4 pt-8 sm:px-6"
         aria-hidden="true"
       >
-        <p className="text-[clamp(4rem,16vw,14.5rem)] leading-none font-bold tracking-tight text-foreground/[0.04] text-center select-none">
+        <p className="text-[min(13vw,14.5rem)] leading-none font-bold tracking-tight text-foreground/[0.04] text-center select-none">
           ConvoMem
         </p>
       </div>

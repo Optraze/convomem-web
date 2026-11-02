@@ -5,6 +5,7 @@ import { CopyMarkdownButton } from '@/components/copy-markdown-button'
 import { LanguageProvider } from '@/components/mdx/code-tabs'
 import { DocsLayout } from '@/features/docs/components/docs-layout'
 import { DocPager } from '@/features/docs/components/docs-pager'
+import { MobileToc } from '@/features/docs/components/mobile-toc'
 import {
   buildDocSearchIndex,
   getDocAdjacent,
@@ -12,8 +13,15 @@ import {
   resolveDocsNav,
 } from '@/features/docs/nav'
 import { getContentMeta, getMdxComponent } from '@/lib/content'
+import { geistFontPreload } from '@/lib/fonts'
 import { getOgImageUrl } from '@/lib/og'
-import { createPageMeta, getSeoUrl, SITE_NAME } from '@/lib/seo'
+import {
+  createPageMeta,
+  getSeoUrl,
+  ORGANIZATION_ID,
+  SITE_NAME,
+  serializeStructuredData,
+} from '@/lib/seo'
 
 export const Route = createFileRoute('/docs/$slug')({
   loader: ({ params }) => {
@@ -39,8 +47,10 @@ export const Route = createFileRoute('/docs/$slug')({
         description: frontmatter.description,
         path: `/docs/${slug}`,
         ogImage,
+        noIndex: frontmatter.status === 'draft',
       }),
       links: [
+        geistFontPreload,
         { rel: 'canonical', href: url },
         {
           rel: 'alternate',
@@ -51,12 +61,13 @@ export const Route = createFileRoute('/docs/$slug')({
       scripts: [
         {
           type: 'application/ld+json',
-          children: JSON.stringify({
+          children: serializeStructuredData({
             '@context': 'https://schema.org',
             '@type': 'TechArticle',
             headline: frontmatter.title,
             description: frontmatter.description,
             url,
+            publisher: { '@id': ORGANIZATION_ID },
             ...(frontmatter.date && { datePublished: frontmatter.date }),
             ...(frontmatter.updated && { dateModified: frontmatter.updated }),
             author: { '@type': 'Organization', name: SITE_NAME },
@@ -64,7 +75,7 @@ export const Route = createFileRoute('/docs/$slug')({
         },
         {
           type: 'application/ld+json',
-          children: JSON.stringify({
+          children: serializeStructuredData({
             '@context': 'https://schema.org',
             '@type': 'BreadcrumbList',
             itemListElement: [
@@ -136,6 +147,7 @@ function DocPage() {
           <p className="mt-2 text-[15px] leading-7 text-muted-foreground">
             {frontmatter.description}
           </p>
+          <MobileToc toc={toc} />
           <div className="prose mt-8 max-w-none">
             <MDXContent />
           </div>
