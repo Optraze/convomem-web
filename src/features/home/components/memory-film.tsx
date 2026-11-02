@@ -47,6 +47,7 @@ function FilmPlayer({
   const [inView, setInView] = useState(false)
   const [visible, setVisible] = useState(true)
   const [userPaused, setUserPaused] = useState(false)
+  const [userStarted, setUserStarted] = useState(false)
   const [state, setState] = useState<FilmState>({
     playing: false,
     muted: true,
@@ -128,15 +129,25 @@ function FilmPlayer({
           !suspended &&
           !userPaused &&
           !complete &&
-          !reduced
+          (!reduced || userStarted)
             ? 'play'
             : 'pause',
       },
       window.location.origin
     )
-  }, [ready, inView, visible, suspended, userPaused, complete, reduced])
+  }, [
+    ready,
+    inView,
+    visible,
+    suspended,
+    userPaused,
+    userStarted,
+    complete,
+    reduced,
+  ])
 
   const togglePlayback = () => {
+    if (!state.playing || complete) setUserStarted(true)
     if (complete) send('replay')
     else send(state.playing ? 'pause' : 'play')
     setUserPaused(state.playing && !complete)
