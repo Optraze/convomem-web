@@ -10,6 +10,8 @@
 @import "./features/home/customer-examples.css";
 @import "./features/home/memory-film.css";
 @import "./features/home/mobile-experience.css";
+@import "./features/home/demo-experience.css";
+@import "./features/contact/contact.css";
 
 @custom-variant dark (&:is(.dark *));
 

@@ -17,6 +17,7 @@ export interface DemoFact {
   durability?: number
   expiresAt?: string | null
   isSensitive: boolean
+  speaker?: string
   tags: string[]
 }
 export interface ConvState {

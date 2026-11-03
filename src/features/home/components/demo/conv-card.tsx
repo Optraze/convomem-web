@@ -6,7 +6,19 @@ import { FactRow } from './fact-row'
 import { InsightsPanel } from './insights-panel'
 import { PipelineTrace } from './pipeline-trace'
 
-export function ConvCard({ c, n }: { c: ConvState; n: number }) {
+export function ConvCard({
+  c,
+  n,
+  running,
+}: {
+  c: ConvState
+  n: number
+  running: boolean
+}) {
+  const incomplete =
+    !c.done || c.stages.some((stage) => stage.status === 'running')
+  const processing = running && incomplete
+  const interrupted = !running && incomplete
   return (
     <div className="demo-conversation-result rounded-lg border border-border bg-background overflow-hidden">
       <div className="flex items-center justify-between px-3.5 py-2 border-b border-border bg-muted/40">
@@ -37,17 +49,31 @@ export function ConvCard({ c, n }: { c: ConvState; n: number }) {
           <ShieldCheck size={11} className="text-hint" />
           <span className="font-mono text-hint text-[10px]">
             {c.redactedCount} sensitive fact{c.redactedCount === 1 ? '' : 's'}{' '}
-            held back (PII)
+            masked or withheld (PII)
           </span>
         </p>
       )}
 
-      <details className="demo-processing-details" open={!c.done}>
+      <details
+        className="demo-processing-details"
+        open={processing || interrupted}
+      >
         <summary>
-          Processing trace <span>{c.done ? 'Complete' : 'Processing'}</span>
+          Processing trace{' '}
+          <span>
+            {interrupted
+              ? 'Interrupted'
+              : processing
+                ? 'Processing'
+                : 'Complete'}
+          </span>
           <ChevronDown size={14} />
         </summary>
-        <PipelineTrace stages={c.stages} done={c.done} />
+        <PipelineTrace
+          stages={c.stages}
+          done={!processing}
+          stopped={interrupted}
+        />
       </details>
 
       {/* this conversation's own insights (sentiment · intent · complaints) */}

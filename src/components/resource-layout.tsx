@@ -5,12 +5,16 @@ import type { ReactNode } from 'react'
 import { Logo } from './logo'
 import { ResourceHeader } from './resource-header'
 
-export function ResourceFooter() {
+export function ResourceFooter({
+  appearance = 'auto',
+}: {
+  appearance?: 'auto' | 'light' | 'dark'
+} = {}) {
   return (
     <footer className="resource-footer">
       <div>
         <Link to="/" className="resource-footer-brand">
-          <Logo aria-hidden="true" />
+          <Logo appearance={appearance} aria-hidden="true" />
           ConvoMem
         </Link>
         <p>

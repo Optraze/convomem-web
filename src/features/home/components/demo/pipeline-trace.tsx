@@ -14,7 +14,7 @@ const STAGE_SEQUENCE: {
     key: 'extract',
     stage: 1,
     label: 'Extraction',
-    desc: 'pulls candidate facts + self-validates',
+    desc: 'finds facts grounded in the conversation',
   },
   {
     key: 'environment',
@@ -32,17 +32,23 @@ const STAGE_SEQUENCE: {
     key: 'pii',
     stage: 4,
     label: 'PII redaction',
-    desc: 'detects + masks sensitive data before storage',
+    desc: 'masks or withholds sensitive details',
   },
   {
     key: 'reconcile',
     stage: 5,
     label: 'Reconcile & dedup',
-    desc: 'merges against stored memory (production only)',
+    desc: 'removes duplicates within this conversation',
+  },
+  {
+    key: 'insights',
+    stage: 6,
+    label: 'Conversation signals',
+    desc: 'detects sentiment, intent and customer issues',
   },
 ]
 
-type RowStatus = 'pending' | 'running' | 'done' | 'skipped'
+type RowStatus = 'pending' | 'running' | 'done' | 'skipped' | 'stopped'
 
 /* ── A single pipeline stage row in the detailed live trace ── */
 function StageRow({
@@ -70,7 +76,9 @@ function StageRow({
           <Loader2 size={12} className="text-foreground animate-spin" />
         )}
         {status === 'done' && <Check size={12} className="text-foreground" />}
-        {status === 'skipped' && <Minus size={12} className="text-hint" />}
+        {(status === 'skipped' || status === 'stopped') && (
+          <Minus size={12} className="text-hint" />
+        )}
         {status === 'pending' && (
           <span className="w-1.5 h-1.5 rounded-full border border-border-strong" />
         )}
@@ -109,20 +117,25 @@ function StageRow({
 export function PipelineTrace({
   stages,
   done,
+  stopped = false,
 }: {
   stages: StageEvent[]
   done: boolean
+  stopped?: boolean
 }) {
   const byKey = new Map(stages.map((s) => [s.key, s]))
   return (
     <div className="px-3.5 py-2 border-b border-border bg-surface/60">
       {STAGE_SEQUENCE.map((row) => {
         const ev = byKey.get(row.key)
-        const status: RowStatus = ev
-          ? (ev.status as RowStatus)
-          : done
-            ? 'skipped'
-            : 'pending'
+        const status: RowStatus =
+          stopped && ev?.status === 'running'
+            ? 'stopped'
+            : ev
+              ? (ev.status as RowStatus)
+              : done
+                ? 'skipped'
+                : 'pending'
         return (
           <StageRow
             key={row.key}
@@ -131,7 +144,7 @@ export function PipelineTrace({
             desc={row.desc}
             status={status}
             detail={ev?.detail}
-            active={ev?.status === 'running'}
+            active={status === 'running'}
           />
         )
       })}

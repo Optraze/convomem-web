@@ -8,26 +8,55 @@
 
 export const MAX_CONVERSATIONS = 5
 
-function parseCSVLine(line: string): string[] {
-  const out: string[] = []
-  let cur = ''
-  let q = false
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i]
-    if (q) {
-      if (c === '"' && line[i + 1] === '"') {
-        cur += '"'
+/** Read whole records so quoted multiline transcripts stay intact. */
+function parseCSVRecords(input: string): string[][] {
+  const text = input.replace(/^\uFEFF/, '')
+  let quoted = false,
+    commas = 0,
+    tabs = 0
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i]
+    if (char === '"') {
+      if (quoted && text[i + 1] === '"') {
         i++
-      } else if (c === '"') q = false
-      else cur += c
-    } else if (c === '"') q = true
-    else if (c === ',') {
-      out.push(cur)
-      cur = ''
-    } else cur += c
+        continue
+      }
+      quoted = !quoted
+    }
+    if (!quoted) {
+      if (char === '\n' || char === '\r') break
+      if (char === ',') commas++
+      if (char === '\t') tabs++
+    }
   }
-  out.push(cur)
-  return out.map((s) => s.trim())
+  const delimiter = tabs > commas ? '\t' : ','
+  const rows: string[][] = []
+  let row: string[] = [],
+    cell = ''
+  quoted = false
+  const finishRow = () => {
+    row.push(cell.trim())
+    if (row.some((value) => value.length > 0)) rows.push(row)
+    row = []
+    cell = ''
+  }
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i]
+    if (char === '"') {
+      if (quoted && text[i + 1] === '"') {
+        cell += '"'
+        i++
+      } else quoted = !quoted
+    } else if (!quoted && char === delimiter) {
+      row.push(cell.trim())
+      cell = ''
+    } else if (!quoted && (char === '\n' || char === '\r')) {
+      finishRow()
+      if (char === '\r' && text[i + 1] === '\n') i++
+    } else cell += char
+  }
+  finishRow()
+  return rows
 }
 
 const SOURCES = ['chat', 'voice', 'email', 'sms']
@@ -35,13 +64,9 @@ const SOURCES = ['chat', 'voice', 'email', 'sms']
 export function parseConversations(
   input: string
 ): { text: string; source: string }[] {
-  const lines = input
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean)
-  if (lines.length === 0) return []
+  const rows = parseCSVRecords(input)
+  if (!rows.length) return []
 
-  const rows = lines.map(parseCSVLine)
   const header = rows[0].map((h) => h.toLowerCase())
   const looksLikeHeader = header.some((h) =>
     /message|conversation|transcript|text|content|body|utterance/.test(h)
@@ -104,12 +129,8 @@ const CHANNELS = ['VOICE', 'CHAT', 'SMS', 'EMAIL']
 /** Parse raw CSV/TSV text into a column/row table. Detects a header row; if
  *  none is present, synthesizes "column N" names so mapping still works. */
 export function parseCsvTable(input: string): CsvTable {
-  const lines = input
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean)
-  if (lines.length === 0) return { columns: [], rows: [] }
-  const grid = lines.map(parseCSVLine)
+  const grid = parseCSVRecords(input)
+  if (!grid.length) return { columns: [], rows: [] }
   const width = Math.max(...grid.map((r) => r.length))
   const norm = grid.map((r) =>
     Array.from({ length: width }, (_, i) => r[i] ?? '')

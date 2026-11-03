@@ -1,9 +1,14 @@
 import { useMemo, useState } from 'react'
-import { ArrowRight, X } from 'lucide-react'
+import {
+  ArrowRight,
+  ChevronDown,
+  FileText,
+  Mail,
+  MessageSquare,
+  Phone,
+} from 'lucide-react'
 
 import type { CsvMapping, CsvTable, MappedConversation } from './extractor'
-
-import { Button } from '@/components/ui/button'
 
 import {
   groupConversations,
@@ -11,7 +16,6 @@ import {
   MAX_CONVERSATIONS,
 } from './extractor'
 
-/* One labelled <select>. Optional fields offer a "— none —" choice. */
 function FieldSelect({
   label,
   hint,
@@ -25,34 +29,26 @@ function FieldSelect({
   value: string
   columns: string[]
   optional?: boolean
-  onChange: (v: string) => void
+  onChange: (value: string) => void
 }) {
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="font-mono text-hint text-[10px] tracking-[0.16em] uppercase">
+    <label className="demo-import-field">
+      <span>
         {label}
-        {!optional && <span className="text-foreground"> *</span>}
+        {!optional && ' *'}
       </span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="font-mono bg-background border border-border rounded-md px-2.5 py-2 text-[12px] text-foreground focus:outline-none focus:border-border-strong transition-colors"
-      >
-        {optional && <option value="">— none —</option>}
-        {columns.map((c) => (
-          <option key={c} value={c}>
-            {c}
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        {optional && <option value="">Not included</option>}
+        {columns.map((column) => (
+          <option key={column} value={column}>
+            {column}
           </option>
         ))}
       </select>
-      <span className="text-hint" style={{ fontSize: '10px' }}>
-        {hint}
-      </span>
+      <small>{hint}</small>
     </label>
   )
 }
-
-const BUBBLE = 'max-w-[85%] rounded-lg px-2.5 py-1.5 text-[11.5px] leading-snug'
 
 export function CsvMapper({
   table,
@@ -60,154 +56,160 @@ export function CsvMapper({
   onCancel,
 }: {
   table: CsvTable
-  onRun: (convs: MappedConversation[]) => void
+  onRun: (conversations: MappedConversation[]) => void
   onCancel: () => void
 }) {
   const [mapping, setMapping] = useState<CsvMapping>(() =>
     guessMapping(table.columns)
   )
-  const set = (k: keyof CsvMapping) => (v: string) =>
-    setMapping((m) => ({ ...m, [k]: v }))
-
-  const convs = useMemo(
+  const set = (key: keyof CsvMapping) => (value: string) =>
+    setMapping((m) => ({ ...m, [key]: value }))
+  const conversations = useMemo(
     () => groupConversations(table, mapping),
     [table, mapping]
   )
-  const valid = mapping.messageCol !== '' && convs.length > 0
-  const totalRows = table.rows.length
-
+  const oversized = conversations.some((c) =>
+    c.messages.some((m) => m.content.length > 4000)
+  )
+  const valid = !!mapping.messageCol && conversations.length > 0 && !oversized
   return (
-    <div className="p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-4">
+    <div className="demo-import">
+      <div className="demo-import-summary">
+        <FileText size={19} />
         <div>
-          <span className="font-mono text-subtle text-[12px]">map columns</span>
-          <p className="text-hint mt-0.5" style={{ fontSize: '11px' }}>
-            {totalRows} row{totalRows === 1 ? '' : 's'} · matched to{' '}
-            {convs.length} conversation{convs.length === 1 ? '' : 's'}
-            {convs.length === MAX_CONVERSATIONS
-              ? ` (demo caps at ${MAX_CONVERSATIONS})`
-              : ''}
+          <strong>
+            {table.rows.length} rows read · {conversations.length} conversations
+            ready
+          </strong>
+          <p>
+            Preview the messages below. Adjust the columns only if something
+            looks wrong.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          onClick={onCancel}
-          aria-label="Cancel"
-        >
-          <X size={14} />
-        </Button>
       </div>
-
-      {/* Column mapping controls */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        <FieldSelect
-          label="Message"
-          hint="the text to capture"
-          value={mapping.messageCol}
-          columns={table.columns}
-          onChange={set('messageCol')}
-        />
-        <FieldSelect
-          label="Conversation"
-          hint="groups rows into a thread"
-          value={mapping.conversationCol}
-          columns={table.columns}
-          optional
-          onChange={set('conversationCol')}
-        />
-        <FieldSelect
-          label="Role"
-          hint="user vs. agent"
-          value={mapping.roleCol}
-          columns={table.columns}
-          optional
-          onChange={set('roleCol')}
-        />
-        <FieldSelect
-          label="Channel"
-          hint="voice · chat · sms · email"
-          value={mapping.channelCol}
-          columns={table.columns}
-          optional
-          onChange={set('channelCol')}
-        />
+      <details
+        className="demo-import-settings"
+        open={!mapping.messageCol || undefined}
+      >
+        <summary>
+          <span>
+            Detected:{' '}
+            <strong>{mapping.messageCol || 'Choose message column'}</strong>
+            {mapping.channelCol && <> · {mapping.channelCol}</>}
+          </span>
+          <span>
+            Adjust columns <ChevronDown size={14} />
+          </span>
+        </summary>
+        <div className="demo-import-fields">
+          <FieldSelect
+            label="Message"
+            hint="The customer's words"
+            value={mapping.messageCol}
+            columns={table.columns}
+            onChange={set('messageCol')}
+          />
+          <FieldSelect
+            label="Channel"
+            hint="Voice, chat, SMS or email"
+            value={mapping.channelCol}
+            columns={table.columns}
+            optional
+            onChange={set('channelCol')}
+          />
+          <FieldSelect
+            label="Conversation ID"
+            hint="Group messages into a thread"
+            value={mapping.conversationCol}
+            columns={table.columns}
+            optional
+            onChange={set('conversationCol')}
+          />
+          <FieldSelect
+            label="Speaker"
+            hint="Customer or agent"
+            value={mapping.roleCol}
+            columns={table.columns}
+            optional
+            onChange={set('roleCol')}
+          />
+        </div>
+      </details>
+      <div className="demo-import-preview-title">
+        <h3>Conversations to process</h3>
+        <span>Up to {MAX_CONVERSATIONS} conversations · 20 messages each</span>
       </div>
-
-      {/* Chat-bubble preview, grouped by conversation */}
-      <div className="font-mono text-hint text-[10px] tracking-[0.16em] uppercase mb-2">
-        preview
-      </div>
-      {convs.length === 0 ? (
-        <p className="font-mono text-subtle text-[11px] py-4">
-          No conversations matched — pick the column that holds the message
-          text.
+      {!conversations.length ? (
+        <p className="demo-input-error" role="status">
+          Select a column containing message text to see a preview.
         </p>
       ) : (
-        <div className="space-y-3 max-h-75 overflow-y-auto scrollbar-hide pr-0.5">
-          {convs.map((c, i) => (
-            <div
-              key={`${c.channel}-${c.messages[0].content}`}
-              className="rounded-lg border border-border bg-background overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-muted/40">
-                <span className="font-mono text-subtle text-[10.5px]">
-                  conversation {String(i + 1).padStart(2, '0')}{' '}
-                  <span className="text-hint">· {c.channel.toLowerCase()}</span>
-                </span>
-                <span className="font-mono text-hint tnum text-[10px]">
-                  {c.messages.length} msg
-                </span>
-              </div>
-              <div className="px-3 py-2 space-y-1.5">
-                {c.messages.slice(0, 6).map((m) => (
-                  <div
-                    key={`${c.channel}-${m.content}`}
-                    className={`flex ${m.role === 'assistant' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`${BUBBLE} ${m.role === 'assistant' ? 'bg-foreground text-background' : 'bg-muted text-foreground'}`}
-                    >
-                      <span
-                        className={`font-mono block text-[9px] tracking-widest uppercase mb-0.5 ${m.role === 'assistant' ? 'text-background/70' : 'text-hint'}`}
-                      >
-                        {m.role === 'assistant' ? 'agent' : 'user'}
-                      </span>
-                      {m.content}
-                    </div>
+        <ol className="demo-import-previews">
+          {conversations.map((conversation, index) => {
+            const Icon =
+              conversation.channel === 'VOICE'
+                ? Phone
+                : conversation.channel === 'EMAIL'
+                  ? Mail
+                  : MessageSquare
+            return (
+              // biome-ignore lint/suspicious/noArrayIndexKey: imported groups retain source order and may contain identical conversations.
+              <li key={`${index}-${conversation.channel}`}>
+                <details open={index === 0}>
+                  <summary>
+                    <span className="demo-import-channel">
+                      <Icon size={16} />
+                      <strong>{conversation.channel.toLowerCase()}</strong>
+                      <span>{String(index + 1).padStart(2, '0')}</span>
+                    </span>
+                    <span>
+                      {conversation.messages.length}{' '}
+                      {conversation.messages.length === 1
+                        ? 'message'
+                        : 'messages'}{' '}
+                      <ChevronDown size={15} />
+                    </span>
+                  </summary>
+                  <div className="demo-import-messages">
+                    {conversation.messages.map((message, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: identical repeated turns are distinct rows in the ordered transcript.
+                      <div key={i} data-role={message.role}>
+                        <span>
+                          {message.role === 'assistant' ? 'Agent' : 'Customer'}
+                        </span>
+                        <p>{message.content}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                {c.messages.length > 6 && (
-                  <p className="font-mono text-hint text-[10px] pt-0.5">
-                    +{c.messages.length - 6} more turn
-                    {c.messages.length - 6 === 1 ? '' : 's'}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+                </details>
+              </li>
+            )
+          })}
+        </ol>
       )}
-
-      <div className="mt-5 flex items-center gap-2.5">
-        <Button
-          type="button"
-          onClick={() => valid && onRun(convs)}
-          disabled={!valid}
-        >
-          Run {convs.length} conversation{convs.length === 1 ? '' : 's'}{' '}
-          <ArrowRight size={14} />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onCancel}
-          className="font-mono text-[11px]"
-        >
-          cancel
-        </Button>
+      {oversized && (
+        <p className="demo-input-error" role="alert">
+          One or more messages exceed 4,000 characters. Shorten those messages
+          in the file before importing.
+        </p>
+      )}
+      <div className="demo-import-actions">
+        <div>
+          <button
+            className="demo-primary-action"
+            type="button"
+            disabled={!valid}
+            onClick={() => valid && onRun(conversations)}
+          >
+            Extract {conversations.length}{' '}
+            {conversations.length === 1 ? 'conversation' : 'conversations'}{' '}
+            <ArrowRight size={15} />
+          </button>
+          <button type="button" className="demo-import-back" onClick={onCancel}>
+            Choose another input
+          </button>
+        </div>
+        <p>Nothing is saved.</p>
       </div>
     </div>
   )

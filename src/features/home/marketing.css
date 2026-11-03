@@ -738,6 +738,65 @@
 .demo-processing-details[open] > summary > svg {
   transform: rotate(180deg);
 }
+.demo-signal-chip {
+  --signal-ink: #475569;
+  --signal-bg: #f4f6f9;
+  --signal-border: #dce2eb;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--signal-border);
+  border-radius: 6px;
+  background: var(--signal-bg);
+  color: var(--signal-ink);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.demo-signal-chip > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.demo-signal-chip strong {
+  font-weight: 600;
+}
+.demo-signal-dot {
+  flex: 0 0 5px;
+  width: 5px;
+  height: 5px;
+  margin-top: 0.56em;
+  border-radius: 50%;
+  background: currentColor;
+}
+.demo-signal-chip[data-signal-type="complaint"] {
+  --signal-ink: #9f2444;
+  --signal-bg: #fff0f3;
+  --signal-border: #f2ccd5;
+}
+.demo-signal-chip:is(
+  [data-signal-type="buying_intent"],
+  [data-signal-type="buying_signal"]
+) {
+  --signal-ink: #2447b8;
+  --signal-bg: #eef3ff;
+  --signal-border: #ccd9fb;
+}
+.demo-signal-chip[data-signal-type="churn_risk"] {
+  --signal-ink: #8a490d;
+  --signal-bg: #fff5e6;
+  --signal-border: #f0d8b4;
+}
+.demo-signal-chip[data-signal-type="upsell_opportunity"] {
+  --signal-ink: #7041a2;
+  --signal-bg: #f6f0ff;
+  --signal-border: #ded0f0;
+}
+.demo-signal-chip[data-signal-type="feature_request"] {
+  --signal-ink: #0a607b;
+  --signal-bg: #ecf8fc;
+  --signal-border: #bfe2ec;
+}
 .demo-results-footer {
   display: flex;
   gap: 7px;

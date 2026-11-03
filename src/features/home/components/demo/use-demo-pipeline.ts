@@ -5,12 +5,12 @@ import type {
   Convo,
   ConvState,
   DemoFact,
-  InsightsResult,
   StageEvent,
   StageStatus,
   State,
 } from './use-demo-pipeline-types'
 
+import { readDemoStream, readInsights } from './demo-stream'
 import { parseConversations, parseCsvTable } from './extractor'
 import { localFallback } from './use-demo-pipeline-fallback'
 import { INITIAL } from './use-demo-pipeline-types'
@@ -30,9 +30,8 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.convomem.com'
 
 /* ─────────────────────────────────────────────────────────────────────────
    use-demo-pipeline — drives the live demo against the REAL backend pipeline
-   (POST /api/v1/demo/capture, Server-Sent Events) and falls back to the local
-   in-browser heuristic if the server is unreachable, so the landing page is
-   never broken by a backend outage.
+   (POST /api/v1/demo/capture, Server-Sent Events) and offers a separately labelled local
+   preview only when the visitor explicitly chooses it after a live error.
 
    The backend streams real pipeline events: stage (running/done/skipped),
    fact, done-conv, insights, done, error. We accumulate them into per-
@@ -40,31 +39,13 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.convomem.com'
 
 const DEMO_URL = `${BASE_URL}/api/v1/demo/capture`
 
-function parseSSE(buffer: string): {
-  events: { event: string; data: unknown }[]
-  rest: string
-} {
-  const events: { event: string; data: unknown }[] = []
-  const parts = buffer.split('\n\n')
-  const rest = parts.pop() ?? ''
-  for (const part of parts) {
-    const ev = part.match(/^event: (.+)$/m)?.[1]
-    const dataLine = part.match(/^data: (.+)$/m)?.[1]
-    if (!ev || !dataLine) continue
-    try {
-      events.push({ event: ev, data: JSON.parse(dataLine) })
-    } catch {
-      /* skip */
-    }
-  }
-  return { events, rest }
-}
-
 export function useDemoPipeline() {
   const [state, setState] = useState<State>(INITIAL)
   const abortRef = useRef<AbortController | null>(null)
+  const lastRequest = useRef<Convo[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const rateLimitedRef = useRef(false)
+  useEffect(() => () => abortRef.current?.abort(), [])
 
   useEffect(() => {
     if (state.retryAfter <= 0) {
@@ -98,6 +79,7 @@ export function useDemoPipeline() {
   const reset = useCallback(() => {
     abortRef.current?.abort()
     abortRef.current = null
+    lastRequest.current = []
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
@@ -144,6 +126,7 @@ export function useDemoPipeline() {
       abortRef.current?.abort()
       const ac = new AbortController()
       abortRef.current = ac
+      lastRequest.current = conversations
       setState({ ...INITIAL, phase: 'running', mode: 'live' })
 
       try {
@@ -153,6 +136,7 @@ export function useDemoPipeline() {
           body: JSON.stringify({ conversations, insights: true }),
           signal: ac.signal,
         })
+        if (ac.signal.aborted || abortRef.current !== ac) return
         if (res.status === 429) {
           const retryAfter = Number(res.headers.get('retry-after')) || 60
           setState({
@@ -163,95 +147,89 @@ export function useDemoPipeline() {
           })
           return
         }
-        if (!res.ok || !res.body) throw new Error(`demo endpoint ${res.status}`)
+        if (!res.ok)
+          throw new Error(
+            res.status === 400
+              ? 'Check your input: up to 5 conversations, 20 messages each, and 4,000 characters per message.'
+              : 'The live service is unavailable. Please retry in a moment.'
+          )
 
-        const reader = res.body.getReader()
-        const decoder = new TextDecoder()
-        let buffer = ''
-
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          buffer += decoder.decode(value, { stream: true })
-          const { events, rest } = parseSSE(buffer)
-          buffer = rest
-          for (const { event, data } of events) {
-            const d = data as Record<string, unknown>
-            switch (event) {
-              case 'conv-start':
-                upsertConv(d.index as number, (c) => ({
-                  ...c,
-                  channel: (d.channel as string) || c.channel,
-                }))
-                break
-              case 'stage': {
-                const ev: StageEvent = {
-                  stage: d.stage as number,
-                  key: d.key as string,
-                  label: d.label as string,
-                  status: d.status as StageStatus,
-                  detail: d.detail as string | undefined,
-                }
-                upsertConv(d.index as number, (c) => {
-                  const stages = [...c.stages]
-                  const at = stages.findIndex((s) => s.key === ev.key)
-                  if (at >= 0) stages[at] = ev
-                  else stages.push(ev)
-                  return { ...c, stages }
-                })
-                break
+        for await (const { event, data } of readDemoStream(res)) {
+          if (ac.signal.aborted || abortRef.current !== ac) return
+          const d = data
+          switch (event) {
+            case 'conv-start':
+              upsertConv(d.index as number, (c) => ({
+                ...c,
+                channel: (d.channel as string) || c.channel,
+              }))
+              break
+            case 'stage': {
+              const ev: StageEvent = {
+                stage: d.stage as number,
+                key: d.key as string,
+                label: d.label as string,
+                status: d.status as StageStatus,
+                detail: d.detail as string | undefined,
               }
-              case 'fact':
-                upsertConv(d.index as number, (c) => ({
-                  ...c,
-                  facts: [...c.facts, d.fact as DemoFact],
-                }))
-                break
-              case 'done-conv':
-                upsertConv(d.index as number, (c) => ({
-                  ...c,
-                  done: true,
-                  redactedCount: (d.redactedCount as number) || 0,
-                }))
-                break
-              case 'conv-insights':
-                upsertConv(d.index as number, (c) => ({
-                  ...c,
-                  insights: data as InsightsResult,
-                }))
-                break
-              case 'insights':
-                setState((s) => ({ ...s, insights: data as InsightsResult }))
-                break
-              case 'error':
-                setState((s) => ({
-                  ...s,
-                  phase: 'error',
-                  error: (d.message as string) || 'Pipeline error',
-                }))
-                break
-              case 'done':
-                setState((s) => ({
-                  ...s,
-                  phase: s.phase === 'error' ? 'error' : 'done',
-                }))
-                break
+              upsertConv(d.index as number, (c) => {
+                const stages = [...c.stages]
+                const at = stages.findIndex((s) => s.key === ev.key)
+                if (at >= 0) stages[at] = ev
+                else stages.push(ev)
+                return { ...c, stages }
+              })
+              break
             }
+            case 'fact':
+              upsertConv(d.index as number, (c) => ({
+                ...c,
+                facts: [...c.facts, d.fact as DemoFact],
+              }))
+              break
+            case 'done-conv':
+              upsertConv(d.index as number, (c) => ({
+                ...c,
+                done: true,
+                redactedCount: (d.redactedCount as number) || 0,
+              }))
+              break
+            case 'conv-insights':
+              upsertConv(d.index as number, (c) => ({
+                ...c,
+                insights: readInsights(data),
+              }))
+              break
+            case 'insights':
+              setState((s) => ({ ...s, insights: readInsights(data) }))
+              break
+            case 'error':
+              setState((s) => ({
+                ...s,
+                phase: 'error',
+                error: (d.message as string) || 'Pipeline error',
+              }))
+              break
+            case 'done':
+              setState((s) => ({
+                ...s,
+                phase: s.phase === 'error' ? 'error' : 'done',
+              }))
+              break
           }
         }
-        setState((s) => (s.phase === 'running' ? { ...s, phase: 'done' } : s))
       } catch (_err) {
         if (ac.signal.aborted) return
-        // Backend unreachable → seamless offline heuristic so the page still works.
-        const { convs, insights } = localFallback(conversations)
-        setState({
-          ...INITIAL,
-          phase: 'done',
-          mode: 'offline',
-          convs,
-          insights,
-        })
+        setState((s) => ({
+          ...s,
+          phase: 'error',
+          mode: 'live',
+          error:
+            _err instanceof Error &&
+            _err.message.startsWith('Check your input:')
+              ? _err.message
+              : 'The live run could not be completed. Your input has not been saved. Please retry.',
+        }))
       }
     },
     [upsertConv]
@@ -259,7 +237,7 @@ export function useDemoPipeline() {
 
   // Typed message → one conversation. Sample CSV → split by row (no mapping UI).
   const run = useCallback(
-    (input: string, opts?: { csv?: boolean }) => {
+    (input: string, opts?: { csv?: boolean; channel?: Convo['channel'] }) => {
       const conversations: Convo[] = opts?.csv
         ? parseConversations(input).map((c) => ({
             message: c.text,
@@ -268,7 +246,7 @@ export function useDemoPipeline() {
               : 'CHAT') as Convo['channel'],
           }))
         : input.trim()
-          ? [{ message: input.trim(), channel: 'CHAT' }]
+          ? [{ message: input.trim(), channel: opts?.channel || 'CHAT' }]
           : []
       return execute(conversations)
     },
@@ -302,5 +280,12 @@ export function useDemoPipeline() {
     [execute]
   )
 
-  return { ...state, run, prepareCsv, runMapped, reset }
+  const retry = () => execute(lastRequest.current)
+  const previewLocally = () => {
+    abortRef.current?.abort()
+    const { convs, insights } = localFallback(lastRequest.current)
+    setState({ ...INITIAL, phase: 'done', mode: 'offline', convs, insights })
+  }
+
+  return { ...state, run, prepareCsv, runMapped, reset, retry, previewLocally }
 }

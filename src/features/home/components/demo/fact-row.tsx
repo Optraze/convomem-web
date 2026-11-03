@@ -24,6 +24,11 @@ export function FactRow({ fact, index }: { fact: DemoFact; index: number }) {
           {fact.content}
         </span>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
+          {fact.speaker && fact.speaker !== 'customer' && (
+            <span className="font-mono text-subtle text-[10px]">
+              Agent-authored ·
+            </span>
+          )}
           <span className="font-mono text-hint text-[10px]">
             {fact.memoryType}
           </span>

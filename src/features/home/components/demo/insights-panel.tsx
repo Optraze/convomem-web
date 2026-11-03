@@ -55,11 +55,14 @@ export function InsightsPanel({
             {ins.insights.map((it) => (
               <span
                 key={`insight-${it.summary}`}
-                className="font-mono inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-border text-[10px] text-subtle"
+                className="demo-signal-chip font-mono"
+                data-signal-type={it.type.toLowerCase().replace(/[\s-]+/g, '_')}
               >
-                <span className="w-1 h-1 rounded-full bg-foreground" />
-                {it.type.replace(/_/g, ' ')}
-                {it.summary ? ` · ${it.summary}` : ''}
+                <span className="demo-signal-dot" aria-hidden="true" />
+                <span>
+                  <strong>{it.type.replace(/_/g, ' ')}</strong>
+                  {it.summary ? ` · ${it.summary}` : ''}
+                </span>
               </span>
             ))}
           </div>

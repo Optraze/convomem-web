@@ -1,11 +1,13 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
   Check,
   Database,
   FileText,
   Loader2,
+  Mail,
   MessageSquare,
+  Phone,
   RotateCcw,
   ShieldCheck,
   Sparkles,
@@ -20,9 +22,24 @@ import { InsightsPanel } from './insights-panel'
 import { useDemoPipeline } from './use-demo-pipeline'
 
 const examples = [
-  { label: 'Earlier call', text: customerExample.voice },
-  { label: 'Returning customer', text: customerExample.chat },
-  { label: 'Follow-up preference', text: customerExample.emailMessage },
+  {
+    label: 'Call',
+    text: customerExample.voice,
+    channel: 'VOICE' as const,
+    icon: Phone,
+  },
+  {
+    label: 'Chat',
+    text: customerExample.chat,
+    channel: 'CHAT' as const,
+    icon: MessageSquare,
+  },
+  {
+    label: 'Email',
+    text: customerExample.emailMessage,
+    channel: 'EMAIL' as const,
+    icon: Mail,
+  },
 ]
 
 export function MemoryTerminal() {
@@ -39,24 +56,32 @@ export function MemoryTerminal() {
     prepareCsv,
     runMapped,
     reset,
+    retry,
+    previewLocally,
   } = useDemoPipeline()
-  const [text, setText] = useState('')
+  const [text, setText] = useState<string>(customerExample.voice)
+  const [selectedExample, setSelectedExample] = useState<number | null>(0)
   const [drag, setDrag] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const regionRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (phase === 'idle' || phase === 'mapping' || phase === 'running')
+      regionRef.current
+        ?.closest('.customer-demo-body')
+        ?.scrollTo({ top: 0, behavior: 'instant' })
+  }, [phase])
   const onFile = (file?: File) => {
     if (!file || phase !== 'idle') return
     setFileName(file.name)
     const reader = new FileReader()
     reader.onload = () => {
-      setText('')
       prepareCsv(String(reader.result || ''))
     }
     reader.readAsText(file)
   }
   const resetAll = () => {
     reset()
-    setText('')
     setFileName(null)
     if (fileRef.current) fileRef.current.value = ''
   }
@@ -67,6 +92,7 @@ export function MemoryTerminal() {
   return (
     // biome-ignore lint/a11y/noNoninteractiveElementInteractions: file drop supplements the keyboard-accessible Import CSV button
     <section
+      ref={regionRef}
       aria-label="Customer memory demo"
       className={`demo-terminal ${drag ? 'demo-terminal-dragging' : ''}`}
       onDragOver={(event) => {
@@ -84,13 +110,42 @@ export function MemoryTerminal() {
         <div className="demo-input-layout">
           <div className="demo-compose">
             <span className="demo-step-eyebrow">01 / YOUR CONVERSATION</span>
-            <h2>Start with a conversation.</h2>
-            <p>Choose an example, or add a customer message of your own.</p>
-            <label htmlFor="demo-message">Customer message</label>
+            <h2>See what a conversation becomes.</h2>
+            <p>
+              Try a customer story below, or edit the message to make it your
+              own.
+            </p>
+            <fieldset
+              className="demo-message-examples"
+              aria-label="Choose a customer conversation"
+            >
+              {examples.map((example, index) => (
+                <button
+                  type="button"
+                  key={example.label}
+                  aria-pressed={selectedExample === index}
+                  onClick={() => {
+                    setText(example.text)
+                    setSelectedExample(index)
+                  }}
+                >
+                  <example.icon size={15} />
+                  {example.label}
+                </button>
+              ))}
+            </fieldset>
+            <div className="demo-message-label">
+              <label htmlFor="demo-message">Customer message</label>
+              <span>{text.length.toLocaleString()} / 4,000</span>
+            </div>
             <textarea
               id="demo-message"
               value={text}
-              onChange={(event) => setText(event.target.value)}
+              maxLength={4000}
+              rows={5}
+              onChange={(event) => {
+                setText(event.target.value)
+              }}
               onKeyDown={(event) => {
                 if (
                   (event.metaKey || event.ctrlKey) &&
@@ -100,32 +155,31 @@ export function MemoryTerminal() {
                   !event.nativeEvent.isComposing
                 ) {
                   event.preventDefault()
-                  run(text)
+                  run(text, {
+                    channel:
+                      selectedExample === null
+                        ? 'CHAT'
+                        : examples[selectedExample].channel,
+                  })
                 }
               }}
-              rows={5}
-              placeholder="Tell us what the customer said. Preferences, plans, questions, and concerns are a good place to start."
+              placeholder="Paste a customer message…"
               aria-describedby="demo-message-help"
             />
-            <div className="demo-example-row">
-              <span>Try an example</span>
-              {examples.map((example) => (
-                <button
-                  type="button"
-                  key={example.label}
-                  onClick={() => setText(example.text)}
-                  aria-label={`Use ${example.label.toLowerCase()} example`}
-                >
-                  {example.label}
-                </button>
-              ))}
-            </div>
             <div className="demo-compose-actions">
               <button
                 type="button"
                 className="demo-primary-action"
                 disabled={!text.trim() || rateLimited}
-                onClick={() => text.trim() && run(text)}
+                onClick={() =>
+                  text.trim() &&
+                  run(text, {
+                    channel:
+                      selectedExample === null
+                        ? 'CHAT'
+                        : examples[selectedExample].channel,
+                  })
+                }
               >
                 {rateLimited ? (
                   `Retry in ${retryAfter}s`
@@ -151,7 +205,9 @@ export function MemoryTerminal() {
               <Upload size={20} />
               <div>
                 <strong>Have a transcript file?</strong>
-                <p>Import a CSV and map its columns before running.</p>
+                <p>
+                  Import your own CSV, or run five ready-made conversations.
+                </p>
                 <div>
                   <button
                     type="button"
@@ -160,8 +216,12 @@ export function MemoryTerminal() {
                     Import CSV
                     <FileText size={12} />
                   </button>
-                  <button type="button" onClick={() => prepareCsv(SAMPLE_CSV)}>
-                    Try a sample CSV
+                  <button
+                    type="button"
+                    disabled={rateLimited}
+                    onClick={() => run(SAMPLE_CSV, { csv: true })}
+                  >
+                    Run sample conversations
                   </button>
                 </div>
               </div>
@@ -213,8 +273,8 @@ export function MemoryTerminal() {
             </div>
             <p className="demo-guide-note">
               <MessageSquare size={14} />
-              The live demo uses a model. If the service is unavailable, results
-              are clearly marked as a local preview.
+              Uses the live capture extractor and memory-policy checks. No
+              customer records are saved.
             </p>
           </aside>
         </div>
@@ -223,10 +283,9 @@ export function MemoryTerminal() {
           <div className="demo-state-heading">
             <div>
               <span className="demo-step-eyebrow">IMPORT / REVIEW</span>
-              <h2>Connect your columns.</h2>
+              <h2>Review your import.</h2>
               <p>
-                {fileName ? fileName : 'Sample CSV'} · Preview the conversations
-                before running.
+                {fileName || 'Your CSV'} · Check the messages before running.
               </p>
             </div>
           </div>
@@ -251,7 +310,9 @@ export function MemoryTerminal() {
               <p>
                 {phase === 'running'
                   ? 'Facts and signals appear here as the conversation is processed.'
-                  : `${totalFacts} ${totalFacts === 1 ? 'fact' : 'facts'} across ${convs.length} ${convs.length === 1 ? 'conversation' : 'conversations'}.`}
+                  : phase === 'error'
+                    ? 'Your live run could not be completed. Retry, or edit your input.'
+                    : `${totalFacts} ${totalFacts === 1 ? 'fact' : 'facts'} across ${convs.length} ${convs.length === 1 ? 'conversation' : 'conversations'}.`}
               </p>
             </div>
             <div className="demo-result-actions">
@@ -264,15 +325,22 @@ export function MemoryTerminal() {
                   <span />
                 )}
                 {mode === 'offline'
-                  ? 'Local preview'
+                  ? 'Local preview · no AI'
                   : phase === 'running'
                     ? 'Live · processing'
-                    : 'Live model'}
+                    : phase === 'error'
+                      ? 'Live · interrupted'
+                      : 'Live model'}
               </span>
+              {phase === 'running' && (
+                <button type="button" onClick={resetAll}>
+                  Cancel run
+                </button>
+              )}
               {phase !== 'running' && (
                 <button type="button" onClick={resetAll}>
                   <RotateCcw size={12} />
-                  Try another message
+                  {phase === 'error' ? 'Edit input' : 'Try another message'}
                 </button>
               )}
             </div>
@@ -284,15 +352,36 @@ export function MemoryTerminal() {
             </p>
           )}
           {convs.map((conversation, index) => (
-            <ConvCard key={conversation.index} c={conversation} n={index} />
+            <ConvCard
+              key={conversation.index}
+              c={conversation}
+              n={index}
+              running={phase === 'running'}
+            />
           ))}
           {insights && (
             <InsightsPanel ins={insights} title="Across all conversations" />
           )}
           {error && (
-            <p className="demo-input-error" role="alert">
-              {error}
-            </p>
+            <div className="demo-failure" role="alert">
+              <p>{error}</p>
+              <div>
+                <button
+                  type="button"
+                  className="demo-primary-action"
+                  onClick={retry}
+                >
+                  Retry live extraction <RotateCcw size={14} />
+                </button>
+                <button
+                  type="button"
+                  className="demo-local-preview"
+                  onClick={previewLocally}
+                >
+                  See a local preview instead (no AI)
+                </button>
+              </div>
+            </div>
           )}
           {phase === 'running' && convs.length === 0 && (
             <div className="demo-starting" role="status">
